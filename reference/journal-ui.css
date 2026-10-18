@@ -1,0 +1,151 @@
+    #deep-work-repaired-concept .dw-window.dw-wide { width: 696px; }
+    #deep-work-repaired-concept button, #deep-work-repaired-concept label:has(input[type="checkbox"]) { cursor: pointer; }
+    #deep-work-repaired-concept button:disabled { cursor: default; opacity: .5; }
+    #deep-work-repaired-concept button:focus-visible, #deep-work-repaired-concept input:focus-visible, #deep-work-repaired-concept select:focus-visible { outline: 3px solid var(--dw-blue); outline-offset: 3px; }
+    #deep-work-repaired-concept .dw-viewbar { display: flex; justify-content: center; padding: 12px 20px 0; }
+    #deep-work-repaired-concept .dw-segmented { display: inline-flex; padding: 2px; border: 1px solid var(--dw-line); background: var(--dw-disabled); border-radius: 7px; }
+    #deep-work-repaired-concept .dw-segmented button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 26px; min-width: 87px; padding: 3px 12px; border: 1px solid transparent; border-radius: 5px; background: transparent; color: var(--dw-secondary); font: inherit; font-size: 12px; white-space: nowrap; }
+    #deep-work-repaired-concept .dw-segmented button[aria-selected="true"], #deep-work-repaired-concept .dw-segmented button[aria-pressed="true"] { background: var(--dw-surface); border-color: var(--dw-control-line); color: var(--dw-text); box-shadow: 0 1px 2px var(--dw-control-shadow); }
+    #deep-work-repaired-concept .dw-segmented svg { width: 14px; height: 14px; }
+    #deep-work-repaired-concept .dw-journal-content { padding: 23px 25px 16px; }
+    #deep-work-repaired-concept .dw-journal-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 21px; }
+    #deep-work-repaired-concept .dw-journal-heading h2 { margin: 0 0 5px; font-size: 20px; line-height: 1.25; letter-spacing: -.45px; font-weight: 600; }
+    #deep-work-repaired-concept .dw-journal-heading p { margin: 0; font-size: 11px; color: var(--dw-secondary); }
+    #deep-work-repaired-concept .dw-small-button { display: inline-flex; gap: 6px; justify-content: center; align-items: center; min-height: 27px; padding: 4px 9px; border: 1px solid var(--dw-control-line); border-radius: 5px; background: var(--dw-surface); color: var(--dw-text); font-size: 11px; line-height: 1.35; box-shadow: 0 1px 2px var(--dw-control-shadow); white-space: nowrap; }
+    #deep-work-repaired-concept .dw-small-button:hover:not(:disabled) { background: var(--dw-toolbar); }
+    #deep-work-repaired-concept .dw-small-button svg { width: 13px; height: 13px; }
+    #deep-work-repaired-concept .dw-icon-button { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 25px; height: 28px; padding: 3px; border: 0; border-radius: 4px; background: transparent; color: var(--dw-secondary); }
+    #deep-work-repaired-concept .dw-icon-button:hover { color: var(--dw-text); background: var(--dw-disabled); }
+    #deep-work-repaired-concept .dw-icon-button svg { width: 15px; height: 15px; }
+    #deep-work-repaired-concept .dw-plain-input { min-width: 0; height: 29px; padding: 4px 7px; background: var(--dw-surface); border: 1px solid var(--dw-control-line); border-radius: 5px; color: var(--dw-text); font: inherit; font-size: 12px; font-variant-numeric: tabular-nums; }
+    #deep-work-repaired-concept .dw-report-toolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    #deep-work-repaired-concept .dw-periods button { min-width: 57px; min-height: 24px; padding: 3px 10px; font-size: 11px; }
+    #deep-work-repaired-concept .dw-date-navigation { display: flex; align-items: center; gap: 3px; }
+    #deep-work-repaired-concept #dw-report-date { width: 133px; font-size: 11px; }
+    #deep-work-repaired-concept .dw-custom-range { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; margin-top: 15px; }
+    #deep-work-repaired-concept .dw-custom-range label { display: flex; flex-direction: column; gap: 5px; min-width: 0; color: var(--dw-secondary); font-size: 11px; }
+    #deep-work-repaired-concept .dw-custom-range input { width: 100%; }
+    #deep-work-repaired-concept .dw-range-hint { grid-column: 1/-1; margin: 0; font-size: 10px; }
+    #deep-work-repaired-concept .dw-report-context { display: flex; justify-content: space-between; align-items: center; margin: 19px 0 10px; gap: 10px; }
+    #deep-work-repaired-concept .dw-report-context h3 { margin: 0; font-size: 12px; font-weight: 500; color: var(--dw-secondary); }
+    #deep-work-repaired-concept .dw-text-button { color: var(--dw-blue); background: transparent; border: 0; border-radius: 3px; padding: 3px 0; font-size: 11px; white-space: nowrap; }
+    #deep-work-repaired-concept .dw-text-button:hover { text-decoration: underline; }
+    #deep-work-repaired-concept .dw-sample-banner { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; margin-bottom: 11px; border: 1px solid var(--dw-line); background: var(--dw-blue-soft); border-radius: 6px; font-size: 10px; color: var(--dw-secondary); }
+    #deep-work-repaired-concept .dw-sample-banner strong { color: var(--dw-text); font-weight: 500; }
+    #deep-work-repaired-concept .dw-sample-detail { margin-left: 7px; }
+    #deep-work-repaired-concept .dw-metrics { display: grid; grid-template-columns: 1.15fr 1.12fr 1fr; border: 1px solid var(--dw-line); border-radius: 8px; padding: 17px 0 14px; background: var(--dw-surface); }
+    #deep-work-repaired-concept .dw-metric { display: flex; flex-direction: column; padding: 0 17px; min-width: 0; }
+    #deep-work-repaired-concept .dw-metric + .dw-metric { border-left: 1px solid var(--dw-line); }
+    #deep-work-repaired-concept .dw-metric > span { color: var(--dw-secondary); font-size: 11px; }
+    #deep-work-repaired-concept .dw-metric strong { display: block; margin: 5px 0 5px; line-height: 1.15; font-weight: 500; font-size: 29px; letter-spacing: -.9px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    #deep-work-repaired-concept .dw-metric strong em { color: var(--dw-tertiary); font-size: 18px; font-weight: 400; font-style: normal; letter-spacing: -.4px; }
+    #deep-work-repaired-concept .dw-metric small { color: var(--dw-secondary); font-size: 10px; line-height: 1.4; }
+    #deep-work-repaired-concept .dw-activity { margin: 21px 0 22px; }
+    #deep-work-repaired-concept .dw-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    #deep-work-repaired-concept .dw-section-heading h3 { margin: 0; font-size: 12px; font-weight: 600; }
+    #deep-work-repaired-concept .dw-muted { color: var(--dw-secondary); font-size: 10px; }
+    #deep-work-repaired-concept .dw-activity-tools { display: flex; align-items: center; gap: 12px; }
+    #deep-work-repaired-concept .dw-legend-dot { display: inline-block; width: 7px; height: 7px; margin-right: 4px; border-radius: 2px; background: var(--dw-disabled); border: 1px solid var(--dw-control-line); }
+    #deep-work-repaired-concept .dw-legend-work { background: var(--dw-blue); border-color: var(--dw-blue); }
+    #deep-work-repaired-concept select.dw-mini-select { height: 25px; width: 94px; padding: 3px 7px; border-color: var(--dw-line); font-size: 10px; appearance: auto; -webkit-appearance: auto; box-shadow: none; }
+    #deep-work-repaired-concept .dw-chart-scroll { overflow-x: auto; padding-bottom: 3px; }
+    #deep-work-repaired-concept .dw-chart { display: grid; gap: 9px; height: 159px; min-width: 100%; position: relative; background: repeating-linear-gradient(to top, transparent 0, transparent 41px, var(--dw-line) 42px, transparent 43px); background-size: 100% 129px; background-repeat: no-repeat; }
+    #deep-work-repaired-concept .dw-bar-column { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 100%; min-width: 0; height: 159px; padding: 0; margin: 0; border: 0; border-radius: 4px; color: var(--dw-secondary); background: transparent; font-size: 10px; font-variant-numeric: tabular-nums; }
+    #deep-work-repaired-concept .dw-bar-column:hover { background: var(--dw-blue-soft); }
+    #deep-work-repaired-concept .dw-bar-value { display: block; margin-bottom: 5px; color: var(--dw-secondary); white-space: nowrap; font-size: 10px; }
+    #deep-work-repaired-concept .dw-bar { display: block; flex: 0 0 auto; width: min(100%, 42px); min-height: 3px; border-radius: 4px 4px 1px 1px; background: var(--dw-blue); }
+    #deep-work-repaired-concept .dw-bar-column[data-offday="true"] .dw-bar { background: var(--dw-control-line); }
+    #deep-work-repaired-concept .dw-bar-column[data-empty="true"] .dw-bar { background: var(--dw-line); }
+    #deep-work-repaired-concept .dw-bar-label { display: block; width: 100%; height: 25px; padding-top: 8px; text-align: center; white-space: nowrap; font-size: 10px; }
+    #deep-work-repaired-concept .dw-bar-column[data-today="true"] .dw-bar-label { color: var(--dw-blue); font-weight: 600; }
+    #deep-work-repaired-concept .dw-chart-note { margin: 8px 0 0; color: var(--dw-secondary); font-size: 10px; }
+    #deep-work-repaired-concept .dw-sessions { border-top: 1px solid var(--dw-line); padding-top: 18px; }
+    #deep-work-repaired-concept .dw-count { display: inline-flex; align-items: center; justify-content: center; min-width: 19px; height: 17px; border-radius: 4px; margin-left: 3px; padding: 0 4px; background: var(--dw-disabled); color: var(--dw-secondary); font-size: 10px; font-weight: 400; }
+    #deep-work-repaired-concept .dw-table-wrap { overflow: auto; max-height: 274px; border: 1px solid var(--dw-line); border-radius: 7px; background: var(--dw-surface); }
+    #deep-work-repaired-concept .dw-session-table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 11px; white-space: nowrap; }
+    #deep-work-repaired-concept .dw-session-table th { position: sticky; top: 0; z-index: 1; padding: 8px 10px; background: var(--dw-toolbar); color: var(--dw-secondary); border-bottom: 1px solid var(--dw-line); font-size: 10px; font-weight: 500; text-align: left; }
+    #deep-work-repaired-concept .dw-session-table td { padding: 10px; border-bottom: 1px solid var(--dw-line); vertical-align: middle; font-variant-numeric: tabular-nums; }
+    #deep-work-repaired-concept .dw-session-table tr:last-child td { border-bottom: 0; }
+    #deep-work-repaired-concept .dw-session-table tr:nth-child(even) td { background: var(--dw-window); }
+    #deep-work-repaired-concept .dw-session-table small { display: block; margin-top: 2px; font-size: 10px; color: var(--dw-secondary); }
+    #deep-work-repaired-concept .dw-session-table .dw-align-right { text-align: right; }
+    #deep-work-repaired-concept .dw-cycle-state { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; color: var(--dw-secondary); }
+    #deep-work-repaired-concept .dw-cycle-state[data-state="complete"] { color: var(--dw-text); }
+    #deep-work-repaired-concept .dw-cycle-state[data-state="live"] { color: var(--dw-blue); }
+    #deep-work-repaired-concept .dw-state-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+    #deep-work-repaired-concept .dw-accounting-note { color: var(--dw-secondary); font-size: 10px; line-height: 1.55; margin: 10px 0 0; }
+    #deep-work-repaired-concept .dw-session-pagination { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 9px; }
+    #deep-work-repaired-concept .dw-session-pagination > div { display: flex; gap: 7px; }
+    #deep-work-repaired-concept .dw-empty { text-align: center; padding: 25px 12px; border: 1px solid var(--dw-line); border-radius: 7px; background: var(--dw-surface); }
+    #deep-work-repaired-concept .dw-empty > svg { width: 23px; height: 23px; color: var(--dw-tertiary); margin-bottom: 6px; }
+    #deep-work-repaired-concept .dw-empty h4 { margin: 0; font-size: 12px; font-weight: 500; }
+    #deep-work-repaired-concept .dw-empty p { margin: 5px 0 12px; font-size: 11px; color: var(--dw-secondary); }
+    #deep-work-repaired-concept .dw-journal-footer { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 14px; color: var(--dw-secondary); font-size: 10px; }
+    #deep-work-repaired-concept .dw-save-dot { display: inline-block; width: 5px; height: 5px; border-radius: 50%; margin-right: 5px; background: var(--dw-tertiary); }
+    #deep-work-repaired-concept .dw-settings-heading-icon { width: 25px; height: 25px; color: var(--dw-secondary); }
+    #deep-work-repaired-concept .dw-settings-group { border: 1px solid var(--dw-line); border-radius: 8px; background: var(--dw-surface); margin-top: 16px; overflow: hidden; }
+    #deep-work-repaired-concept .dw-setting-row { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 13px 14px; }
+    #deep-work-repaired-concept .dw-setting-row + .dw-setting-row { border-top: 1px solid var(--dw-line); }
+    #deep-work-repaired-concept .dw-setting-row strong { display: block; font-size: 12px; font-weight: 500; }
+    #deep-work-repaired-concept .dw-setting-row small { display: block; color: var(--dw-secondary); font-size: 10px; margin-top: 3px; }
+    #deep-work-repaired-concept select.dw-settings-select { width: 165px; height: 29px; flex-shrink: 0; padding: 3px 21px 3px 8px; font-size: 11px; appearance: auto; -webkit-appearance: auto; }
+    #deep-work-repaired-concept .dw-setting-detail { padding: 0 14px 13px; }
+    #deep-work-repaired-concept .dw-weekdays { display: flex; gap: 7px; }
+    #deep-work-repaired-concept .dw-weekdays label { flex: 1; position: relative; }
+    #deep-work-repaired-concept .dw-weekdays input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+    #deep-work-repaired-concept .dw-weekdays span { display: flex; align-items: center; justify-content: center; height: 32px; border: 1px solid var(--dw-control-line); border-radius: 5px; font-size: 11px; color: var(--dw-secondary); background: var(--dw-window); }
+    #deep-work-repaired-concept .dw-weekdays input:checked + span { border-color: var(--dw-blue); color: var(--dw-on-blue); background: var(--dw-blue); }
+    #deep-work-repaired-concept .dw-weekdays input:focus-visible + span { outline: 3px solid var(--dw-blue); outline-offset: 3px; }
+    #deep-work-repaired-concept .dw-setting-help { color: var(--dw-secondary); font-size: 11px; line-height: 1.5; margin: 9px 0 0; }
+    #deep-work-repaired-concept #dw-everyday-setting { margin: 0; }
+    #deep-work-repaired-concept .dw-shift-pattern { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 16px; }
+    #deep-work-repaired-concept .dw-shift-pattern label { display: flex; align-items: center; gap: 6px; color: var(--dw-secondary); font-size: 11px; }
+    #deep-work-repaired-concept .dw-shift-pattern input[type="number"] { width: 49px; }
+    #deep-work-repaired-concept .dw-shift-pattern label.dw-shift-anchor { flex-direction: column; align-items: flex-start; gap: 5px; }
+    #deep-work-repaired-concept .dw-schedule-preview { margin-top: 21px; }
+    #deep-work-repaired-concept .dw-schedule-days { display: grid; grid-template-columns: repeat(14,1fr); gap: 5px; }
+    #deep-work-repaired-concept .dw-schedule-day { padding: 7px 0; text-align: center; background: var(--dw-surface); border: 1px solid var(--dw-line); border-radius: 5px; }
+    #deep-work-repaired-concept .dw-schedule-day small { display: block; color: var(--dw-secondary); font-size: 9px; }
+    #deep-work-repaired-concept .dw-schedule-day strong { display: block; font-size: 12px; font-weight: 400; margin-top: 3px; }
+    #deep-work-repaired-concept .dw-schedule-day[data-work="true"] { border-color: var(--dw-blue); background: var(--dw-blue-soft); }
+    #deep-work-repaired-concept .dw-schedule-day[data-work="true"] strong { color: var(--dw-blue); }
+    #deep-work-repaired-concept .dw-settings-footnote { margin: 16px 0 0; color: var(--dw-secondary); font-size: 11px; line-height: 1.65; }
+    #deep-work-repaired-concept .dw-settings-actions { display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid var(--dw-line); padding-top: 15px; margin-top: 20px; }
+    #deep-work-repaired-concept .dw-blue-button { background: var(--dw-blue); border-color: var(--dw-blue); color: var(--dw-on-blue); }
+    #deep-work-repaired-concept .dw-blue-button:hover:not(:disabled) { background: var(--dw-blue-hover); }
+    #deep-work-repaired-concept .dw-recovery { margin: 0 0 16px; padding: 9px 10px; border: 1px solid var(--dw-line); border-radius: 6px; color: var(--dw-secondary); background: var(--dw-blue-soft); font-size: 11px; }
+    @media (max-width: 580px) {
+      #deep-work-repaired-concept .dw-journal-content { padding: 20px 16px 15px; }
+      #deep-work-repaired-concept .dw-metric { padding: 0 11px; }
+      #deep-work-repaired-concept .dw-metric strong { font-size: 25px; }
+      #deep-work-repaired-concept .dw-metric strong em { font-size: 15px; }
+      #deep-work-repaired-concept .dw-metric small { font-size: 9px; }
+      #deep-work-repaired-concept .dw-sample-detail { display: none; }
+      #deep-work-repaired-concept .dw-schedule-days { grid-template-columns: repeat(7,1fr); }
+      #deep-work-repaired-concept .dw-setting-row { gap: 10px; flex-wrap: wrap; }
+      #deep-work-repaired-concept .dw-setting-row > span { flex: 1; min-width: 135px; }
+    }
+    @media (max-width: 410px) {
+      #deep-work-repaired-concept .dw-journal-heading { align-items: flex-start; gap: 8px; }
+      #deep-work-repaired-concept .dw-journal-heading h2 { font-size: 19px; }
+      #deep-work-repaired-concept .dw-journal-heading p { font-size: 10px; }
+      #deep-work-repaired-concept .dw-report-toolbar { gap: 9px; }
+      #deep-work-repaired-concept .dw-periods { flex: 1; }
+      #deep-work-repaired-concept .dw-periods button { flex: 1; }
+      #deep-work-repaired-concept .dw-date-navigation { justify-content: center; width: 100%; }
+      #deep-work-repaired-concept .dw-custom-range { grid-template-columns: 1fr; }
+      #deep-work-repaired-concept .dw-metrics { grid-template-columns: 1fr 1fr; padding: 13px 0 0; }
+      #deep-work-repaired-concept .dw-metric:nth-child(3) { grid-column: 1/-1; flex-direction: row; align-items: center; flex-wrap: wrap; gap: 7px; margin-top: 12px; padding: 10px 11px; border-left: 0; border-top: 1px solid var(--dw-line); }
+      #deep-work-repaired-concept .dw-metric:nth-child(3) strong { font-size: 17px; margin: 0 0 0 auto; }
+      #deep-work-repaired-concept .dw-metric:nth-child(3) small { flex-basis: 100%; }
+      #deep-work-repaired-concept .dw-metric:nth-child(3) strong em { font-size: 13px; }
+      #deep-work-repaired-concept .dw-activity-tools { gap: 6px; }
+      #deep-work-repaired-concept .dw-weekdays { gap: 4px; }
+      #deep-work-repaired-concept .dw-weekdays span { font-size: 10px; }
+      #deep-work-repaired-concept .dw-session-table th, #deep-work-repaired-concept .dw-session-table td { padding-left: 7px; padding-right: 7px; }
+    }
+    @media (pointer: coarse) {
+      #deep-work-repaired-concept .dw-small-button, #deep-work-repaired-concept .dw-icon-button, #deep-work-repaired-concept .dw-text-button, #deep-work-repaired-concept .dw-segmented button, #deep-work-repaired-concept .dw-plain-input, #deep-work-repaired-concept select.dw-settings-select, #deep-work-repaired-concept select.dw-mini-select { min-height: 40px; }
+      #deep-work-repaired-concept .dw-icon-button { min-width: 35px; }
+      #deep-work-repaired-concept .dw-weekdays span { min-height: 40px; }
+    }

@@ -1,0 +1,122 @@
+{
+  "baselineDate": "2026-10-17",
+  "files": [
+    {
+      "file": "reference/deep-work-preview.html",
+      "bytes": 712382,
+      "sha256": "5980844ae41ae211db7747cc3b25d8f1b8375b810b340c32990e93b5e1301a3f"
+    },
+    {
+      "file": "reference/journal-app.js",
+      "bytes": 46353,
+      "sha256": "3d8fed6a9f30784df7de89c1ea66f049a44a457d93a129ea250ecbfac21ddc22"
+    },
+    {
+      "file": "reference/journal-report-core.js",
+      "bytes": 9285,
+      "sha256": "8468277470d53d5a11906b7c63b841ab7fd412d8321ad67b39dd15b91f0aa51f"
+    },
+    {
+      "file": "reference/journal-ui.html",
+      "bytes": 9846,
+      "sha256": "a4cd25d7de0363724f95c363b8e38cbc3f4d0cda197be743a3e6c0b67ed15a07"
+    },
+    {
+      "file": "reference/journal-ui.css",
+      "bytes": 19584,
+      "sha256": "942d953f5dd4db2c566e4b1b882ad5f675972fb4cb1664df89d371c3bcadee0e"
+    },
+    {
+      "file": "reference/settings-ui.html",
+      "bytes": 4548,
+      "sha256": "c86b4dff616252c4e777b9f7e2865a380b7ebf0f619a05d78ab1dc5581214dc6"
+    },
+    {
+      "file": "reference/settings-ui.css",
+      "bytes": 6505,
+      "sha256": "71c4d1cfa735d970713fbdd97fa6898f50b0ecc8b9836b12203a8e818c286c21"
+    },
+    {
+      "file": "reference/journal-report-core.test.cjs",
+      "bytes": 8129,
+      "sha256": "209bc76b6b95474e5dab00360784a17ef3aa7c0c19c78ad5d9ef7191c9214257"
+    }
+  ],
+  "documentationCoverage": {
+    "scope": "Independent source-selector coverage QA; no prototype behavior executed or changed. Decorative elements without IDs are outside this ID/control enumeration and are grouped in the specs.",
+    "counts": {
+      "specItems": 137,
+      "staticIds": 122,
+      "coveredStaticIds": 122,
+      "staticInteractiveControls": 54,
+      "coveredStaticInteractiveControls": 54,
+      "staticControlsWithoutIds": 10,
+      "coveredStaticControlsWithoutIds": 10,
+      "dynamicVisiblePatterns": 4,
+      "coveredDynamicVisiblePatterns": 4
+    },
+    "missingStaticIds": [],
+    "missingStaticControls": [],
+    "sourceIdsAbsentFromHtml": [],
+    "dynamicVisible": [
+      {
+        "selector": "#dw-chart button.dw-bar-column",
+        "interactive": true,
+        "coveredBy": [
+          "J-029",
+          "J-030",
+          "J-031",
+          "J-032"
+        ]
+      },
+      {
+        "selector": "#dw-session-rows tr[data-record-id]",
+        "interactive": false,
+        "coveredBy": [
+          "J-037",
+          "J-038",
+          "J-039",
+          "J-040",
+          "J-041"
+        ]
+      },
+      {
+        "selector": "#dw-stat-days em",
+        "interactive": false,
+        "coveredBy": [
+          "J-024"
+        ]
+      },
+      {
+        "selector": "#dw-schedule-days .dw-schedule-day",
+        "interactive": false,
+        "coveredBy": [
+          "W-014"
+        ]
+      }
+    ],
+    "transientImplementationHelpers": [
+      {
+        "selector": "body > a[download][href^=\"blob:\"] (transient)",
+        "visibleProductControl": false,
+        "behaviorCoveredBy": [
+          "J-048",
+          "J-049",
+          "J-050",
+          "S-009",
+          "S-010"
+        ],
+        "notes": "The source creates/activates/removes an anchor to deliver Blob CSV. The specs document resulting CSV download, shared serializer, output and browser save limitation; native code uses its own save workflow."
+      },
+      {
+        "selector": "body > textarea[readonly] (transient offscreen copy fallback)",
+        "visibleProductControl": false,
+        "behaviorCoveredBy": [
+          "S-019"
+        ],
+        "notes": "S-019 explicitly documents the temporary-textarea fallback and success/failure behavior."
+      }
+    ]
+  },
+  "verificationBoundary": "Reference source integrity and documentation coverage verified. No Swift app was compiled or executed for this handoff."
+}

@@ -1,0 +1,71 @@
+    <nav class="dw-viewbar" aria-label="App views">
+      <div class="dw-segmented" role="tablist" aria-label="Deep Work views">
+        <button id="dw-tab-focus" type="button" role="tab" aria-selected="false" aria-controls="dw-focus-panel" tabindex="-1"><i data-lucide="timer" aria-hidden="true"></i>Focus</button>
+        <button id="dw-tab-journal" type="button" role="tab" aria-selected="true" aria-controls="dw-journal-panel"><i data-lucide="book-open" aria-hidden="true"></i>Journal</button>
+        <button id="dw-tab-settings" type="button" role="tab" aria-selected="false" aria-controls="dw-settings-panel" tabindex="-1"><i data-lucide="settings" aria-hidden="true"></i>Settings</button>
+      </div>
+    </nav>
+    <!-- FOCUS_PANEL -->
+    <section id="dw-journal-panel" class="dw-journal-content" role="tabpanel" aria-labelledby="dw-tab-journal">
+      <div id="dw-journal-report">
+        <div class="dw-journal-heading">
+          <div><h2>Focus journal</h2><p id="dw-schedule-summary">Monday–Friday · Week starts Monday</p></div>
+          <button id="dw-open-schedule" class="dw-small-button" type="button"><i data-lucide="calendar-days" aria-hidden="true"></i>Schedule</button>
+        </div>
+        <div class="dw-report-toolbar">
+          <div class="dw-segmented dw-periods" role="group" aria-label="Report period">
+            <button type="button" data-period="day" aria-pressed="false">Day</button>
+            <button type="button" data-period="week" aria-pressed="true">Week</button>
+            <button type="button" data-period="range" aria-pressed="false">Range</button>
+          </div>
+          <div id="dw-date-navigation" class="dw-date-navigation">
+            <button id="dw-previous-period" class="dw-icon-button" type="button" aria-label="Previous week"><i data-lucide="chevron-left" aria-hidden="true"></i></button>
+            <input id="dw-report-date" class="dw-plain-input" type="date" aria-label="Choose report date or week">
+            <button id="dw-next-period" class="dw-icon-button" type="button" aria-label="Next week"><i data-lucide="chevron-right" aria-hidden="true"></i></button>
+          </div>
+        </div>
+        <div id="dw-custom-range" class="dw-custom-range" hidden>
+          <label>From<input id="dw-range-from" class="dw-plain-input" type="datetime-local"></label>
+          <label>Until<input id="dw-range-to" class="dw-plain-input" type="datetime-local"></label>
+          <p class="dw-muted dw-range-hint">Includes the start; stops at the end time. Dates use your local time zone.</p>
+        </div>
+        <p id="dw-range-error" class="dw-error" role="alert" hidden>Choose an end time after the start time.</p>
+        <div class="dw-report-context"><h3 id="dw-period-title">This week</h3><button id="dw-today" class="dw-text-button" type="button">Today</button></div>
+        <div id="dw-sample-banner" class="dw-sample-banner" hidden><span><strong>Example data</strong><span class="dw-sample-detail">A preview, separate from your journal.</span></span><button id="dw-show-own" class="dw-text-button" type="button">Show my journal</button></div>
+        <div class="dw-metrics" aria-label="Report totals">
+          <div class="dw-metric"><span>Focus time</span><strong id="dw-stat-time">0m</strong><small>Breaks &amp; pauses excluded</small></div>
+          <div class="dw-metric"><span>Completed cycles</span><strong id="dw-stat-cycles">0</strong><small id="dw-stat-cycle-note">Full focus cycles</small></div>
+          <div class="dw-metric"><span>Days with focus</span><strong id="dw-stat-days">0 <em>/ 7</em></strong><small id="dw-stat-schedule">5 scheduled days</small></div>
+        </div>
+        <section class="dw-activity" aria-labelledby="dw-activity-title">
+          <div class="dw-section-heading"><h3 id="dw-activity-title">Daily focus</h3><div class="dw-activity-tools"><span id="dw-offday-legend" class="dw-muted"><span class="dw-legend-dot"></span>Day off</span><select id="dw-grouping" class="dw-mini-select" aria-label="Group activity"><option value="day">By day</option><option value="week">By week</option></select></div></div>
+          <div id="dw-chart-scroll" class="dw-chart-scroll"><div id="dw-chart" class="dw-chart" aria-label="Focus time by day"></div></div>
+          <p id="dw-chart-note" class="dw-chart-note">All focus time is included, even on days off.</p>
+        </section>
+        <section class="dw-sessions" aria-labelledby="dw-sessions-title">
+          <div class="dw-section-heading"><h3 id="dw-sessions-title">Sessions <span id="dw-session-count" class="dw-count">0</span></h3><button id="dw-export" class="dw-small-button" type="button"><i data-lucide="download" aria-hidden="true"></i>Export CSV</button></div>
+          <div id="dw-empty" class="dw-empty" hidden><i data-lucide="book-open" aria-hidden="true"></i><h4>No focus sessions here yet.</h4><p>Every focused minute will find its place here.</p><button id="dw-empty-focus" class="dw-small-button" type="button">Start a focus cycle</button></div>
+          <div id="dw-session-table-wrap" class="dw-table-wrap"><table class="dw-session-table"><thead><tr><th scope="col">Started</th><th scope="col">Ended</th><th scope="col" class="dw-align-right">Focus time</th><th scope="col" class="dw-align-right">Cycle</th></tr></thead><tbody id="dw-session-rows"></tbody></table></div>
+          <div id="dw-session-pagination" class="dw-session-pagination" hidden><span id="dw-page-info" class="dw-muted"></span><div><button id="dw-page-prev" class="dw-small-button" type="button">Previous</button><button id="dw-page-next" class="dw-small-button" type="button">Next</button></div></div>
+          <p id="dw-accounting-note" class="dw-accounting-note">Partial sessions add focus time. A cycle counts only when its full focus duration is complete.</p>
+        </section>
+        <div class="dw-journal-footer"><span id="dw-storage-status"><span class="dw-save-dot"></span>Saved on this device</span><button id="dw-toggle-sample" class="dw-text-button" type="button">View example</button></div>
+      </div>
+      <section id="dw-schedule-panel" class="dw-schedule-panel" aria-labelledby="dw-schedule-title" hidden>
+        <div class="dw-journal-heading"><div><h2 id="dw-schedule-title">Work schedule</h2><p>Make the journal fit the way you work.</p></div><i data-lucide="calendar-days" class="dw-settings-heading-icon" aria-hidden="true"></i></div>
+        <div class="dw-settings-group">
+          <label class="dw-setting-row" for="dw-schedule-mode"><span><strong>Reporting days</strong><small>Your pattern of work and rest</small></span><select id="dw-schedule-mode" class="dw-settings-select"><option value="weekdays">Chosen weekdays</option><option value="everyday">Any day</option><option value="shifts">Rotating shifts</option></select></label>
+          <div id="dw-weekdays-setting" class="dw-setting-detail"><div id="dw-weekday-buttons" class="dw-weekdays" role="group" aria-label="Scheduled workdays"><label><input type="checkbox" value="1"><span>Mon</span></label><label><input type="checkbox" value="2"><span>Tue</span></label><label><input type="checkbox" value="3"><span>Wed</span></label><label><input type="checkbox" value="4"><span>Thu</span></label><label><input type="checkbox" value="5"><span>Fri</span></label><label><input type="checkbox" value="6"><span>Sat</span></label><label><input type="checkbox" value="0"><span>Sun</span></label></div><p class="dw-setting-help">Choose any combination. A 5/2 week starts with Monday–Friday selected.</p></div>
+          <div id="dw-shifts-setting" class="dw-setting-detail" hidden><div class="dw-shift-pattern"><label>Work<input id="dw-shift-on" class="dw-plain-input" type="number" min="1" max="31" step="1" value="2"><span>days</span></label><label>Rest<input id="dw-shift-off" class="dw-plain-input" type="number" min="1" max="31" step="1" value="2"><span>days</span></label><label class="dw-shift-anchor">First work day<input id="dw-shift-anchor" class="dw-plain-input" type="date"></label></div><p class="dw-setting-help">This work/rest pattern repeats from the first work day.</p></div>
+          <p id="dw-everyday-setting" class="dw-setting-detail dw-setting-help" hidden>Every day is available for focus. There are no fixed days off.</p>
+        </div>
+        <div class="dw-settings-group">
+          <label class="dw-setting-row" for="dw-week-start"><span><strong>Week starts on</strong><small>Used by weekly reports</small></span><select id="dw-week-start" class="dw-settings-select"><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="0">Sunday</option></select></label>
+          <label class="dw-setting-row" for="dw-day-start"><span><strong>Reporting day starts at</strong><small>Keep overnight work on the same day</small></span><input id="dw-day-start" class="dw-plain-input" type="time" value="00:00"></label>
+        </div>
+        <div class="dw-schedule-preview"><div class="dw-section-heading"><h3>Next 14 days</h3><span class="dw-muted"><span class="dw-legend-dot dw-legend-work"></span>Work day</span></div><div id="dw-schedule-days" class="dw-schedule-days"></div></div>
+        <p id="dw-schedule-error" class="dw-error" role="alert" hidden></p>
+        <p class="dw-settings-footnote">This sets how reports are grouped. Focus sessions on days off are always recorded. Changing the schedule recalculates reports and keeps your history.</p>
+        <div class="dw-settings-actions"><button id="dw-cancel-schedule" class="dw-small-button" type="button">Cancel</button><button id="dw-save-schedule" class="dw-small-button dw-blue-button" type="button">Save schedule</button></div>
+      </section>
+    </section>
