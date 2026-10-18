@@ -1,0 +1,6 @@
+.build/
+/.local-artifacts/icon-delivery-archive/
+.DS_Store
+DerivedData/
+*.xcuserstate
+xcuserdata/

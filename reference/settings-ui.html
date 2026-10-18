@@ -1,0 +1,74 @@
+    <section id="dw-settings-panel" class="dw-settings-content" role="tabpanel" aria-labelledby="dw-tab-settings" hidden>
+      <header class="dw-settings-heading">
+        <h2>Settings</h2>
+      </header>
+
+      <section class="dw-settings-section" aria-labelledby="dw-general-heading">
+        <h3 id="dw-general-heading">General</h3>
+        <div class="dw-settings-group">
+          <label class="dw-setting-row dw-launch-setting" for="dw-launch-login">
+            <span>
+              <strong>Launch at Login</strong>
+              <small id="dw-launch-helper">Open Deep Work automatically when you log in to your Mac.</small>
+            </span>
+            <input id="dw-launch-login" class="dw-launch-switch" type="checkbox" role="switch" aria-describedby="dw-launch-helper dw-launch-preview">
+          </label>
+          <p id="dw-launch-preview" class="dw-settings-preview-note"><span class="dw-settings-preview-label">Preview</span>Your preference is saved here. Automatic launch will work in the Mac app.</p>
+        </div>
+      </section>
+
+      <section class="dw-settings-section" aria-labelledby="dw-export-heading">
+        <h3 id="dw-export-heading">Export</h3>
+        <div class="dw-settings-group">
+          <div class="dw-setting-row dw-settings-export-row">
+            <label class="dw-settings-control-label" for="dw-settings-export-scope">Include</label>
+            <select id="dw-settings-export-scope" class="dw-settings-select" aria-describedby="dw-settings-export-note">
+              <option value="all">All Sessions</option>
+              <option value="current">Current Journal Report</option>
+            </select>
+          </div>
+          <div class="dw-settings-detail">
+            <p id="dw-settings-export-note" class="dw-settings-note">Export all sessions from your journal, including partial sessions.</p>
+            <div class="dw-settings-inline-actions">
+              <button id="dw-settings-export-button" class="dw-small-button" type="button">Export to CSV…</button>
+            </div>
+            <p id="dw-settings-export-status" class="dw-settings-status" role="status" aria-live="polite" aria-atomic="true"></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="dw-settings-section" aria-labelledby="dw-feedback-heading">
+        <h3 id="dw-feedback-heading">Feedback</h3>
+        <div class="dw-settings-group">
+          <form id="dw-feedback-form" class="dw-settings-feedback-form" aria-describedby="dw-feedback-note">
+            <p id="dw-feedback-note" class="dw-settings-note">This preview can save a draft or copy your feedback to share.</p>
+            <div class="dw-feedback-fields">
+              <label class="dw-settings-field" for="dw-feedback-type">
+                <span>Feedback type</span>
+                <select id="dw-feedback-type" class="dw-settings-select">
+                  <option value="idea">Idea</option>
+                  <option value="problem">Problem</option>
+                  <option value="general" selected>General feedback</option>
+                </select>
+              </label>
+              <label class="dw-settings-field" for="dw-feedback-email">
+                <span>Email <span class="dw-settings-optional">(optional)</span></span>
+                <input id="dw-feedback-email" class="dw-plain-input" type="email" maxlength="254" autocomplete="email" placeholder="you@example.com">
+              </label>
+              <label class="dw-settings-field dw-feedback-message-field" for="dw-feedback-message">
+                <span>Your feedback</span>
+                <textarea id="dw-feedback-message" class="dw-plain-input" required minlength="5" maxlength="5000" rows="4" placeholder="What would you like to share?" aria-describedby="dw-feedback-error"></textarea>
+              </label>
+            </div>
+            <p id="dw-feedback-error" class="dw-error" role="alert" hidden></p>
+            <div class="dw-settings-form-actions">
+              <button id="dw-feedback-save" class="dw-small-button" type="submit">Save Draft</button>
+              <button id="dw-feedback-copy" class="dw-small-button dw-blue-button" type="button">Copy Feedback</button>
+            </div>
+            <p id="dw-feedback-status" class="dw-settings-status" role="status" aria-live="polite" aria-atomic="true"></p>
+          </form>
+        </div>
+      </section>
+
+      <p id="dw-settings-storage-status" class="dw-settings-storage-status" role="status" aria-live="polite">Settings are saved on this device.</p>
+    </section>

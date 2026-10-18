@@ -1,0 +1,69 @@
+# Deep Work project instructions
+
+## Sources and scope
+
+- Read `README.md`, then the overview and implementation stages in `DEEP_WORK_SPECIFICATION.md`; read element details for the affected milestone before editing.
+- The specification defines behavior and stable IDs. `IMPLEMENTATION_CHECKLIST.md` is the only progress tracker. `implementation-tracker.json` is an unchanged initial export.
+- `reference/` is approved, read-only visual and behavior evidence. Do not modify it or replace requirements with new designs.
+- Keep Focus, Journal, Settings; Work schedule belongs inside Journal. Record native choices and unresolved product decisions in `docs/NATIVE_DECISIONS.md`.
+
+## Implementation conventions
+
+- Swift/SwiftUI with AppKit for native window and keyboard behavior; Apple Silicon only (arm64), macOS 15 minimum. Do not add Intel or older macOS compatibility unless the user changes this policy.
+- One app-owned `AppModel`, independent of view/window lifetime. Keep value models and local stores lightweight and injectable. Never persist example records as actual history.
+- Follow the October 18 native product clarification: red close/Command-W only hide the main window; running timers and menu-bar updates continue, and paused timers stay paused. Menu-bar click brings the existing Focus window to the front. Only Command-Q pauses, saves, drains and exits; relaunch stays paused. Protect recoverable edits on failed Quit saves and retain explicit Save Draft semantics. The approved application icon lives only in `DeepWork/Resources/Assets.xcassets/AppIcon.appiconset`; generate ICNS into build output and keep delivery archives out of build/test inputs.
+- Persist journal records, configuration, schedule, settings, and explicitly saved feedback drafts in SQLite under the user-domain Application Support directory, using the app bundle ID (`app.deepwork.mac`) as its subdirectory. Resolve the directory through Foundation; do not hard-code a user's home path. Keep the original explicit Save Draft semantics.
+- Preserve raw timestamps/segments. Validate versioned data at the storage boundary; serialize writes with SQLite transactions; expose failures without losing in-memory edits or overwriting unreadable data. Test migrations and preserve legacy source data until migration commits successfully.
+- Keep future-stage integrations visibly unavailable; do not simulate success or count scaffolding as accepted behavior.
+- Tests belong in `DeepWorkTests`; use stable element IDs in relevant test names/evidence. Do not change unrelated files.
+- This testing policy applies automatically to every new task, new feature, edit to an existing feature, refactor, and bug fix. Include test planning, implementation, and verification in the work without waiting for a separate request or reminder.
+- Every feature change must include relevant unit tests and integration/acceptance tests. Follow Swift, Apple, and software engineering testing practices: use Swift Testing or XCTest for native behavior, deterministic injected clocks/services, isolated fixtures, and assertions about observable behavior rather than implementation details. Exercise real SQLite and native platform boundaries in integration tests where applicable.
+- Cover true and false branches, successful and failed operations, and nil/null or missing optional values wherever the contract permits them. Also cover empty, invalid, and boundary inputs, state transitions, and affected persistence/recovery or concurrency cases. Select meaningful cases for the changed behavior; do not invent null states for nonoptional Swift types or add assertions solely to inflate coverage.
+- Every bug fix must include regression coverage with the fix: reproduce the failing scenario, then verify the corrected behavior and relevant unaffected cases. Prefer an automated regression test; use explicit reproducible native acceptance cases for behavior that cannot reasonably be automated, recording that limitation. Do not defer coverage to a later milestone.
+- If tooling prevents a required test, record its exact blocker and leave the affected acceptance unverified in the checklist.
+
+## Swift and software engineering practices
+
+- Apply these practices to new features, existing features, refactors, and bug fixes. Prefer the smallest clear design that satisfies the specification; avoid speculative layers and unrelated cleanup.
+- Follow Apple's current recommendations, API documentation, Human Interface Guidelines, and platform guidelines for Swift, SwiftUI, AppKit, accessibility, concurrency, application lifecycle, security, and data storage. Prefer supported native APIs; verify relevant official guidance when choosing or changing platform behavior. Record any intentional departure and its reason while preserving the approved product contract.
+- Use typed value models and enums for domain states, explicit access control, small cohesive types, and descriptive Swift API names. Avoid force unwraps/casts in fallible production paths; handle missing or invalid input deliberately.
+- Keep UI mutation on `@MainActor`; isolate mutable shared state and serialize persistence. Respect Swift concurrency/Sendable boundaries and cancellation; avoid long blocking work on the UI thread. Do not drive accounting from UI refresh ticks.
+- Keep business rules outside views; inject storage, clocks, and platform services where needed for deterministic tests. Views render shared state and dispatch intentions rather than owning duplicate domain state.
+- Preserve invariants at decoding and mutation boundaries. Surface actionable failures, preserve recoverable data, and never claim success before the underlying operation succeeds.
+- Use native accessibility, keyboard, lifecycle, and adaptive layout conventions; verify these behaviors on macOS. Record intentional departures from the reference before accepting them.
+- Before changing code, understand its callers, data contracts, and failure modes. Add the relevant regression coverage with the change, run focused tests and compilation, and broaden checks when affected behavior warrants it.
+- Keep dependencies minimal, retain compatibility intentionally, and document schema/API/rollout decisions. Never log secrets or private feedback content.
+
+## Build and verification
+
+- Verified locally: `./scripts/test.sh` runs 110 native Swift tests, 12 native icon packaging checks and 4 platform build checks; `./scripts/build-app.sh` compiles and packages `.build/Deep Work.app`; `open ".build/Deep Work.app"` launches it. Current results and environment limits are in `docs/VERIFICATION.md`.
+- `plutil -lint DeepWork/Resources/Info.plist DeepWork.xcodeproj/project.pbxproj` validates project/plist syntax. Regenerate explicit Xcode references with `python3 scripts/generate-xcode-project.py` after adding/removing app or core test sources.
+- Local builds use Swift 6.4 and Command Line Tools; full Xcode remains unavailable locally. Separately, [hosted CI](https://github.com/lukin-io/deep-work/actions/runs/39107935588) passed the native tests and an arm64 Release project build with Xcode 16.4/macOS SDK 15.5. Keep local and hosted evidence distinct; never infer a successful Xcode build from plist validation. Xcode 16+ commands are in `README.md`.
+- `swift build -Xswiftc -strict-concurrency=complete -Xswiftc -warnings-as-errors` verifies production concurrency checking and rejects Swift warnings. Require complete Swift Testing summaries; the test script rejects premature hostless exits even when SwiftPM returns success.
+- Nest AppKit integration suites under serialized `NativeApplicationTests`. For hostless status-button and window-close integration, dispatch the real native button target/action with `sendAction`; synthetic `performClick`/`performClose` can stop SwiftPM’s main run loop. Test foreground activation, real red close, Command-W, and Quit failure choices through the compiled app; record adapter boundaries explicitly.
+- Run native model/store tests, compile the native app, and exercise changed window/navigation behavior. JavaScript reference tests are not native completion evidence.
+
+## Progress updates
+
+- Update existing IDs in `IMPLEMENTATION_CHECKLIST.md`, with actual commands/results and remaining acceptance checks. Mark DONE only when the entire item's native acceptance passes; keep cross-stage items IN PROGRESS.
+- Record milestone evidence in `docs/VERIFICATION.md`; update checklist rollups consistently. Do not maintain a second progress tracker.
+- Always keep `README.md` current with required setup, dependencies, build/test/run commands, migration steps, and known tooling limits whenever implementation changes them.
+- Report local compile, native tests, UI observations, and unverified tooling separately.
+
+## Commit and pull request writing
+
+- Use `/Users/sesharim/.codex/skills/caveman-commit/SKILL.md` for commit messages; use the same concise intent-first style for PR titles/descriptions.
+- Use Conventional Commits. Explain non-obvious reasons, behavior changes, migration/rollout requirements, and unresolved limitations without shortening away meaningful context.
+- PR descriptions must explain the problem and before/after behavior, actual validation, exact target branch, and remaining dependencies without relying on the conversation. Never describe partial implementation or unverified deployment as complete.
+
+## GitHub releases and downloadable builds
+
+- Publish app releases to `lukin-io/deep-work` GitHub Releases with an actual built app ZIP, `SHA256SUMS`, and `release-metadata.json`. A source-code archive, PR, local build or temporary Actions artifact alone does not complete a release request. Link the release and downloadable app in the final report after verifying they are available.
+- Use a clean, committed source revision and a new annotated version tag. Preview tags are `vX.Y.Z-preview.N` (positive N); the numeric version must match `CFBundleShortVersionString`. Use a positive build number and record the exact commit, architectures, minimum macOS, configuration and signing status. Never move published tags or overwrite published assets; fixes receive a new version/tag.
+- Prepare `docs/releases/<tag>.md` with changes, installation steps, verification performed, compatibility, data migration notes and limitations. New release commits must already belong to `origin/main`; verify freshly fetched ancestry before draft creation and immediately before publication. The first preview predates the PR #1 merge and stays immutable. Publishing a preview does not by itself authorize merging its PR.
+- Use `.github/workflows/release.yml`: native tests and Xcode Release builds on Apple Silicon macOS 15/Xcode 16.4 and macOS 26/Xcode 26.6, then an optimized arm64 Release package for macOS 15+ and archive regressions. Explicitly select and verify each Xcode/SDK; update pinned toolchains with the environment/workflow regressions. PRs only validate and retain temporary artifacts. Tag pushes may publish only after all required jobs pass. Keep actions pinned to reviewed commit SHAs, read-only permissions for tests/builds, and `contents: write` only in the tag-only publication job. Use the job's GitHub token; never commit credentials or log tokens.
+- CI infrastructure changes require `python3 DeepWorkTests/Build/test-ci-policy.py` and publication changes require `python3 DeepWorkTests/Release/test-publish-release.py`, alongside affected native checks. Fixtures prove fail-closed behavior, not hosted execution. Record actual matrix results separately.
+- `scripts/package-release.sh` builds from source; `scripts/verify-release.sh` checks the archive, executable, architectures, icon, signature, metadata and checksum. Include the license; exclude settings, journals, SQLite files, local delivery archives and debug fixtures. Test new or changed release behavior with native archive tests and publication failure regressions.
+- Create a draft release, upload all assets, download and compare them, then publish. Refuse duplicate releases and mismatched source/tag/artifact metadata. Failure before publication retains any created draft. An unconfirmed publication operation requires inspecting GitHub's state before retrying. If publication succeeds but public-download verification fails, report the release as published with its public download unverified; never delete or replace it to hide the failure. Confirm public downloads without authentication after publication and report the precise failed step when verification fails.
+- The current pipeline intentionally supports **ad hoc signed, unnotarized previews only**, marked prerelease and never Latest. Do not describe these as Developer ID signed, notarized, or Gatekeeper-approved. Stable release publication must fail until Apple Developer ID signing, hardened runtime, secure timestamping, notarization, stapling and Gatekeeper assessment are implemented and verified. Keep signing material in appropriate secret storage and follow Apple's current distribution guidance. Never disable system security or strip quarantine as an installation step.
+- Keep README release/build commands and `docs/VERIFICATION.md` evidence current. Separate local checks, hosted CI, published-download verification, signing/notarization, and runtime coverage; do not infer one from another. Release engineering does not advance unrelated product acceptance IDs.
