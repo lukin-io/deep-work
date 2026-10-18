@@ -52,6 +52,19 @@ Use `IMPLEMENTATION_CHECKLIST.md` as the manual source of progress. Change TODO 
 
 The JSON is an initial import snapshot, not a live mirror of the Markdown checklist. Choose one progress source after importing it into another tool. The prototype's Working/Simulated/Decorative status stays separate from native completion.
 
+## Next milestone: Stage 3 — Journal
+
+PR #1 is merged into `main`. The next branch, `feature/journal-stage-3`, starts from merge commit `2ea0b94bc3cb320087921fbb3ff0670d361a44dc`, so it includes the native app, SQLite timer/recovery, icons and release CI.
+
+[Stage 3 plan](docs/STAGE_3_PLAN.md) maps the existing J/W IDs to implementation and native acceptance:
+
+1. Calendar/report engine: half-open ranges, clipped focus segments, completion timestamps, local cutoffs, DST and schedule rotation.
+2. Day/Week/Range selection, the three metrics, activity chart, session rows and 12-row pagination.
+3. Work-schedule drafts, Save/Cancel, SQLite persistence and failure recovery.
+4. Separate actual/example data, live report integration and native keyboard/accessibility/appearance checks.
+
+Stage 3 is planned, not implemented. The report engine will supply shared export data, but CSV serialization/native saving remain Stage 4. `IMPLEMENTATION_CHECKLIST.md` remains the only product progress tracker.
+
 ## Important implementation boundaries
 
 - The native menu-bar timer and close/reopen behavior are implemented. Real Launch at Login and Slack authorization/status changes remain later milestones.

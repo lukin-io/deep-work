@@ -247,3 +247,18 @@ This is an **ad hoc signed, unnotarized preview**. Developer ID signing, notariz
 - `python3 DeepWorkTests/Build/test-ci-policy.py`: **22 environment/workflow regressions passed** (`.build/ci-policy-tests.log`). They cover minimum/newer explicit toolchains, absent/mismatched tools, non-macOS/Intel hosts, SDK/compiler drift, triggers, permissions, job dependencies and publication gating. They do not establish real hosted results.
 - `python3 DeepWorkTests/Release/test-publish-release.py`: **38 publication regressions passed** (`.build/main-ancestry-publication-tests.log`). Five added cases cover accepted ancestors of main, unmerged commits, stale/missing refs, fetch failures and history replacement during draft verification. Four negative cases were reproduced against the previous publisher before validating the correction (`.build/main-ancestry-regression-before.log`). The publisher refreshes main and checks ancestry both before creating a draft and immediately before publication.
 - Shell syntax and `git diff --check` pass. No application behavior or database schema changed; no new release was published for these CI/docs changes. Hosted matrix results and merge provenance are recorded after their actual completion.
+
+### Current CI result, merge and next branch
+
+[PR run 39109011793](https://github.com/lukin-io/deep-work/actions/runs/39109011793) **passed** on exact head `0381dafa55568d9c656300e0701c9320721bdabe` before merging:
+
+| Runner | Verified toolchain | Native and policy results | Xcode Release |
+| --- | --- | --- | --- |
+| macOS 15.7.9, arm64 | Xcode 16.4, Swift 6.1.2, SDK 15.5 | 110 Swift, 4 platform, 12 icon, 22 CI policy, 38 publication tests passed | BUILD SUCCEEDED |
+| macOS 26.6.2, arm64 | Xcode 26.6, Swift 6.3.3, SDK 26.5 | 110 Swift, 4 platform, 12 icon, 22 CI policy, 38 publication tests passed | BUILD SUCCEEDED |
+
+Both strict-concurrency/warnings-as-errors builds and plist/project checks passed. F-015 native control checks passed on both; macOS 26 also produced distinct nontransparent progress pixels for both motion policies. macOS 15's capture remained unavailable/transparent, explicitly unverified for appearance.
+
+The package job ran after both matrix jobs passed, built the optimized arm64 app, and passed **20 policy + 17 archive regressions**. Publication correctly remained skipped for this PR event. The changed main-ancestry publishing guard is covered by the 38 fixture regressions; no new live release was created merely to test that guard.
+
+PR #1 was merged with its history preserved into `main` as `2ea0b94bc3cb320087921fbb3ff0670d361a44dc`. The merge API used the verified expected head SHA and returned `merged: true`. After fetching the merged remote, local `main` fast-forwarded to it; only then was `feature/journal-stage-3` created. Git ancestry verifies that the branch includes the complete reviewed head and published-preview source. The Stage 3 plan and post-merge evidence are documentation changes, not a Stage 3 implementation or new product acceptance.
