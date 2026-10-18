@@ -39,4 +39,4 @@ f1750a6f9e837d6e37d95de1b7ce3afbd0c9efe70425c016ea0d8645413cbc8c  DeepWork-Icon-
 e6b0fd2c8331dabc96f4921b94cafa69ffe5f305a199a193a7a942803895b3c3  deep-work-icon-1.0.zip
 ```
 
-For a future approved icon, replace the production catalog's ten images and metadata, run the commands above, and inspect the rebuilt app. Keep editable design deliveries outside application resources. Do not add another production icon folder or depend on the local archive. Full Xcode compilation still requires installing and selecting Xcode; CLT checks do not establish an `actool` result.
+For a future approved icon, replace the production catalog's ten images and metadata, run the commands above, and inspect the rebuilt app. Keep editable design deliveries outside application resources. Do not add another production icon folder or depend on the local archive. Local Xcode compilation requires installing and selecting Xcode. Hosted Xcode 16.4 compiled the production catalog successfully in [CI run 39107935588](https://github.com/lukin-io/deep-work/actions/runs/39107935588); CLT icon checks remain separate evidence.

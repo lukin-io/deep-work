@@ -4,11 +4,11 @@ A native SwiftUI/AppKit application implementing the Stage 1 foundation and Stag
 
 ## Download the app
 
-Built apps are published under [GitHub Releases](https://github.com/lukin-io/deep-work/releases). Select a preview and download **Deep-Work-<tag>-macOS-arm64.zip** from Assets, extract it, and move **Deep Work.app** to Applications. Requires **Apple Silicon (M1 or later) and macOS 15 or later**. Intel Macs are unsupported. GitHub's automatic Source code ZIP is for developers, not an installed app.
+[Download Deep Work 0.1.0 preview 1](https://github.com/lukin-io/deep-work/releases/download/v0.1.0-preview.1/Deep-Work-v0.1.0-preview.1-macOS-arm64.zip), extract the ZIP, and move **Deep Work.app** to Applications. Read the [release notes and checksums](https://github.com/lukin-io/deep-work/releases/tag/v0.1.0-preview.1), or browse [all releases](https://github.com/lukin-io/deep-work/releases). Requires **Apple Silicon (M1 or later) and macOS 15 or later**. Intel Macs are unsupported. GitHub's automatic Source code ZIP is for developers, not an installed app.
 
 Previews are **ad hoc signed and unnotarized**; macOS may block first launch. Only open a build you trust, following [Apple's app-opening guidance](https://support.apple.com/en-us/102445). Stable notarized releases are not yet available. Each release lists its tested platforms and known limitations; macOS 15+ is the deployment target, not a claim that every OS version was tested.
 
-Download `SHA256SUMS` and `release-metadata.json` alongside the app ZIP and verify them with `shasum -a 256 -c SHA256SUMS`. The metadata records the source commit and build configuration. Quit an older running copy before replacing it; user data stays in Application Support.
+The first preview passed [release CI and public-download verification](https://github.com/lukin-io/deep-work/actions/runs/39108209226). Download `SHA256SUMS` and `release-metadata.json` alongside the app ZIP and verify them with `shasum -a 256 -c SHA256SUMS`. The metadata records the source commit and build configuration. Quit an older running copy before replacing it; user data stays in Application Support.
 
 ## Start here
 
@@ -54,7 +54,7 @@ The JSON is an initial import snapshot, not a live mirror of the Markdown checkl
 
 ## Build, test, and run locally
 
-Requires macOS and a Swift toolchain. The app requires **Apple Silicon (M1 or later), macOS 15+**; local verification used **macOS 27.0.1, Apple Silicon, Swift 6.4**. Intel Macs and macOS versions before 15 are unsupported. Tests use the same minimum macOS version.
+Requires Swift 6 or later from Xcode 16+ or current Command Line Tools. The app requires **Apple Silicon (M1 or later), macOS 15+**; local verification used **macOS 27.0.1, Apple Silicon, Swift 6.4**. Intel Macs and macOS versions before 15 are unsupported. Tests use the same minimum macOS version.
 
 Check the selected developer tools first:
 
@@ -107,7 +107,15 @@ xcodebuild -project DeepWork.xcodeproj -scheme DeepWork \
   -configuration Debug -destination 'platform=macOS' build
 ```
 
-**Xcode validation is blocked on this machine:** `xcode-select -p` returns `/Library/Developer/CommandLineTools`; `xcodebuild` reports that it requires Xcode. The project and shared scheme are structurally validated, but that is not an Xcode build result. The native Swift build and test results are recorded in [VERIFICATION.md](docs/VERIFICATION.md).
+**Local full Xcode remains unavailable:** `xcode-select -p` returns `/Library/Developer/CommandLineTools`; local `xcodebuild` requires an Xcode installation. Separately, [hosted CI passed](https://github.com/lukin-io/deep-work/actions/runs/39107935588) the native tests and an Apple Silicon Release build with **Xcode 16.4 and macOS SDK 15.5**. CI uses this project-build check; the downloadable app is packaged and signed separately by the release script:
+
+```sh
+xcodebuild -project DeepWork.xcodeproj -scheme DeepWork \
+  -configuration Release -destination 'platform=macOS' \
+  -derivedDataPath .build/Xcode CODE_SIGNING_ALLOWED=NO build
+```
+
+Local, hosted, and distribution verification are recorded separately in [VERIFICATION.md](docs/VERIFICATION.md).
 
 ## Git repository
 
@@ -145,15 +153,19 @@ git remote -v
 
 The release pipeline uses the native macOS tools already described above, plus Python 3 and Git. GitHub-hosted runners include these tools and the GitHub CLI. No local GitHub CLI or long-lived upload token is needed: pushing an annotated preview tag triggers `.github/workflows/release.yml` with its scoped job token.
 
-Before tagging, commit the changes and release notes, ensure the numeric version in `DeepWork/Resources/Info.plist` matches the tag, and require the PR's native test/package checks to pass. Preview tags follow `vX.Y.Z-preview.N`, with N starting at 1. For the first preview:
+Before tagging, prepare `docs/releases/<tag>.md`, commit the changes and release notes, ensure the numeric version in `DeepWork/Resources/Info.plist` matches the tag, and require the PR's native test/package checks to pass. Preview tags follow `vX.Y.Z-preview.N`, with N starting at 1. **`v0.1.0-preview.1` is the first release; do not recreate or move it.** The next commands use `v0.1.0-preview.2` as an example: first fetch tags and choose the next unused version and a positive local build number.
 
 ```sh
+git fetch origin --tags
+git tag --list 'v0.1.0-preview.*'
+release_tag='v0.1.0-preview.2' # Replace if already used; match the committed notes.
+release_build=2
 ./scripts/test.sh
 python3 DeepWorkTests/Release/test-publish-release.py
 ./DeepWorkTests/Release/test-release.sh
-./scripts/package-release.sh v0.1.0-preview.1 1
-./scripts/verify-release.sh .build/releases/v0.1.0-preview.1 v0.1.0-preview.1 "$(git rev-parse HEAD)"
-./DeepWorkTests/Release/test-release.sh .build/releases/v0.1.0-preview.1 v0.1.0-preview.1
+./scripts/package-release.sh "$release_tag" "$release_build"
+./scripts/verify-release.sh ".build/releases/$release_tag" "$release_tag" "$(git rev-parse HEAD)"
+./DeepWorkTests/Release/test-release.sh ".build/releases/$release_tag" "$release_tag"
 ```
 
 The package script requires a clean committed checkout, builds arm64 with Swift's **Release** configuration, generates the icon, signs the app ad hoc, validates an extracted archive, and writes the ZIP/checksums/metadata to `.build/releases/<tag>/`. It refuses an existing output directory to protect earlier artifacts. A local package does not upload anything and is not a published release. The release build ignores the debug-only data-directory override.
@@ -161,13 +173,15 @@ The package script requires a clean committed checkout, builds arm64 with Swift'
 Create a new annotated tag at the exact verified commit and push that tag, using the next unused preview number for subsequent releases:
 
 ```sh
-git tag -a v0.1.0-preview.1 -m "Deep Work 0.1.0 preview 1"
-git push origin v0.1.0-preview.1
+git tag -a "$release_tag" -m "Deep Work $release_tag"
+git push origin "$release_tag"
 ```
 
 Do not repeat those commands once the version exists or move a published tag. Normal releases should be based on reviewed `main`; the initial requested preview may come from the app feature branch while PR #1 is open.
 
-The workflow runs native tests on Apple Silicon, builds and tests an arm64 package, and creates a draft GitHub prerelease. It uploads the app ZIP, checksums and metadata, downloads and verifies them, then publishes with Latest disabled. PR runs only validate and retain temporary Actions artifacts; they cannot publish. A failed upload or verification leaves an unpublished draft for inspection. Fix the failure and use a new version; never replace published release bytes. Read [AGENTS.md](AGENTS.md) for release rules and [verification evidence](docs/VERIFICATION.md) for actual results.
+The workflow runs native tests on Apple Silicon, checks the Xcode Release build, builds and tests an arm64 package, and creates a draft GitHub prerelease. It uploads the app ZIP, checksums and metadata, downloads and verifies them, then publishes with Latest disabled and verifies the public downloads without authentication. PR runs only validate and retain temporary Actions artifacts; they cannot publish. CI assigns its run number as the packaged build number.
+
+Failure before publication retains any created draft. If GitHub does not confirm the publication operation, inspect the release state before retrying. If publication succeeds but public-download verification fails, the release remains published and its download is reported as unverified; nothing is deleted or replaced. Fixes use a new version. Read [AGENTS.md](AGENTS.md) for release rules and [verification evidence](docs/VERIFICATION.md) for actual results.
 
 Stable tags are rejected until Developer ID signing, hardened runtime, timestamping, notarization, stapling and Gatekeeper verification are implemented. No signing identities are available on the current development machine. Apple's [distribution packaging](https://developer.apple.com/documentation/xcode/packaging-mac-software-for-distribution) and [notarization guidance](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution) define that future distribution path.
 
