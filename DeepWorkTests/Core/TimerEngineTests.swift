@@ -8,15 +8,15 @@ final class TimerEngineTests {
     @Test func F009_startRevalidatesDurationsAndClock() throws {
         var engine = TimerEngine()
         #expect(throws: ModelValidationError.self) {
-            try engine.start(configuration: FocusConfiguration(), at: instant(0))
+            try engine.start(configuration: FocusConfiguration(), at: self.instant(0))
         }
         for minutes in [0, 481] {
             #expect(throws: ModelValidationError.self) {
-                try engine.start(configuration: configuration(focus: minutes), at: instant(0))
+                try engine.start(configuration: self.configuration(focus: minutes), at: self.instant(0))
             }
         }
         #expect(throws: ModelValidationError.self) {
-            try engine.start(configuration: configuration(), at: TimerInstant(elapsed: .nan, wallDate: start))
+            try engine.start(configuration: self.configuration(), at: TimerInstant(elapsed: .nan, wallDate: self.start))
         }
         #expect(engine.state == .setup)
         #expect(engine.liveRecord == nil)
@@ -459,11 +459,11 @@ final class TimerEngineTests {
         var checkpoint = try #require(first.activeCheckpoint)
         checkpoint.remainingSeconds = 50
         #expect(throws: ModelValidationError.self) {
-            try TimerEngine(checkpoint: checkpoint, repeats: true, at: instant(10_000))
+            try TimerEngine(checkpoint: checkpoint, repeats: true, at: self.instant(10_000))
         }
         checkpoint.remainingSeconds = 0
         #expect(throws: ModelValidationError.self) {
-            try TimerEngine(checkpoint: checkpoint, repeats: true, at: instant(10_000))
+            try TimerEngine(checkpoint: checkpoint, repeats: true, at: self.instant(10_000))
         }
     }
 
