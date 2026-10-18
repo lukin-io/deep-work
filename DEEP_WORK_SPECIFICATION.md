@@ -6,6 +6,14 @@ Deep Work is a small macOS focus timer with three top-level views: **Focus**, **
 
 The supplied app reference is an offline HTML prototype. This handoff contains requirements, tracking files, and reference code; it does not contain a compiled Mac app or an Xcode project. A working control in the prototype does not mean its Swift implementation is complete.
 
+## Native product clarification — October 18, 2026
+
+The user clarified the distinction between **Close** and **Quit**: **red close and Command-W only hide the main window.** A running focus or break continues, including phase transitions and background SQLite checkpoints; an already paused phase stays paused. Closing never pauses, ends, or resets the cycle, and slow or failed storage must not prevent hiding. Clicking the native menu-bar timer brings the existing window to the front on Focus without restarting it. Its running label is `MM:SS - Deep work` or `MM:SS - Break`, using the approved spelling **Break**.
+
+**Only full Quit (Command-Q) pauses the phase, saves settings, configuration, saved schedule, journal records and the sealed checkpoint, drains queued writes, and exits.** Relaunch restores the unfinished phase paused until Resume. A failed Quit save offers Keep Open by default or explicit Quit Without Saving. Explicit Save Draft semantics remain unchanged. Force Quit/crash recovery uses the last committed checkpoint and never counts process downtime.
+
+This clarification supersedes the earlier incorrect native close-and-pause amendment and restores the original G-006/AC-11 window behavior. The full menu-bar phase labels supersede the prototype's abbreviated G-004 labels below. `reference/` remains preserved as baseline evidence. The supplied Icon 1.0 artwork is the approved native application icon; its canonical source is `DeepWork/Resources/Assets.xcassets/AppIcon.appiconset` (see [icon provenance](docs/APP_ICON.md)). Native choices and verification are recorded in [NATIVE_DECISIONS.md](docs/NATIVE_DECISIONS.md) and [VERIFICATION.md](docs/VERIFICATION.md).
+
 ## Contents
 
 **Core reference:** [Tracking](#how-to-use-this-handoff) · [Baseline and scope](#baseline-and-scope) · [Timer rules](#timer-and-session-rules) · [Journal and calendar](#journal-and-calendar-contract) · [CSV](#csv-output-contract) · [Swift components](#swift-implementation-map) · [Native decisions](#decisions-to-record-before-affected-native-work) · [Build order and acceptance](#implementation-order-and-release-checks).

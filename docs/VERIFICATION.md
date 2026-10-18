@@ -69,6 +69,8 @@ Known dummy acceptance data was moved, without deletion, into `.build/ui-accepta
 
 Stage 2 adds the deterministic timer, Focus controls, exact active-segment accounting, ordered background SQLite checkpoints, paused recovery, process ownership, and native status-item projection. The reference and initial JSON tracker remain unchanged. Progress by stable ID remains in the checklist.
 
+These are historical Stage 2 results. The latest Close/Quit clarification restores Command-W continuation observed in UI-11. An intervening close-and-pause implementation was an incorrect interpretation and is superseded. Current hide/Quit verification is recorded below; icon evidence remains separate.
+
 ### Native automated verification
 
 Final verification commands:
@@ -122,3 +124,72 @@ All Stage 2 manual sessions below used the isolated Debug directory `.build/stag
 Full Xcode is still not installed: the exact `xcodebuild` blocker above remains. macOS 13 and Intel execution, actual physical sleep/wake, abrupt power loss, exhaustive VoiceOver announcements, system Reduce Motion preference propagation, light/dark and narrow-window review remain unverified. Clock-policy tests exercise sleep-equivalent elapsed time deterministically, and real hidden-window timing was observed; neither is presented as a physical sleep test.
 
 Journal reports/examples/work-schedule editing, CSV/clipboard, actual login registration and Slack remain future milestones. J-052 is still incomplete because CSV must remain usable under storage failure; J-053 still needs actual live report rows/metrics. No JavaScript result was used as native completion evidence.
+
+## Historical close protection and icon work — October 18, 2026
+
+**Superseded lifecycle interpretation:** this implementation mistakenly applied pause/save to red close and Command-W. The user clarified that only full Quit should pause/save; current behavior and replacement regressions are recorded in [Close and Quit clarification](#close-and-quit-clarification--october-18-2026). UI-17–UI-19 below document the old behavior, not current acceptance. The icon and Quit-failure evidence remain relevant.
+
+### Automated regression coverage
+
+- `./scripts/test.sh`: **107 Swift tests passed: 78 core + 29 app**, with both terminal summaries present in `.build/close-icon-tests.log`. Eight new lifecycle functions include parameterized boundary and independent-store failure cases.
+- Real SQLite integration verifies retained configuration, saved schedule, historical records, settings and explicit feedback draft; focus and break recovery retain their exact remainder, segments, and live UUID without adding closed time. Unsaved feedback and schedule drafts survive window close in memory without replacing the explicitly saved versions.
+- Actual AppKit close-button target/action dispatch verifies immediate pause, save-before-hide, setup/already-paused close, delayed boundary reconciliation without duplicate records, either-store failure, blocked controls during saves, reopen cancellation of pending hide, Close/Quit overlap, and failed Quit restoring usable controls. Minimize and background saves retain running state.
+- The persistent failure banner was made state-neutral: after failed Close/Quit, the user can Resume without leaving a false “timer paused” claim. Regression tests check both the continuing timer and truthful copy.
+- Synthetic `NSWindow.performClose` has the same hostless SwiftPM run-loop exit limitation as `NSStatusBarButton.performClick`. The test-script completion guard rejected that incomplete run. Tests dispatch the native traffic-light button's real configured target/action with `sendAction`; real red-button clicks and Command-W were exercised in the compiled app below.
+- `swift build -Xswiftc -strict-concurrency=complete`: passed, with no product-source concurrency warnings; `.build/close-icon-strict-build.log`. Existing CLT linker-path warnings remain.
+- `./DeepWorkTests/Icon/test-app-icon.sh` (also run by `scripts/test.sh`): **7 native packaging cases passed**. The supplied ICNS decodes through AppKit/ImageIO in all ten standard/Retina sizes; every representation matches the production asset catalog's pixels. Missing metadata/resource, corruption, incomplete sizes, and changed artwork are rejected; delivery files and extracted catalog bytes match the original ZIP.
+- `./scripts/build-app.sh`: native compile, approved ICNS packaging/pixel validation, and ad hoc signing passed; `.build/close-icon-build.log`. `plutil -lint DeepWork/Resources/Info.plist DeepWork.xcodeproj/project.pbxproj` and `codesign --verify --strict ".build/Deep Work.app"` passed. The project uses the native AppIcon asset catalog; actual Xcode/`actool` execution is still blocked by the exact missing-Xcode error above, reproduced after this change.
+- All eight approved reference files remain byte-identical to the manifest; the initial JSON tracker is unchanged. Checklist validation confirms 137 unique IDs and 36 DONE markers consistent with their statuses.
+
+### Compiled-app acceptance
+
+All test sessions used `.build/close-icon-native-data` or the disposable regular-file fixture `.build/close-feature-blocked-store`. The normal Application Support history was not used for these sessions.
+
+| Case | Observed native result |
+| --- | --- |
+| UI-17: red close during focus | Start a 60/10 pair with Repeat off, then click the red traffic light. The window hides after saving. Command-0 reopens **Deep work paused / Resume / 59:54**. Read-only SQLite comparison shows the same live UUID, sealed segments and exact remainder **3593.399417208 seconds**; preferences/schedule are unchanged and no finalized row was added by Close. The close button's native label is “Close window and pause timer,” with help “Save changes and pause timer.” |
+| UI-18: Command-W during break | Take break explicitly finalizes the positive focus as one Partial row and starts the break. Command-W saves and pauses it; reopening shows **Break paused / Resume / 09:57**. SQLite retains **596.365034917 seconds**, the single earlier row and saved configuration/schedule. Clean Quit retains the same remainder and row; integrity_check is ok. |
+| UI-19: failed Close | Launch against the disposable regular file, then click Close. The native window stays visible and exposes `dw-lifecycle-error`: “Changes could not be saved. Keep Deep Work open to preserve changes that are still in memory.” The existing store failure stays visible; no false save is reported. |
+| UI-20: failed Quit choices | Command-Q in that failure instance opens the native warning with **Keep Open** first/default and **Quit Without Saving** second. Keep Open dismisses the warning and restores the usable window. A second Quit followed by explicit Quit Without Saving exits only that test process. In setup, the alert correctly omits a claim that a timer is paused. |
+| UI-21: final-build relaunch | Rebuild and relaunch against the same isolated healthy data. Journal retains its one historical row. Command-0 shows the recovery notice and **Break paused / 09:57 / Resume**, preserving the saved remainder and Repeat off. No process downtime was counted. |
+| UI-22: actual app icon/cache regression | Initially the existing bundle identity still displayed a generic icon in About despite valid resource metadata and native decoding. Quit, refresh the rebuilt bundle's root modification time, and reopen: AppKit's native About panel displays the supplied blue ring icon. The CLI build now performs that bundle refresh after signing, matching ordinary rebuilt-app discovery, without clearing global caches or overriding icon images in application code. The final app was returned to Journal on its normal data directory. |
+
+Full Xcode, macOS 13/Intel runtime, physical sleep/wake, power-loss durability and exhaustive VoiceOver remain unverified as described above. Failure announcement dispatch and AX labels are implemented; they are not a complete screen-reader acceptance pass. Force Quit/crash still restores only the last committed checkpoint and can lose the uncommitted interval.
+
+## Icon source cleanup — October 18, 2026
+
+The subsequent user-requested cleanup removes the top-level `icons/` delivery folder. `DeepWork/Resources/Assets.xcassets/AppIcon.appiconset` is now the sole production source. The supplied PNG, ICNS and ZIP were moved byte-for-byte into ignored `.local-artifacts/icon-delivery-archive/`, outside disposable build output. Every production catalog file matched the ZIP, and the supplied master matched the largest catalog PNG exactly. Provenance and current paths are in [APP_ICON.md](APP_ICON.md).
+
+- `./DeepWorkTests/Icon/test-app-icon.sh`: **12 cases passed**, `.build/icon-cleanup-tests.log`. The CLI derives ICNS from unchanged catalog PNGs using `iconutil`; native validation proves all ten point/pixel sizes and pixel parity. Tests cover metadata/resource corruption, missing input/catalog, malformed metadata, deterministic output, source immutability, refusal to generate inside the catalog, and preserving the previous good output after failure. Builds/tests have no delivery-folder or archive dependency.
+- `./scripts/build-app.sh`: passed native compile, generated-icon validation, packaging, ad hoc signing and bundle timestamp refresh; `.build/icon-cleanup-build.log`. `codesign --verify --strict ".build/Deep Work.app"`, project/plist lint and changed-shell-script syntax checks passed.
+- Relaunched the rebuilt native app and inspected About: it displays the approved blue ring icon. Returned the app to Focus. The asset catalog contains no generated ICNS or ZIP; the delivery archive is ignored by Git; `reference/` remains byte-identical.
+- No application Swift behavior changed. At that cleanup, the prior 107-test Swift result was the last full-suite result; the cleanup ran the affected native icon checks and app build. The later lifecycle verification below supersedes the Swift result. Actual Xcode/`actool` compilation remains unverified because full Xcode is not installed.
+
+## Close and Quit clarification — October 18, 2026
+
+This replaces the incorrect close-and-pause behavior recorded above. Red close and Command-W only hide the retained window; running cycles continue, paused cycles stay paused, and menu-bar click brings Focus forward. Only full Quit pauses and waits for durable saves before exiting. Menu titles use the full **Deep work** and **Break** phase names.
+
+### Current automated results
+
+- `./scripts/test.sh`: **109 Swift tests passed (78 core + 31 app)** and **12 native icon packaging cases passed**; both complete Swift Testing summaries are in `.build/hide-quit-tests.log`.
+- `./scripts/test.sh --filter ClosePersistenceTests`: **9 lifecycle test functions passed**, including parameterized cases, plus the 12 icon checks; `.build/close-hide-focused.log`.
+- Close regressions dispatch the actual AppKit traffic-light target/action. They verify immediate hiding, automatic ticker-driven SQLite checkpoints while hidden, multiple crossed phase boundaries, exactly-once records, same live UUID/window after reopening, setup and already-paused states, historical/settings/schedule/saved-draft retention, independent store failures, and deliberately blocked writes. Hiding never freezes controls or leaves a deferred hide that could dismiss a reopened window.
+- Quit regressions verify pause at the Quit instant, ordered persistence after earlier hidden writes, no duplicate records, paused recovery without process downtime, and usable controls after independent or combined save failures. Explicit unsaved draft semantics remain covered.
+- Menu integration dispatches the actual `NSStatusBarButton` target/action and asserts countdown/title before reopening, hidden focus-to-break transitions, retained running or paused state, the same window/session, and foreground activation requests. Core tests cover full phase labels and countdown rounding. Hostless `performClick`/`performClose` remain unsuitable because they can stop the SwiftPM main run loop; `sendAction` exercises the native button wiring, and the completion guard rejects truncated runs.
+- `./scripts/build-app.sh`: native compile, icon packaging/pixel validation and ad hoc signing passed; `.build/hide-quit-build.log`.
+- `swift build -Xswiftc -strict-concurrency=complete`: passed without product-source concurrency warnings; `.build/hide-quit-strict-build.log`. Existing CLT linker search-path warnings remain.
+- `plutil -lint DeepWork/Resources/Info.plist DeepWork.xcodeproj/project.pbxproj`, `codesign --verify --strict ".build/Deep Work.app"`, and `git diff --check`: passed. All eight reference hashes match; the initial JSON tracker is unchanged. Checklist validation confirms 137 unique IDs, 36 DONE, and matching status/checkbox values.
+
+### Current compiled-app acceptance
+
+Used `.build/hide-quit-native-data` with the rebuilt native app; acceptance records did not enter the normal Application Support store.
+
+| Case | Observed native result |
+| --- | --- |
+| UI-23: red close and hidden focus | Start a 60/10 pair with Repeat off. Click red close: reopening retains **Deep work / Pause**, not Resume. Then Command-W hides again. Two read-only SQLite observations before reopening show the same live UUID, focus remainder decreasing from **3586.087713375** to **3570.565491542** seconds, and zero finalized rows. Command-0 brings Focus forward still running. The native close label is “Close window and keep timer running.” |
+| UI-24: Command-W during break | Take break creates one Partial focus row, then Command-W hides. Before reopening, SQLite break checkpoints advance from **595.32835075** to **555.088328** seconds; the historical row count stays one. Command-0 brings the same break forward with **Pause**, still running. |
+| UI-25: Quit and recovery | Command-Q exits the actual test process successfully. SQLite retains break remainder **537.664724** seconds; integrity_check is ok. Relaunch initially shows Journal with one saved session; Focus shows the recovery notice, **Break paused / 08:58 / Resume**. Command-W/reopen preserves that paused display. A later Quit retains exactly **537.664724** seconds and the same one historical row, proving downtime and the already-paused hidden interval were excluded. |
+
+Menu-item behavior is verified through real AppKit button dispatch; compiled-app Command-0 verifies the shared handler's foreground/window behavior. A physical menu-extra mouse click was not independently observed in this run: the UI adapter exposes the app window and application menus but not its status item, and selecting SystemUIServer returned `timeoutReached (-10005)`. Do not treat the adapter-level test as a recorded desktop mouse click. The manual menu-click steps remain in README.
+
+Full Xcode remains unavailable with the exact `xcodebuild` error recorded above. macOS 13/Intel, physical sleep/wake, power loss, and exhaustive accessibility/visual sweeps remain unverified. The icon is unchanged by this correction, and its native packaging checks pass again.

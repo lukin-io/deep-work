@@ -182,26 +182,29 @@ struct TimerIntegrationTests {
         await app.flushPersistence()
     }
 
-    @Test func testG003_G006_F024_AC11HiddenNativeWindowKeepsTimerAndFocusReopen() async throws {
+    @Test func testG003_G006_F024_AC11HiddenNativeWindowContinuesAndReopensSameTimer() async throws {
         prepareNativeTestApplication()
         let directory = directory(); defer { try? FileManager.default.removeItem(at: directory) }
         let clock = TestTimerClock(); let app = model(directory, clock: clock)
         let controller = WindowController(model: app)
         let window = try #require(controller.window); defer { window.orderOut(nil) }
         configure(app); app.startFocus(); app.selectedTab = .settings
-        controller.showWindow(nil); #expect(!controller.windowShouldClose(window))
-        #expect(!window.isVisible)
+        clock.advance(10)
+        controller.showWindow(nil); requestNativeWindowClose(window)
+        #expect(!window.isVisible && !app.timer.isPaused && app.timer.remainingSeconds == 50)
         clock.advance(130); app.refreshTimer()
-        #expect(app.journal.records.count == 1 && app.timer.state == .focus && app.timer.remainingSeconds == 50)
+        #expect(app.journal.records.count == 1 && app.timer.state == .focus && app.timer.remainingSeconds == 40)
         let id = app.timer.liveRecord?.id
         app.showFocus(); controller.showWindow(nil)
-        #expect(window.isVisible && app.selectedTab == .focus)
-        #expect(app.timer.liveRecord?.id == id)
-        app.pauseTimer(); #expect(!controller.windowShouldClose(window))
+        #expect(window.isVisible && app.selectedTab == .focus && controller.window === window)
+        #expect(!app.timer.isPaused && app.timer.liveRecord?.id == id)
+        app.pauseTimer(); requestNativeWindowClose(window)
+        #expect(!window.isVisible && app.timer.isPaused)
         clock.advance(600); app.showFocus(); controller.showWindow(nil)
-        #expect(app.timer.isPaused && app.timer.remainingSeconds == 50)
+        #expect(app.timer.isPaused && app.timer.remainingSeconds == 40)
         #expect(app.timer.liveRecord?.id == id)
         await app.flushPersistence()
+        #expect(JournalStore(directory: directory).load().value.records.count == 1)
     }
     @Test func testG009TabSwitchReconcilesDeadlineBeforeJournalIsShown() async throws {
         let directory = directory(); defer { try? FileManager.default.removeItem(at: directory) }
@@ -222,7 +225,7 @@ struct TimerIntegrationTests {
         app.resumeTimer(); app.endSession(); app.repeats.wrappedValue = false
         app.focusSelection.wrappedValue = .preset(90)
         clock.advance(600); app.refreshTimer()
-        await quitting.value
+        #expect(await quitting.value)
         #expect(app.timer.isPaused && app.timer.state == .focus)
         #expect(app.timer.remainingSeconds == 43)
         #expect(app.journal.configuration.repeats)

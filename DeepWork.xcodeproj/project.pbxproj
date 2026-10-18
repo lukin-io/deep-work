@@ -244,6 +244,16 @@
 			"path" = "DeepWork/Resources/Info.plist";
 			"sourceTree" = "SOURCE_ROOT";
 		};
+		"05529D7BAF9BE1F1AD75AA78" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "folder.assetcatalog";
+			"path" = "DeepWork/Resources/Assets.xcassets";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		"D0ADC22F3C046CC76298F620" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "05529D7BAF9BE1F1AD75AA78";
+		};
 		"84BCFF4A243DED914527FF46" = {
 			"isa" = "PBXFileReference";
 			"explicitFileType" = "wrapper.application";
@@ -273,6 +283,7 @@
 				"5BA6CA76DD1BD29BBBB5547D",
 				"3E9962F6691CF73AD5EB2411",
 				"8873151C067A966D8A2B0623",
+				"05529D7BAF9BE1F1AD75AA78",
 				"AE7805B56D1DCAFAA071416F",
 			);
 			"sourceTree" = "<group>";
@@ -355,7 +366,7 @@
 			"isa" = "PBXResourcesBuildPhase";
 			"buildActionMask" = 2147483647;
 			"files" = (
-
+				"D0ADC22F3C046CC76298F620",
 			);
 			"runOnlyForDeploymentPostprocessing" = 0;
 		};
@@ -376,6 +387,7 @@
 				);
 				"COMBINE_HIDPI_IMAGES" = "YES";
 				"ENABLE_APP_SANDBOX" = "NO";
+				"ASSETCATALOG_COMPILER_APPICON_NAME" = "AppIcon";
 			};
 			"name" = "Debug";
 		};
@@ -396,6 +408,7 @@
 				);
 				"COMBINE_HIDPI_IMAGES" = "YES";
 				"ENABLE_APP_SANDBOX" = "NO";
+				"ASSETCATALOG_COMPILER_APPICON_NAME" = "AppIcon";
 			};
 			"name" = "Release";
 		};

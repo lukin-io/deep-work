@@ -76,10 +76,12 @@ def main() -> None:
     app_group, app_sources = source_group("Application", app_paths)
     tests_group, test_sources = source_group("Core tests", test_paths)
     plist = add("file:Info.plist", "PBXFileReference", lastKnownFileType="text.plist.xml", path="DeepWork/Resources/Info.plist", sourceTree="SOURCE_ROOT")
+    icons = add("file:Assets.xcassets", "PBXFileReference", lastKnownFileType="folder.assetcatalog", path="DeepWork/Resources/Assets.xcassets", sourceTree="SOURCE_ROOT")
+    icons_build = add("build:Assets.xcassets", "PBXBuildFile", fileRef=icons)
     app_product = add("product:DeepWork", "PBXFileReference", explicitFileType="wrapper.application", includeInIndex=0, path="Deep Work.app", sourceTree="BUILT_PRODUCTS_DIR")
     test_product = add("product:DeepWorkCoreTests", "PBXFileReference", explicitFileType="wrapper.cfbundle", includeInIndex=0, path="DeepWorkCoreTests.xctest", sourceTree="BUILT_PRODUCTS_DIR")
     products = add("group:Products", "PBXGroup", children=[app_product, test_product], name="Products", sourceTree="<group>")
-    main_group = add("group:Main", "PBXGroup", children=[app_group, tests_group, plist, products], sourceTree="<group>")
+    main_group = add("group:Main", "PBXGroup", children=[app_group, tests_group, plist, icons, products], sourceTree="<group>")
     package = add("package:DeepWorkCore", "XCLocalSwiftPackageReference", relativePath=".")
 
     common = {
@@ -101,6 +103,7 @@ def main() -> None:
             "GENERATE_INFOPLIST_FILE": "NO", "CODE_SIGN_STYLE": "Automatic", "CODE_SIGN_IDENTITY": "-",
             "LD_RUNPATH_SEARCH_PATHS": ["$(inherited)", "@executable_path/../Frameworks"],
             "COMBINE_HIDPI_IMAGES": "YES", "ENABLE_APP_SANDBOX": "NO",
+            "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon",
         }),
         ("DeepWorkCoreTests", test_sources, test_product, "com.apple.product-type.bundle.unit-test", {
             "PRODUCT_NAME": "$(TARGET_NAME)", "PRODUCT_MODULE_NAME": "DeepWorkCoreTests",
@@ -113,9 +116,10 @@ def main() -> None:
         dependency = add(f"dependency:{name}:DeepWorkCore", "XCSwiftPackageProductDependency", package=package, productName="DeepWorkCore")
         framework = add(f"framework:{name}:DeepWorkCore", "PBXBuildFile", productRef=dependency)
         frameworks = add(f"frameworks:{name}", "PBXFrameworksBuildPhase", buildActionMask=2147483647, files=[framework], runOnlyForDeploymentPostprocessing=0)
-        resources = add(f"resources:{name}", "PBXResourcesBuildPhase", buildActionMask=2147483647, files=[], runOnlyForDeploymentPostprocessing=0)
+        resources = add(f"resources:{name}", "PBXResourcesBuildPhase", buildActionMask=2147483647, files=[icons_build] if name == "DeepWork" else [], runOnlyForDeploymentPostprocessing=0)
+        build_phases = [sources, frameworks, resources]
         target_config = configurations(name, settings)
-        targets.append(add(f"target:{name}", "PBXNativeTarget", buildConfigurationList=target_config, buildPhases=[sources, frameworks, resources], buildRules=[], dependencies=[], name=name, packageProductDependencies=[dependency], productName="Deep Work" if name == "DeepWork" else name, productReference=product, productType=product_type))
+        targets.append(add(f"target:{name}", "PBXNativeTarget", buildConfigurationList=target_config, buildPhases=build_phases, buildRules=[], dependencies=[], name=name, packageProductDependencies=[dependency], productName="Deep Work" if name == "DeepWork" else name, productReference=product, productType=product_type))
 
     project = add("project", "PBXProject", attributes={"BuildIndependentTargetsInParallel": "YES", "LastUpgradeCheck": "1600", "TargetAttributes": {target: {"CreatedOnToolsVersion": "16.0", "ProvisioningStyle": "Automatic"} for target in targets}}, buildConfigurationList=project_configs, compatibilityVersion="Xcode 14.0", developmentRegion="en", hasScannedForEncodings=0, knownRegions=["en", "Base"], mainGroup=main_group, packageReferences=[package], productRefGroup=products, projectDirPath="", projectRoot="", targets=targets)
     PROJECT.mkdir(exist_ok=True)

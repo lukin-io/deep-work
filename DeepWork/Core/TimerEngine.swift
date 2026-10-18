@@ -123,8 +123,8 @@ public struct TimerEngine: Sendable {
 
     public var menuBarTitle: String {
         switch state {
-        case .focus: return "\(countdownText) - deep"
-        case .break: return "\(countdownText) - break"
+        case .focus: return "\(countdownText) - Deep work"
+        case .break: return "\(countdownText) - Break"
         case .setup, .complete: return "Deep Work"
         }
     }

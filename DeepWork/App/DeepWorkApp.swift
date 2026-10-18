@@ -54,8 +54,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard !terminationPending else { return .terminateLater }
         terminationPending = true
         Task { @MainActor in
-            await model.prepareForTermination()
-            sender.reply(toApplicationShouldTerminate: true)
+            let saved = await model.prepareForTermination()
+            var shouldQuit = saved
+            if !saved {
+                windowController.showWindow(nil)
+                sender.activate(ignoringOtherApps: true)
+                let alert = NSAlert()
+                alert.alertStyle = .warning
+                alert.messageText = "Changes could not be saved"
+                let timerMessage = model.timer.isPaused ? "Your timer is paused. " : ""
+                alert.informativeText = timerMessage + "Keep Deep Work open to preserve changes that are still in memory. Quitting without saving will lose those changes."
+                alert.addButton(withTitle: "Keep Open")
+                alert.addButton(withTitle: "Quit Without Saving")
+                shouldQuit = alert.runModal() == .alertSecondButtonReturn
+            }
+            terminationPending = false
+            sender.reply(toApplicationShouldTerminate: shouldQuit)
         }
         return .terminateLater
     }

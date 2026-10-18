@@ -32,6 +32,7 @@ final class AppModel: ObservableObject {
     @Published private(set) var feedbackError: String?
     @Published private(set) var feedbackStatus: String?
     @Published private(set) var isTerminating = false
+    @Published private(set) var lifecycleFailureMessage: String?
     @Published private(set) var timer: TimerEngine
     @Published private(set) var pendingJournalWrites = 0
     @Published private(set) var pendingSettingsWrites = 0
@@ -232,15 +233,33 @@ final class AppModel: ObservableObject {
 
     func flushPersistence() async { await persistence.flush() }
 
-    /// Seal at the Quit request, drain all queued transactions and their results,
-    /// then let AppKit terminate. A crash can restore only the last committed seal.
-    func prepareForTermination() async {
-        guard !isTerminating else { await flushPersistence(); return }
+    /// Seal at the Quit request and drain all queued transactions and results.
+    /// A failed save cancels automatic termination and restores usable controls.
+    @discardableResult
+    func prepareForTermination() async -> Bool {
+        guard !isTerminating else {
+            await flushPersistence()
+            return journalFailure == nil && settingsFailure == nil
+        }
         isTerminating = true
+        lifecycleFailureMessage = nil
+        sealAndSaveForTermination()
+        await flushPersistence()
+        let saved = recordLifecycleSaveResult()
+        if !saved { isTerminating = false }
+        return saved
+    }
+
+    private func sealAndSaveForTermination() {
         applyTimerChange(timer.pause(at: clock.now()))
         ticker?.cancel(); ticker = nil
         persistSettings()
-        await flushPersistence()
+    }
+
+    private func recordLifecycleSaveResult() -> Bool {
+        let saved = journalFailure == nil && settingsFailure == nil
+        lifecycleFailureMessage = saved ? nil : "Changes could not be saved. Keep Deep Work open to preserve changes that are still in memory."
+        return saved
     }
 
     private func applyTimerChange(_ records: [SessionRecord]) {

@@ -6,6 +6,14 @@ struct RootView: View {
         VStack(spacing: 0) {
             NavigationTabs(selection: $model.selectedTab)
                 .frame(width: 300, height: 30).padding(.top, 12).padding(.bottom, 8)
+            if let message = model.lifecycleFailureMessage {
+                Text(message)
+                    .font(.callout).foregroundStyle(.red)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 24).padding(.top, 8)
+                    .accessibilityIdentifier("dw-lifecycle-error")
+            }
             ScrollView {
                 Group {
                     switch model.selectedTab {
@@ -20,6 +28,12 @@ struct RootView: View {
         .background(Color(nsColor: .windowBackgroundColor))
         .tint(.accentColor)
         .disabled(model.isTerminating)
+        .onChange(of: model.lifecycleFailureMessage) { message in
+            guard let message, let window = NSApp.keyWindow else { return }
+            NSAccessibility.post(element: window, notification: .announcementRequested, userInfo: [
+                .announcement: message, .priority: NSAccessibilityPriorityLevel.high.rawValue
+            ])
+        }
     }
 }
 

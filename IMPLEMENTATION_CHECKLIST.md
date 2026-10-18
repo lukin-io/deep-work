@@ -48,7 +48,15 @@ F-001–F-026 now meet the Focus milestone acceptance under the recorded native 
 
 `./scripts/test.sh` completes **99 native tests**; `./scripts/build-app.sh` produces the native app. Real UI/SQLite cases include hidden-window timing, an exact 60-second complete record across two segments, Quit/relaunch, SIGKILL recovery, and denial of a second owner. The test script rejects incomplete hostless runs even if SwiftPM returns status 0. The full Xcode build remains blocked by the missing Xcode installation. Commands, evidence and exact limits are in [VERIFICATION.md](docs/VERIFICATION.md).
 
-The initial local repository commit is `bee5c07`; no remote is configured. The approved reference and initial JSON tracker remain unchanged. Stage 3 is journal reporting, examples and work-schedule editing; CSV, clipboard, login and Slack retain their later milestones.
+The initial local repository commit is `bee5c07`; Stage 2 is `f5d07f0`. The repository was local-only at those milestone exits; `origin` now points to [lukin-io/deep-work](https://github.com/lukin-io/deep-work). The approved reference and initial JSON tracker remain unchanged. Stage 3 is journal reporting, examples and work-schedule editing; CSV, clipboard, login and Slack retain their later milestones.
+
+## Close and Quit clarification — October 18, 2026
+
+The user corrected the earlier close-and-pause interpretation: red close and Command-W **only hide the main window**. Running focus/break cycles, phase transitions and SQLite checkpoints continue; already paused cycles stay paused. The menu-bar item shows the countdown with **Deep work** or **Break** and brings the existing Focus window to the front. Only Command-Q pauses, saves, drains and quits; recovery stays paused. Failed or slow saves never block hiding. Failed Quit retains the Keep Open/default and explicit Quit Without Saving choices. `reference/` remains unchanged.
+
+Native verification: **109 Swift tests passed (78 core + 31 app)** plus **12 icon packaging cases**. Regressions cover automatic hidden ticking/checkpoints, native close/status-button target/action dispatch, hidden boundaries, same-window reopening, settings/history retention, slow/failed writes, and Quit-only pause/recovery. The native build passes. Compiled-app observations and adapter/tooling limits are in [current lifecycle verification](docs/VERIFICATION.md#close-and-quit-clarification--october-18-2026). The accepted count remains **36/137**; this correction updates existing IDs.
+
+Icon source cleanup: G-001 uses the existing `Assets.xcassets/AppIcon.appiconset` as its single production source. Top-level delivery duplicates are moved to an ignored local archive, and the CLI build generates ICNS into build output. [Icon organization](docs/APP_ICON.md) describes the current paths; [cleanup verification](docs/VERIFICATION.md#icon-source-cleanup--october-18-2026) records focused packaging results. This structural cleanup changes no acceptance counts.
 
 ## Shared shell
 
@@ -59,21 +67,21 @@ The initial local repository commit is `bee5c07`; no remote is configured. The a
 - [ ] **G-001 — Deep Work window and title** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-001))
 
     Status: **IN PROGRESS** · Stage: **1** · Owner: Codex  
-    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
-    Blocker / notes: Native window, title, resizing and timer continuity are implemented. Full light/dark and narrow-content acceptance remains Stage 6.  
+    Evidence / commit: `./scripts/test.sh` — 109 native Swift tests; [current lifecycle evidence](docs/VERIFICATION.md#close-and-quit-clarification--october-18-2026).  
+    Blocker / notes: Native window, title, resizing, approved app icon and corrected hide/Quit behavior are implemented. Full light/dark and narrow-content acceptance remains Stage 6.  
     Swift: `DeepWork/App/WindowController.swift`, `DeepWork/App/AppModel.swift`
 
-- [x] **G-006 — Red close button: hide window** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-006))
+- [x] **G-006 — Red close button: hide and keep running** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-006))
 
     Status: **DONE** · Stage: **1** · Owner: Codex  
-    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
-    Blocker / notes: Actual close hides without ending/pausing/resetting; hidden focus crosses boundaries, paused time stays frozen, and native close label explains continuation.  
+    Evidence / commit: `./scripts/test.sh` — 109 native Swift tests; [hide/Quit evidence](docs/VERIFICATION.md#close-and-quit-clarification--october-18-2026).  
+    Blocker / notes: Red close/Command-W hide immediately without pausing, ending or resetting the timer. Native close-button action, automatic hidden ticking and SQLite writes, multi-boundary accounting, slow/failed saves, same-window reopen and Quit-only pause/recovery pass. Existing paused state and saved settings/schedule/history are preserved; Close creates no partial record.  
     Swift: `DeepWork/App/WindowController.swift`, `DeepWork/App/AppModel.swift`
 
 - [x] **G-007 — Yellow minimize traffic light** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-007))
 
     Status: **DONE** · Stage: **1** · Owner: Codex  
-    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Evidence / commit: `./scripts/test.sh` — 109 native Swift tests; [current lifecycle evidence](docs/VERIFICATION.md#close-and-quit-clarification--october-18-2026).  
     Blocker / notes: Native minimize/deminimize continues to pass with the retained app owner; earlier native evidence remains valid.  
     Swift: `DeepWork/App/WindowController.swift`, `DeepWork/App/AppModel.swift`
 
@@ -91,22 +99,22 @@ The initial local repository commit is `bee5c07`; no remote is configured. The a
 - [ ] **G-002 — Deep Work, File and Window menu labels** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-002))
 
     Status: **IN PROGRESS** · Stage: **5** · Owner: Codex  
-    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Evidence / commit: `./scripts/test.sh` — 109 native Swift tests; [current lifecycle evidence](docs/VERIFICATION.md#close-and-quit-clarification--october-18-2026).  
     Blocker / notes: Real application menus exist; Show Focus, Close and Quit paths work. Remaining menu-command acceptance is not claimed.  
     Swift: `DeepWork/App/MenuBarController.swift`, `DeepWork/App/DeepWorkApp.swift`
 
 - [x] **G-003 — Menu-bar timer item and reopen action** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-003))
 
     Status: **DONE** · Stage: **5** · Owner: Codex  
-    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
-    Blocker / notes: Real status-button target/action dispatch reopens hidden Settings on Focus with the same running/paused UUID; foreground activation observed through the compiled app’s Command-0 path.  
+    Evidence / commit: `./scripts/test.sh` — 109 native Swift tests; [current lifecycle evidence](docs/VERIFICATION.md#close-and-quit-clarification--october-18-2026).  
+    Blocker / notes: Real status-button target/action dispatch reopens hidden Settings on Focus with the same running/paused cycle, window and UUID, including a hidden focus-to-break boundary. Compiled-app Command-0 verifies foreground activation through the shared handler. Physical menu-extra clicking remains an adapter limitation recorded in verification.  
     Swift: `DeepWork/App/MenuBarController.swift`, `DeepWork/App/DeepWorkApp.swift`
 
 - [x] **G-004 — Menu-bar countdown and phase text** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-004))
 
     Status: **DONE** · Stage: **5** · Owner: Codex  
-    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
-    Blocker / notes: Real status title uses the same ceil timer projection and tabular NSFont digits; focus/break/pause/idle/completion and 480:00 cases pass.  
+    Evidence / commit: `./scripts/test.sh` — 109 native Swift tests; [current lifecycle evidence](docs/VERIFICATION.md#close-and-quit-clarification--october-18-2026).  
+    Blocker / notes: Real status title uses full Deep work/Break labels, the shared ceil countdown and tabular NSFont digits; hidden focus/break transitions, pause, idle/completion and 480:00 cases pass in native integration.  
     Swift: `DeepWork/App/MenuBarController.swift`, `DeepWork/App/DeepWorkApp.swift`
 
 - [x] **G-005 — Timer and paused menu-bar icons** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-005))
@@ -371,7 +379,7 @@ The initial local repository commit is `bee5c07`; no remote is configured. The a
 - [x] **F-025 — Recovered-session notice** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-025))
 
     Status: **DONE** · Stage: **2** · Owner: Codex  
-    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Evidence / commit: `./scripts/test.sh` — 109 native Swift tests; [current lifecycle evidence](docs/VERIFICATION.md#close-and-quit-clarification--october-18-2026).  
     Blocker / notes: Five-second/action/visibility checkpoints and Quit drain tested. Real Quit and SIGKILL relaunch restore exact paused remainder/UUID/segments; no process downtime credited.  
     Swift: `DeepWork/Core/TimerEngine.swift`, `DeepWork/Data/JournalStore.swift`, `DeepWork/App/AppModel.swift`
 

@@ -39,6 +39,8 @@ final class WindowController: NSWindowController, NSWindowDelegate {
     }
 
     func windowShouldClose(_ sender: NSWindow) -> Bool {
+        // Closing only hides the retained window. Queue the ordinary checkpoint
+        // without waiting for disk or changing the running/paused timer state.
         model.persistCommittedState()
         sender.orderOut(nil)
         return false

@@ -118,7 +118,7 @@ struct AppModelTests {
 }
 
 /// Native AppKit integration, using actual NSWindow state on the main actor.
-/// Timer-dependent close behavior remains a Stage 2 acceptance obligation.
+/// Closing hides the retained window without changing the timer state.
 extension NativeApplicationTests {
 @Suite(.serialized)
 struct WindowIntegrationTests {
@@ -140,7 +140,7 @@ struct WindowIntegrationTests {
         #expect(window.contentMinSize.width == 320)
         model.feedbackMessage = "An unsaved lifecycle draft"
         model.repeats.wrappedValue = false
-        #expect(controller.windowShouldClose(window) == false)
+        requestNativeWindowClose(window)
         #expect(!window.isVisible)
         controller.showWindow(nil)
         #expect(window.isVisible)
