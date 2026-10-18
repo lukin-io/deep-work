@@ -1,8 +1,12 @@
 #!/bin/bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-swift build -c debug
-binary_dir="$(swift build -c debug --show-bin-path)"
+if [[ "$(uname -m)" != arm64 ]]; then
+    printf 'Deep Work requires Apple Silicon. Run this build from a native arm64 terminal on macOS 15 or later.\n' >&2
+    exit 1
+fi
+swift build -c debug --product DeepWork --triple arm64-apple-macosx15.0
+binary_dir="$(swift build -c debug --triple arm64-apple-macosx15.0 --show-bin-path)"
 app_dir="$PWD/.build/Deep Work.app"
 mkdir -p "$app_dir/Contents/MacOS" "$app_dir/Contents/Resources"
 cp "$binary_dir/DeepWork" "$app_dir/Contents/MacOS/DeepWork"

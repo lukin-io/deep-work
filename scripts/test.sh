@@ -1,6 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
+python3 DeepWorkTests/Build/test-build-platform.py
 ./DeepWorkTests/Icon/test-app-icon.sh
 # Some standalone Command Line Tools releases ship Testing but omit its macro
 # search path. Full Xcode toolchains discover the plugin automatically.

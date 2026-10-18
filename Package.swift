@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "DeepWork",
-    platforms: [.macOS(.v13)],
+    platforms: [.macOS("15.0")],
     products: [
         .library(name: "DeepWorkCore", targets: ["DeepWorkCore"]),
         .executable(name: "DeepWork", targets: ["DeepWorkApp"])

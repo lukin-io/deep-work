@@ -165,7 +165,7 @@ class PublicationTests(unittest.TestCase):
         self.git("commit", "-qm", "Fixture")
         self.commit = self.git("rev-parse", "HEAD").strip()
         self.git("tag", "-a", TAG, "-m", "Preview fixture")
-        self.archive = f"Deep-Work-{TAG}-macOS-universal.zip"
+        self.archive = f"Deep-Work-{TAG}-macOS-arm64.zip"
         self.assets = [self.archive, "SHA256SUMS", "release-metadata.json"]
         self.artifacts = self.repo / f".build/releases/{TAG}"
         self.artifacts.mkdir(parents=True)

@@ -26,7 +26,7 @@ class ReleaseArtifactTests(unittest.TestCase):
         self.addCleanup(self.temporary.cleanup)
         self.directory = Path(self.temporary.name) / "assets"
         shutil.copytree(SOURCE, self.directory)
-        self.archive = self.directory / f"Deep-Work-{TAG}-macOS-universal.zip"
+        self.archive = self.directory / f"Deep-Work-{TAG}-macOS-arm64.zip"
         self.metadata_file = self.directory / "release-metadata.json"
         self.metadata = json.loads(self.metadata_file.read_text())
 
@@ -48,7 +48,7 @@ class ReleaseArtifactTests(unittest.TestCase):
         replacement.replace(self.archive)
         self.refresh_checksums()
 
-    def test_real_universal_release_is_valid(self):
+    def test_real_apple_silicon_release_is_valid(self):
         release.verify(self.directory, TAG, self.metadata["commit"])
 
     def test_wrong_source_commit_is_rejected(self):
@@ -122,32 +122,61 @@ class ReleaseArtifactTests(unittest.TestCase):
         with self.assertRaisesRegex(release.ReleaseError, "executable permissions"):
             release.verify(self.directory, TAG)
 
-    def test_missing_intel_slice_is_rejected(self):
-        def change(entry, content):
-            if entry.filename.endswith("/MacOS/DeepWork"):
-                fat = Path(self.temporary.name) / "fat"
-                thin = Path(self.temporary.name) / "thin"
-                fat.write_bytes(content)
-                subprocess.run(["xcrun", "lipo", str(fat), "-thin", "arm64", "-output", str(thin)], check=True)
-                content = thin.read_bytes()
-            return entry, content
-        self.rewrite_archive(change)
-        with self.assertRaisesRegex(release.ReleaseError, "arm64 and x86_64"):
+    def intel_fixture(self):
+        # A tiny incompatible Mach-O tests the rejection boundary without
+        # building or distributing an Intel version of the application.
+        executable = Path(self.temporary.name) / "intel-fixture"
+        subprocess.run(["xcrun", "clang", "-target", "x86_64-apple-macosx15.0", "-x", "c",
+                        "-o", str(executable), "-"], input="int main(void) { return 0; }\n",
+                       text=True, check=True, capture_output=True)
+        return executable
+
+    def test_intel_only_executable_is_rejected(self):
+        intel = self.intel_fixture().read_bytes()
+        self.rewrite_archive(lambda entry, content: (entry, intel)
+                             if entry.filename.endswith("/MacOS/DeepWork") else (entry, content))
+        with self.assertRaisesRegex(release.ReleaseError, "must contain only arm64"):
             release.verify(self.directory, TAG)
 
-    def test_higher_deployment_target_in_one_slice_is_rejected(self):
+    def test_universal_executable_is_rejected(self):
+        intel = self.intel_fixture()
         def change(entry, content):
             if entry.filename.endswith("/MacOS/DeepWork"):
-                original = Path(self.temporary.name) / "original"
-                changed = Path(self.temporary.name) / "changed"
-                original.write_bytes(content)
-                subprocess.run(["xcrun", "vtool", "-arch", "x86_64", "-set-build-version", "macos", "14.0", "27.0",
-                                "-replace", "-output", str(changed), str(original)], check=True, capture_output=True)
-                content = changed.read_bytes()
+                arm64 = Path(self.temporary.name) / "arm64-fixture"
+                universal = Path(self.temporary.name) / "universal-fixture"
+                arm64.write_bytes(content)
+                subprocess.run(["xcrun", "lipo", "-create", str(arm64), str(intel), "-output", str(universal)], check=True)
+                content = universal.read_bytes()
             return entry, content
         self.rewrite_archive(change)
-        with self.assertRaisesRegex(release.ReleaseError, "target macOS 13.0 on both"):
+        with self.assertRaisesRegex(release.ReleaseError, "must contain only arm64"):
             release.verify(self.directory, TAG)
+
+    def test_unsupported_deployment_targets_are_rejected(self):
+        original_archive = self.archive.read_bytes()
+        for target in ["14.0", "16.0"]:
+            with self.subTest(target=target):
+                self.archive.write_bytes(original_archive)
+                def change(entry, content):
+                    if entry.filename.endswith("/MacOS/DeepWork"):
+                        original = Path(self.temporary.name) / "original"
+                        changed = Path(self.temporary.name) / "changed"
+                        original.write_bytes(content)
+                        subprocess.run(["xcrun", "vtool", "-arch", "arm64", "-set-build-version", "macos", target, "27.0",
+                                        "-replace", "-output", str(changed), str(original)], check=True, capture_output=True)
+                        content = changed.read_bytes()
+                    return entry, content
+                self.rewrite_archive(change)
+                with self.assertRaisesRegex(release.ReleaseError, "target macOS 15.0"):
+                    release.verify(self.directory, TAG)
+
+    def test_intel_and_universal_metadata_are_rejected(self):
+        for architectures in [["x86_64"], ["arm64", "x86_64"]]:
+            with self.subTest(architectures=architectures):
+                self.metadata["architectures"] = architectures
+                self.refresh_checksums()
+                with self.assertRaisesRegex(release.ReleaseError, "invalid architectures"):
+                    release.verify(self.directory, TAG)
 
     def test_corrupt_signature_is_rejected(self):
         def change(entry, content):

@@ -1243,4 +1243,6 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
 ## Native release review
 
+Distribution support is Apple Silicon (arm64), macOS 15+. GitHub release packaging and public-download evidence are recorded in [VERIFICATION.md](docs/VERIFICATION.md); release engineering does not change the product acceptance totals.
+
 Before declaring the port complete, run AC-01 through AC-29 from the specification and record the results for the affected IDs above. Verify macOS integrations on an actual Mac. Keep unresolved implementation details visible rather than marking their preview state DONE.

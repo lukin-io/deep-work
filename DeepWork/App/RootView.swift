@@ -28,7 +28,7 @@ struct RootView: View {
         .background(Color(nsColor: .windowBackgroundColor))
         .tint(.accentColor)
         .disabled(model.isTerminating)
-        .onChange(of: model.lifecycleFailureMessage) { message in
+        .onChange(of: model.lifecycleFailureMessage) { _, message in
             guard let message, let window = NSApp.keyWindow else { return }
             NSAccessibility.post(element: window, notification: .announcementRequested, userInfo: [
                 .announcement: message, .priority: NSAccessibilityPriorityLevel.high.rawValue

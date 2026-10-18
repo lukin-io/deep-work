@@ -49,7 +49,7 @@ verify_remote_tag
 artifact_directory="${2:-.build/releases/$tag}"
 [[ -d "$artifact_directory" ]] || fail 'the artifact directory is missing'
 artifact_directory="$(cd "$artifact_directory" && pwd -P)"
-archive="Deep-Work-$tag-macOS-universal.zip"
+archive="Deep-Work-$tag-macOS-arm64.zip"
 assets=("$archive" SHA256SUMS release-metadata.json)
 for asset in "${assets[@]}"; do
   [[ -f "$artifact_directory/$asset" && ! -L "$artifact_directory/$asset" && -s "$artifact_directory/$asset" ]] ||

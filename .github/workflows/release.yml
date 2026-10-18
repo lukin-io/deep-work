@@ -19,12 +19,8 @@ env:
 
 jobs:
   native-tests:
-    name: Native tests (${{ matrix.runner }})
-    strategy:
-      fail-fast: false
-      matrix:
-        runner: [macos-15, macos-15-intel]
-    runs-on: ${{ matrix.runner }}
+    name: Native tests (Apple Silicon)
+    runs-on: macos-15
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -69,7 +65,7 @@ jobs:
           xcodebuild -project DeepWork.xcodeproj -scheme DeepWork
           -configuration Release -destination 'platform=macOS'
           -derivedDataPath .build/Xcode CODE_SIGNING_ALLOWED=NO build
-      - name: Build optimized universal app and verified archive
+      - name: Build optimized Apple Silicon app and verified archive
         env:
           RELEASE_TAG: ${{ steps.version.outputs.tag }}
         run: ./scripts/package-release.sh "$RELEASE_TAG" "$GITHUB_RUN_NUMBER"

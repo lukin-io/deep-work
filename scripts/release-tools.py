@@ -85,12 +85,12 @@ def inspect_source(tag, build_number):
 
 
 def write_metadata(directory, tag, build_number, commit):
-    artifact = directory / f"Deep-Work-{tag}-macOS-universal.zip"
+    artifact = directory / f"Deep-Work-{tag}-macOS-arm64.zip"
     metadata = {
         "schemaVersion": 1, "appName": "Deep Work", "bundleIdentifier": "app.deepwork.mac",
         "tag": tag, "version": version_for_tag(tag), "buildNumber": validate_build_number(build_number),
         "commit": commit, "sourceTreeClean": True, "configuration": "Release",
-        "architectures": ["arm64", "x86_64"], "minimumMacOS": "13.0",
+        "architectures": ["arm64"], "minimumMacOS": "15.0",
         "signing": {"identity": "ad-hoc", "notarized": False},
         "artifact": artifact.name, "sha256": digest(artifact),
         "createdAtUTC": datetime.datetime.now(datetime.timezone.utc).isoformat(),
@@ -123,7 +123,7 @@ def validate_entries(entries):
 
 def verify(directory, tag, expected_commit=None):
     version = version_for_tag(tag)
-    artifact_name = f"Deep-Work-{tag}-macOS-universal.zip"
+    artifact_name = f"Deep-Work-{tag}-macOS-arm64.zip"
     require(directory.is_dir(), "Release directory does not exist.")
     require({path.name for path in directory.iterdir()} == {artifact_name, "SHA256SUMS", "release-metadata.json"},
             "Release directory must contain exactly the archive, SHA256SUMS, and release-metadata.json.")
@@ -137,7 +137,7 @@ def verify(directory, tag, expected_commit=None):
     require(isinstance(metadata, dict), "Release metadata must be an object.")
     expected = {"schemaVersion": 1, "appName": "Deep Work", "bundleIdentifier": "app.deepwork.mac",
                 "tag": tag, "version": version, "configuration": "Release", "sourceTreeClean": True,
-                "architectures": ["arm64", "x86_64"], "minimumMacOS": "13.0",
+                "architectures": ["arm64"], "minimumMacOS": "15.0",
                 "signing": {"identity": "ad-hoc", "notarized": False},
                 "artifact": artifact_name, "sha256": digest(artifact)}
     for key, value in expected.items():
@@ -165,15 +165,14 @@ def verify(directory, tag, expected_commit=None):
             plist = plistlib.load(stream)
         for key, value in {"CFBundleIdentifier": "app.deepwork.mac", "CFBundleExecutable": "DeepWork",
                            "CFBundleShortVersionString": version, "CFBundleVersion": build_number,
-                           "CFBundlePackageType": "APPL", "LSMinimumSystemVersion": "13.0",
+                           "CFBundlePackageType": "APPL", "LSMinimumSystemVersion": "15.0",
                            "CFBundleIconFile": "AppIcon.icns"}.items():
             require(plist.get(key) == value, f"Packaged Info.plist has an invalid {key}.")
-        require(set(run(["xcrun", "lipo", "-archs", str(executable)]).split()) == {"arm64", "x86_64"},
-                "Application executable must contain arm64 and x86_64 slices.")
-        for architecture in ["arm64", "x86_64"]:
-            build_commands = run(["xcrun", "vtool", "-arch", architecture, "-show-build", str(executable)])
-            require(re.search(r"^\s*minos 13\.0(?:\.0)?$", build_commands, re.MULTILINE) is not None,
-                    "Application executable must target macOS 13.0 on both architectures.")
+        require(run(["xcrun", "lipo", "-archs", str(executable)]).split() == ["arm64"],
+                "Application executable must contain only arm64; Intel and universal binaries are unsupported.")
+        build_commands = run(["xcrun", "vtool", "-arch", "arm64", "-show-build", str(executable)])
+        require(re.search(r"^\s*minos 15\.0(?:\.0)?$", build_commands, re.MULTILINE) is not None,
+                "Application executable must target macOS 15.0.")
         require(b"DEEP_WORK_DATA_DIR" not in executable.read_bytes(),
                 "Application contains the Debug-only data-directory override.")
         run(["codesign", "--verify", "--strict", "--all-architectures", str(app)])
@@ -185,7 +184,7 @@ def verify(directory, tag, expected_commit=None):
                 "Application must contain the repository license unchanged.")
         run(["swift", str(ROOT / "scripts/verify-app-icon.swift"), str(app),
              str(ROOT / "DeepWork/Resources/Assets.xcassets/AppIcon.appiconset")])
-    print(f"Verified {tag}: universal Release app, icon, license, ad-hoc signature, metadata, checksums; not notarized.")
+    print(f"Verified {tag}: Apple Silicon Release app (macOS 15+), icon, license, ad-hoc signature, metadata, checksums; not notarized.")
 
 
 def main(arguments):

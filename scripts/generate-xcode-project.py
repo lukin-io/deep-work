@@ -86,7 +86,8 @@ def main() -> None:
 
     common = {
         "CLANG_ENABLE_MODULES": "YES", "CLANG_ENABLE_OBJC_ARC": "YES",
-        "MACOSX_DEPLOYMENT_TARGET": "13.0", "SDKROOT": "macosx",
+        "MACOSX_DEPLOYMENT_TARGET": "15.0", "SDKROOT": "macosx",
+        "ARCHS": "arm64", "EXCLUDED_ARCHS": "x86_64",
         "SUPPORTED_PLATFORMS": "macosx", "SWIFT_VERSION": "5.0",
         "GCC_C_LANGUAGE_STANDARD": "gnu17", "GCC_WARN_UNUSED_FUNCTION": "YES",
         "GCC_WARN_UNUSED_VARIABLE": "YES", "SWIFT_STRICT_CONCURRENCY": "complete",

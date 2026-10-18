@@ -54,12 +54,12 @@ struct FocusView: View {
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("dw-focus-panel")
         .onAppear { if model.consumeFocusControlRequest() { focusRelevantControl() } }
-        .onChange(of: model.focusRequest) { _ in if model.consumeFocusControlRequest() { focusRelevantControl() } }
-        .onChange(of: model.timer.phaseTitle) { title in announce(title) }
-        .onChange(of: model.repeatExplanation) { text in announce(text) }
-        .onChange(of: model.durationSummary) { text in if model.timer.state == .setup { announce(text) } }
-        .onChange(of: model.focusDurationError) { error in if let error { announce("Deep work: \(error)") } }
-        .onChange(of: model.breakDurationError) { error in if let error { announce("Break: \(error)") } }
+        .onChange(of: model.focusRequest) { if model.consumeFocusControlRequest() { focusRelevantControl() } }
+        .onChange(of: model.timer.phaseTitle) { _, title in announce(title) }
+        .onChange(of: model.repeatExplanation) { _, text in announce(text) }
+        .onChange(of: model.durationSummary) { _, text in if model.timer.state == .setup { announce(text) } }
+        .onChange(of: model.focusDurationError) { _, error in if let error { announce("Deep work: \(error)") } }
+        .onChange(of: model.breakDurationError) { _, error in if let error { announce("Break: \(error)") } }
     }
 
     private var setup: some View {
@@ -143,7 +143,7 @@ struct FocusView: View {
                 Text(error).font(.caption).foregroundStyle(.red).accessibilityIdentifier("\(prefix)-error")
             }
         }
-        .onChange(of: selection.wrappedValue) { value in
+        .onChange(of: selection.wrappedValue) { _, value in
             guard value == .custom else { return }
             focusedControl = isFocus ? .focusCustom : .breakCustom
             // Give the newly inserted SwiftUI field its editor before selecting.

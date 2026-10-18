@@ -4,9 +4,9 @@ A native SwiftUI/AppKit application implementing the Stage 1 foundation and Stag
 
 ## Download the app
 
-Built apps are published under [GitHub Releases](https://github.com/lukin-io/deep-work/releases). Select a preview and download **Deep-Work-<tag>-macOS-universal.zip** from Assets, extract it, and move **Deep Work.app** to Applications. The universal app includes Apple Silicon and Intel executables. GitHub's automatic Source code ZIP is for developers, not an installed app.
+Built apps are published under [GitHub Releases](https://github.com/lukin-io/deep-work/releases). Select a preview and download **Deep-Work-<tag>-macOS-arm64.zip** from Assets, extract it, and move **Deep Work.app** to Applications. Requires **Apple Silicon (M1 or later) and macOS 15 or later**. Intel Macs are unsupported. GitHub's automatic Source code ZIP is for developers, not an installed app.
 
-Previews are **ad hoc signed and unnotarized**; macOS may block first launch. Only open a build you trust, following [Apple's app-opening guidance](https://support.apple.com/en-us/102445). Stable notarized releases are not yet available. Each release lists its tested platforms and known limitations; macOS 13+ is the deployment target, not a claim that every OS version was tested.
+Previews are **ad hoc signed and unnotarized**; macOS may block first launch. Only open a build you trust, following [Apple's app-opening guidance](https://support.apple.com/en-us/102445). Stable notarized releases are not yet available. Each release lists its tested platforms and known limitations; macOS 15+ is the deployment target, not a claim that every OS version was tested.
 
 Download `SHA256SUMS` and `release-metadata.json` alongside the app ZIP and verify them with `shasum -a 256 -c SHA256SUMS`. The metadata records the source commit and build configuration. Quit an older running copy before replacing it; user data stays in Application Support.
 
@@ -54,7 +54,7 @@ The JSON is an initial import snapshot, not a live mirror of the Markdown checkl
 
 ## Build, test, and run locally
 
-Requires macOS and a Swift toolchain. The app targets **macOS 13+**; local verification used **macOS 27.0.1, Apple Silicon, Swift 6.4**. Running on macOS 13 or Intel hardware has not been verified. The installed Swift Testing runtime requires macOS 14+ for tests.
+Requires macOS and a Swift toolchain. The app requires **Apple Silicon (M1 or later), macOS 15+**; local verification used **macOS 27.0.1, Apple Silicon, Swift 6.4**. Intel Macs and macOS versions before 15 are unsupported. Tests use the same minimum macOS version.
 
 Check the selected developer tools first:
 
@@ -73,7 +73,7 @@ From this project directory, run these commands in order:
 open ".build/Deep Work.app"
 ```
 
-`test.sh` runs the native Swift Testing suites, including actual AppKit window integration. It resolves the Testing macro plugin shipped with standalone Command Line Tools; no dependency download is needed. It also rejects an incomplete test run even if the hostless runner exits with status 0. The AppKit suites briefly create, minimize, zoom, hide, and reopen native test windows and exercise real status-item buttons. They serialize access to AppKit’s shared application state. `build-app.sh` compiles and creates an ad hoc signed `.build/Deep Work.app` for local use. It is not a notarized distribution build.
+`test.sh` runs the native Swift Testing suites, including actual AppKit window integration. It resolves the Testing macro plugin shipped with standalone Command Line Tools; no dependency download is needed. It checks the Apple Silicon/macOS 15 build settings and rejects unsupported local build hosts. It also rejects an incomplete test run even if the hostless runner exits with status 0. The AppKit suites briefly create, minimize, zoom, hide, and reopen native test windows and exercise real status-item buttons. They serialize access to AppKit’s shared application state. `build-app.sh` compiles and creates an ad hoc signed `.build/Deep Work.app` for local use. It is not a notarized distribution build.
 
 The approved app icon has one source: `DeepWork/Resources/Assets.xcassets/AppIcon.appiconset`. Xcode compiles that catalog; the command-line build packages its unchanged PNGs with the macOS `iconutil` tool and validates all ten representations. Generated ICNS files stay in build output. No image editor or extra setup is needed. See [icon organization and provenance](docs/APP_ICON.md) for replacement steps and the preserved local originals. The test script also runs native icon packaging checks. To check only the icon or an existing built bundle:
 
@@ -156,7 +156,7 @@ python3 DeepWorkTests/Release/test-publish-release.py
 ./DeepWorkTests/Release/test-release.sh .build/releases/v0.1.0-preview.1 v0.1.0-preview.1
 ```
 
-The package script requires a clean committed checkout, builds both architectures with Swift's **Release** configuration, generates the icon, signs the app ad hoc, validates an extracted archive, and writes the ZIP/checksums/metadata to `.build/releases/<tag>/`. It refuses an existing output directory to protect earlier artifacts. A local package does not upload anything and is not a published release. The release build ignores the debug-only data-directory override.
+The package script requires a clean committed checkout, builds arm64 with Swift's **Release** configuration, generates the icon, signs the app ad hoc, validates an extracted archive, and writes the ZIP/checksums/metadata to `.build/releases/<tag>/`. It refuses an existing output directory to protect earlier artifacts. A local package does not upload anything and is not a published release. The release build ignores the debug-only data-directory override.
 
 Create a new annotated tag at the exact verified commit and push that tag, using the next unused preview number for subsequent releases:
 
@@ -167,7 +167,7 @@ git push origin v0.1.0-preview.1
 
 Do not repeat those commands once the version exists or move a published tag. Normal releases should be based on reviewed `main`; the initial requested preview may come from the app feature branch while PR #1 is open.
 
-The workflow runs native tests on Apple Silicon and Intel, builds and tests a universal package, and creates a draft GitHub prerelease. It uploads the app ZIP, checksums and metadata, downloads and verifies them, then publishes with Latest disabled. PR runs only validate and retain temporary Actions artifacts; they cannot publish. A failed upload or verification leaves an unpublished draft for inspection. Fix the failure and use a new version; never replace published release bytes. Read [AGENTS.md](AGENTS.md) for release rules and [verification evidence](docs/VERIFICATION.md) for actual results.
+The workflow runs native tests on Apple Silicon, builds and tests an arm64 package, and creates a draft GitHub prerelease. It uploads the app ZIP, checksums and metadata, downloads and verifies them, then publishes with Latest disabled. PR runs only validate and retain temporary Actions artifacts; they cannot publish. A failed upload or verification leaves an unpublished draft for inspection. Fix the failure and use a new version; never replace published release bytes. Read [AGENTS.md](AGENTS.md) for release rules and [verification evidence](docs/VERIFICATION.md) for actual results.
 
 Stable tags are rejected until Developer ID signing, hardened runtime, timestamping, notarization, stapling and Gatekeeper verification are implemented. No signing identities are available on the current development machine. Apple's [distribution packaging](https://developer.apple.com/documentation/xcode/packaging-mac-software-for-distribution) and [notarization guidance](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution) define that future distribution path.
 
@@ -207,7 +207,7 @@ plutil -lint DeepWork/Resources/Info.plist DeepWork.xcodeproj/project.pbxproj
 codesign --verify --strict ".build/Deep Work.app"
 ```
 
-The engine tests use an injected clock for exact deadlines, multi-cycle delays, pauses, clock changes and recovery. SQLite integration verifies real persisted records/checkpoints; AppKit integration exercises windows, tab focus and status-button actions. Close/Quit regressions cover automatic hidden ticking, slow/failed saves, same-window reopening, and Quit-only pause/recovery. Full Xcode, macOS 13/Intel execution, physical sleep/wake, and complete VoiceOver/light/dark acceptance remain separately identified in the verification record.
+The engine tests use an injected clock for exact deadlines, multi-cycle delays, pauses, clock changes and recovery. SQLite integration verifies real persisted records/checkpoints; AppKit integration exercises windows, tab focus and status-button actions. Close/Quit regressions cover automatic hidden ticking, slow/failed saves, same-window reopening, and Quit-only pause/recovery. Local full Xcode, physical sleep/wake, and complete VoiceOver/light/dark acceptance remain separately identified in the verification record.
 
 For a short manual check with the isolated data command above: choose Custom → 1 minute for both phases, turn Repeat off, and start. Press Command-W: the menu-bar timer must keep counting with the current phase name. Click it to bring Focus to the front at the current remaining time. Repeat with the red close button during the break. One complete 60-second focus record should precede Cycle complete after its break. An already paused cycle must remain paused across close/reopen. Quit with an unfinished phase and relaunch using the same isolated directory: it must restore paused with the same remainder. Reports are Stage 3, so the current Journal presents saved-record availability rather than report metrics.
 
