@@ -2,6 +2,14 @@
 
 A native SwiftUI/AppKit application implementing the Stage 1 foundation and Stage 2 focus timer of the approved Deep Work handoff. The specification defines **137 implementation items**; `IMPLEMENTATION_CHECKLIST.md` is the sole progress tracker. Journal reporting and work schedules are the next milestone.
 
+## Download the app
+
+Built apps are published under [GitHub Releases](https://github.com/lukin-io/deep-work/releases). Select a preview and download **Deep-Work-<tag>-macOS-universal.zip** from Assets, extract it, and move **Deep Work.app** to Applications. The universal app includes Apple Silicon and Intel executables. GitHub's automatic Source code ZIP is for developers, not an installed app.
+
+Previews are **ad hoc signed and unnotarized**; macOS may block first launch. Only open a build you trust, following [Apple's app-opening guidance](https://support.apple.com/en-us/102445). Stable notarized releases are not yet available. Each release lists its tested platforms and known limitations; macOS 13+ is the deployment target, not a claim that every OS version was tested.
+
+Download `SHA256SUMS` and `release-metadata.json` alongside the app ZIP and verify them with `shasum -a 256 -c SHA256SUMS`. The metadata records the source commit and build configuration. Quit an older running copy before replacing it; user data stays in Application Support.
+
 ## Start here
 
 | File | Use it for |
@@ -132,6 +140,36 @@ Pushing requires GitHub authentication. This development machine uses an existin
 git remote set-url origin git@github.com:lukin-io/deep-work.git
 git remote -v
 ```
+
+## Build and publish a preview release
+
+The release pipeline uses the native macOS tools already described above, plus Python 3 and Git. GitHub-hosted runners include these tools and the GitHub CLI. No local GitHub CLI or long-lived upload token is needed: pushing an annotated preview tag triggers `.github/workflows/release.yml` with its scoped job token.
+
+Before tagging, commit the changes and release notes, ensure the numeric version in `DeepWork/Resources/Info.plist` matches the tag, and require the PR's native test/package checks to pass. Preview tags follow `vX.Y.Z-preview.N`, with N starting at 1. For the first preview:
+
+```sh
+./scripts/test.sh
+python3 DeepWorkTests/Release/test-publish-release.py
+./DeepWorkTests/Release/test-release.sh
+./scripts/package-release.sh v0.1.0-preview.1 1
+./scripts/verify-release.sh .build/releases/v0.1.0-preview.1 v0.1.0-preview.1 "$(git rev-parse HEAD)"
+./DeepWorkTests/Release/test-release.sh .build/releases/v0.1.0-preview.1 v0.1.0-preview.1
+```
+
+The package script requires a clean committed checkout, builds both architectures with Swift's **Release** configuration, generates the icon, signs the app ad hoc, validates an extracted archive, and writes the ZIP/checksums/metadata to `.build/releases/<tag>/`. It refuses an existing output directory to protect earlier artifacts. A local package does not upload anything and is not a published release. The release build ignores the debug-only data-directory override.
+
+Create a new annotated tag at the exact verified commit and push that tag, using the next unused preview number for subsequent releases:
+
+```sh
+git tag -a v0.1.0-preview.1 -m "Deep Work 0.1.0 preview 1"
+git push origin v0.1.0-preview.1
+```
+
+Do not repeat those commands once the version exists or move a published tag. Normal releases should be based on reviewed `main`; the initial requested preview may come from the app feature branch while PR #1 is open.
+
+The workflow runs native tests on Apple Silicon and Intel, builds and tests a universal package, and creates a draft GitHub prerelease. It uploads the app ZIP, checksums and metadata, downloads and verifies them, then publishes with Latest disabled. PR runs only validate and retain temporary Actions artifacts; they cannot publish. A failed upload or verification leaves an unpublished draft for inspection. Fix the failure and use a new version; never replace published release bytes. Read [AGENTS.md](AGENTS.md) for release rules and [verification evidence](docs/VERIFICATION.md) for actual results.
+
+Stable tags are rejected until Developer ID signing, hardened runtime, timestamping, notarization, stapling and Gatekeeper verification are implemented. No signing identities are available on the current development machine. Apple's [distribution packaging](https://developer.apple.com/documentation/xcode/packaging-mac-software-for-distribution) and [notarization guidance](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution) define that future distribution path.
 
 ## Local data and current behavior
 

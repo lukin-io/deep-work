@@ -60,6 +60,8 @@ Icon source cleanup: G-001 uses the existing `Assets.xcassets/AppIcon.appiconset
 
 ## Shared shell
 
+Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitHub Releases. Packaging and publication do not complete additional product IDs; the accepted count remains 36/137. The preview includes the Stage 1/2 implementation and clearly identifies later features as unavailable.
+
 ### Window chrome
 
 **Progress:** 3 / 4 accepted.
