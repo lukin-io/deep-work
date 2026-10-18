@@ -1,6 +1,6 @@
 # Deep Work implementation checklist
 
-**Baseline:** October 17, 2026 · **Progress:** 2 of 137 items accepted in native Swift.
+**Baseline:** October 17, 2026 · **Progress:** 36 of 137 items accepted in native Swift.
 
 This is the canonical manual progress tracker for the current three-view app. The initial handoff started with every item TODO; current native evidence is recorded below. Each ID links to its full use case, behavior, input rules, source reference, and acceptance checks in `DEEP_WORK_SPECIFICATION.md`.
 
@@ -12,12 +12,12 @@ Feature completion means all of its child items are DONE. View completion means 
 
 | View or subview | Total | Done | Remaining |
 | --- | ---: | ---: | ---: |
-| Shared shell | 14 | 2 | 12 |
-| Focus | 29 | 0 | 29 |
+| Shared shell | 14 | 10 | 4 |
+| Focus | 29 | 26 | 3 |
 | Journal | 54 | 0 | 54 |
 | Journal work schedule | 19 | 0 | 19 |
 | Settings | 21 | 0 | 21 |
-| **Total** | **137** | **2** | **135** |
+| **Total** | **137** | **36** | **101** |
 
 Work schedule remains inside Journal; its separate rollup is for tracking the nested editor.
 
@@ -38,106 +38,114 @@ Stages guide build order. Dependencies are component prerequisites; use the deta
 
 The native application foundation now contains the three-view shell, one shared application-state owner, typed session/configuration/schedule/settings models, and SQLite persistence. The user explicitly requested SQLite and Apple platform guidelines during implementation. The database belongs at the Foundation-resolved user Application Support path `app.deepwork.mac/DeepWork.sqlite`; legacy local JSON migration preserves its sources. `reference/` and the initial JSON tracker remain unchanged.
 
-G-007 and G-008 meet their complete native acceptance. The other ten Stage 1 IDs remain IN PROGRESS because their full definitions also require later timer/report/export/platform behavior or final visual acceptance; their partial evidence is recorded under each ID. Scaffolding and successful storage tests do not satisfy those later checks.
+At the Stage 1 exit, G-007 and G-008 met their complete native acceptance. The other ten Stage 1 IDs remained IN PROGRESS because their full definitions also require later timer/report/export/platform behavior or final visual acceptance; their partial evidence is recorded under each ID. Scaffolding and successful storage tests do not satisfy those later checks.
 
 The native Swift build and test evidence, UI regression use cases, and exact Xcode tooling blocker are in [VERIFICATION.md](docs/VERIFICATION.md). Native design choices and deferred policies are in [NATIVE_DECISIONS.md](docs/NATIVE_DECISIONS.md). Full Xcode compilation remains unverified until Xcode is installed; the project and shared scheme are present and structurally validated.
+
+## Stage 2 implementation record — October 18, 2026
+
+F-001–F-026 now meet the Focus milestone acceptance under the recorded native policies. Timer controls, exact active-segment accounting, repeat/boundary handling, background checkpoints, paused recovery, and process ownership are implemented. G-003–G-012 are accepted, including the earlier G-007/G-008; there are **36 accepted items** overall. Native Keyboard navigation preferences are respected. Full VoiceOver/system Reduce Motion/light-dark/platform-version sweeps remain Stage 6 checks.
+
+`./scripts/test.sh` completes **99 native tests**; `./scripts/build-app.sh` produces the native app. Real UI/SQLite cases include hidden-window timing, an exact 60-second complete record across two segments, Quit/relaunch, SIGKILL recovery, and denial of a second owner. The test script rejects incomplete hostless runs even if SwiftPM returns status 0. The full Xcode build remains blocked by the missing Xcode installation. Commands, evidence and exact limits are in [VERIFICATION.md](docs/VERIFICATION.md).
+
+The initial local repository commit is `bee5c07`; no remote is configured. The approved reference and initial JSON tracker remain unchanged. Stage 3 is journal reporting, examples and work-schedule editing; CSV, clipboard, login and Slack retain their later milestones.
 
 ## Shared shell
 
 ### Window chrome
 
-**Progress:** 2 / 4 accepted.
+**Progress:** 3 / 4 accepted.
 
 - [ ] **G-001 — Deep Work window and title** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-001))
 
     Status: **IN PROGRESS** · Stage: **1** · Owner: Codex  
-    Evidence / commit: [Native verification, October 18, 2026](docs/VERIFICATION.md); `./scripts/test.sh`, compiled native app and macOS acceptance.  
-    Blocker / notes: Native title/window, single visible panel, preferred widths and 320 pt minimum implemented. Full narrow/light-dark acceptance and timer-dependent state checks remain.  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: Native window, title, resizing and timer continuity are implemented. Full light/dark and narrow-content acceptance remains Stage 6.  
     Swift: `DeepWork/App/WindowController.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **G-006 — Red close button: hide window** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-006))
+- [x] **G-006 — Red close button: hide window** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-006))
 
-    Status: **IN PROGRESS** · Stage: **1** · Owner: Codex  
-    Evidence / commit: [Native verification, October 18, 2026](docs/VERIFICATION.md); `./scripts/test.sh`, compiled native app and macOS acceptance.  
-    Blocker / notes: Native close hides the retained window, keeps the app owner/edits alive, and saves committed data; reopen works. Running/paused countdown and no-partial-session checks require Stage 2.  
+    Status: **DONE** · Stage: **1** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: Actual close hides without ending/pausing/resetting; hidden focus crosses boundaries, paused time stays frozen, and native close label explains continuation.  
     Swift: `DeepWork/App/WindowController.swift`, `DeepWork/App/AppModel.swift`
 
 - [x] **G-007 — Yellow minimize traffic light** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-007))
 
     Status: **DONE** · Stage: **1** · Owner: Codex  
-    Evidence / commit: [Native verification, October 18, 2026](docs/VERIFICATION.md); `./scripts/test.sh`, compiled native app and macOS acceptance.  
-    Blocker / notes: Native minimize/deminimize verified on macOS using actual NSWindow state in WindowIntegrationTests. Uses the Dock and preserves the shared owner.  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: Native minimize/deminimize continues to pass with the retained app owner; earlier native evidence remains valid.  
     Swift: `DeepWork/App/WindowController.swift`, `DeepWork/App/AppModel.swift`
 
 - [x] **G-008 — Green zoom traffic light** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-008))
 
     Status: **DONE** · Stage: **1** · Owner: Codex  
-    Evidence / commit: [Native verification, October 18, 2026](docs/VERIFICATION.md); `./scripts/test.sh`, compiled native app and macOS acceptance.  
-    Blocker / notes: Native zoom/restore verified by window-frame integration assertions. Green-button full-screen entry and Control-Command-F entry/exit exercised on macOS; native resizing/full-screen policy recorded.  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: Native zoom/restore integration passes; prior actual full-screen entry/exit evidence remains valid.  
     Swift: `DeepWork/App/WindowController.swift`, `DeepWork/App/AppModel.swift`
 
 ### Menu bar
 
-**Progress:** 0 / 4 accepted.
+**Progress:** 3 / 4 accepted.
 
 - [ ] **G-002 — Deep Work, File and Window menu labels** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-002))
 
-    Status: **TODO** · Stage: **5** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **IN PROGRESS** · Stage: **5** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: Real application menus exist; Show Focus, Close and Quit paths work. Remaining menu-command acceptance is not claimed.  
     Swift: `DeepWork/App/MenuBarController.swift`, `DeepWork/App/DeepWorkApp.swift`
 
-- [ ] **G-003 — Menu-bar timer item and reopen action** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-003))
+- [x] **G-003 — Menu-bar timer item and reopen action** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-003))
 
-    Status: **TODO** · Stage: **5** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **DONE** · Stage: **5** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: Real status-button target/action dispatch reopens hidden Settings on Focus with the same running/paused UUID; foreground activation observed through the compiled app’s Command-0 path.  
     Swift: `DeepWork/App/MenuBarController.swift`, `DeepWork/App/DeepWorkApp.swift`
 
-- [ ] **G-004 — Menu-bar countdown and phase text** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-004))
+- [x] **G-004 — Menu-bar countdown and phase text** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-004))
 
-    Status: **TODO** · Stage: **5** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **DONE** · Stage: **5** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: Real status title uses the same ceil timer projection and tabular NSFont digits; focus/break/pause/idle/completion and 480:00 cases pass.  
     Swift: `DeepWork/App/MenuBarController.swift`, `DeepWork/App/DeepWorkApp.swift`
 
-- [ ] **G-005 — Timer and paused menu-bar icons** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-005))
+- [x] **G-005 — Timer and paused menu-bar icons** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-005))
 
-    Status: **TODO** · Stage: **5** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **DONE** · Stage: **5** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: One native template timer/pause symbol, paused accessibility prefix, and completion reset verified in AppKit integration.  
     Swift: `DeepWork/App/MenuBarController.swift`, `DeepWork/App/DeepWorkApp.swift`
 
 ### View navigation
 
-**Progress:** 0 / 4 accepted.
+**Progress:** 4 / 4 accepted.
 
-- [ ] **G-009 — Focus tab** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-009))
+- [x] **G-009 — Focus tab** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-009))
 
-    Status: **IN PROGRESS** · Stage: **1** · Owner: Codex  
-    Evidence / commit: [Native verification, October 18, 2026](docs/VERIFICATION.md); `./scripts/test.sh`, compiled native app and macOS acceptance.  
-    Blocker / notes: Mouse and keyboard reach Focus without losing Repeat or unsaved feedback. A native panel/resize regression was fixed and rechecked. Active/paused/complete timer checks require Stage 2.  
+    Status: **DONE** · Stage: **1** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: Mouse/keyboard Focus navigation preserves setup, running, paused and complete state; preferred width and first-responder regression verified.  
     Swift: `DeepWork/App/RootView.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **G-010 — Journal tab and initial landing view** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-010))
+- [x] **G-010 — Journal tab and initial landing view** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-010))
 
-    Status: **IN PROGRESS** · Stage: **1** · Owner: Codex  
-    Evidence / commit: [Native verification, October 18, 2026](docs/VERIFICATION.md); `./scripts/test.sh`, compiled native app and macOS acceptance.  
-    Blocker / notes: Journal opens on process launch/relaunch and native selection is exposed to accessibility. Running timer and crossed-boundary persistence require Stage 2.  
+    Status: **DONE** · Stage: **1** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: Initial/recovered launch selects Journal. Tab switching reconciles and commits crossed boundaries without pausing; contents remain separate Stage 3 work.  
     Swift: `DeepWork/App/RootView.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **G-011 — Settings tab** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-011))
+- [x] **G-011 — Settings tab** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-011))
 
-    Status: **IN PROGRESS** · Stage: **1** · Owner: Codex  
-    Evidence / commit: [Native verification, October 18, 2026](docs/VERIFICATION.md); `./scripts/test.sh`, compiled native app and macOS acceptance.  
-    Blocker / notes: Settings is the third tab and shows its own panel; drafts survive navigation. Running timer and complete narrow-layout acceptance remain.  
+    Status: **DONE** · Stage: **1** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: Settings retains running/paused timer and unsaved edits; all three native tab segments fit and remain enabled at 320 pt.  
     Swift: `DeepWork/App/RootView.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **G-012 — Keyboard navigation across the three tabs** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-012))
+- [x] **G-012 — Keyboard navigation across the three tabs** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-012))
 
-    Status: **IN PROGRESS** · Stage: **1** · Owner: Codex  
-    Evidence / commit: [Native verification, October 18, 2026](docs/VERIFICATION.md); `./scripts/test.sh`, compiled native app and macOS acceptance.  
-    Blocker / notes: Native Left/Right wrap, Home/End selection/focus verified, with unit tests for the AppKit key handler. Form/Repeat state survives. Active-timer preservation requires Stage 2.  
+    Status: **DONE** · Stage: **1** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: Actual NSWindow first-responder routing verifies wrap/Home/End in setup/running/paused states while retaining live UUID and unsaved edits.  
     Swift: `DeepWork/App/RootView.swift`, `DeepWork/App/AppModel.swift`
 
 ### Accessibility feedback
@@ -146,9 +154,9 @@ The native Swift build and test evidence, UI regression use cases, and exact Xco
 
 - [ ] **G-013 — Shared action announcements** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-013))
 
-    Status: **TODO** · Stage: **6** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **IN PROGRESS** · Stage: **6** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: Focus phase, validation, Repeat and summary announcements use native accessibility notifications. Full VoiceOver and later-view announcements remain unverified.  
     Swift: `DeepWork/App/RootView.swift`, `DeepWork/Accessibility/Announcements.swift`
 
 ### Prototype disclosure
@@ -166,212 +174,212 @@ The native Swift build and test evidence, UI regression use cases, and exact Xco
 
 ### Session setup
 
-**Progress:** 0 / 7 accepted.
+**Progress:** 7 / 7 accepted.
 
-- [ ] **F-001 — Set your rhythm heading and setup group** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-001))
+- [x] **F-001 — Set your rhythm heading and setup group** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-001))
 
-    Status: **TODO** · Stage: **2** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **DONE** · Stage: **2** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: Native setup/session visibility and retained End-session choices verified; first launch remains Journal.  
     Swift: `DeepWork/Features/Focus/FocusView.swift`, `DeepWork/Core/FocusConfiguration.swift`, `DeepWork/Data/JournalStore.swift`
 
-- [ ] **F-002 — Deep work duration selector** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-002))
+- [x] **F-002 — Deep work duration selector** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-002))
 
-    Status: **TODO** · Stage: **2** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **DONE** · Stage: **2** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: 60/90/Custom options, blank default, focus/select-all, stored selection and hidden custom retention verified.  
     Swift: `DeepWork/Features/Focus/FocusView.swift`, `DeepWork/Core/FocusConfiguration.swift`, `DeepWork/Data/JournalStore.swift`
 
-- [ ] **F-003 — Custom deep work minutes** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-003))
+- [x] **F-003 — Custom deep work minutes** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-003))
 
-    Status: **TODO** · Stage: **2** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **DONE** · Stage: **2** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: Custom default 75 and whole-minute boundaries 1–480 verified; invalid raw edits cannot start using older saved values.  
     Swift: `DeepWork/Features/Focus/FocusView.swift`, `DeepWork/Core/FocusConfiguration.swift`, `DeepWork/Data/JournalStore.swift`
 
-- [ ] **F-005 — Break duration selector** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-005))
+- [x] **F-005 — Break duration selector** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-005))
 
-    Status: **TODO** · Stage: **2** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **DONE** · Stage: **2** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: 10/20/Custom options, blank default, focus/select-all, and persisted choice verified.  
     Swift: `DeepWork/Features/Focus/FocusView.swift`, `DeepWork/Core/FocusConfiguration.swift`, `DeepWork/Data/JournalStore.swift`
 
-- [ ] **F-006 — Custom break minutes** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-006))
+- [x] **F-006 — Custom break minutes** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-006))
 
-    Status: **TODO** · Stage: **2** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **DONE** · Stage: **2** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: Custom default 15, validation endpoints/invalid edits, and hidden custom retention verified.  
     Swift: `DeepWork/Features/Focus/FocusView.swift`, `DeepWork/Core/FocusConfiguration.swift`, `DeepWork/Data/JournalStore.swift`
 
-- [ ] **F-008 — Selected duration summary** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-008))
+- [x] **F-008 — Selected duration summary** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-008))
 
-    Status: **TODO** · Stage: **2** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **DONE** · Stage: **2** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: Choose-both and valid-duration summaries track raw inputs; setup-only rendering and native status announcements implemented.  
     Swift: `DeepWork/Features/Focus/FocusView.swift`, `DeepWork/Core/FocusConfiguration.swift`, `DeepWork/Data/JournalStore.swift`
 
-- [ ] **F-009 — Start deep work** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-009))
+- [x] **F-009 — Start deep work** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-009))
 
-    Status: **TODO** · Stage: **2** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **DONE** · Stage: **2** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: Start revalidates raw input, snapshots durations and creates one live UUID; duplicate Start is a no-op. Native button focus honors macOS Keyboard navigation preferences.  
     Swift: `DeepWork/Features/Focus/FocusView.swift`, `DeepWork/Core/FocusConfiguration.swift`, `DeepWork/Data/JournalStore.swift`
 
 ### Duration validation
 
-**Progress:** 0 / 2 accepted.
+**Progress:** 2 / 2 accepted.
 
-- [ ] **F-004 — Custom deep work validation message** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-004))
+- [x] **F-004 — Custom deep work validation message** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-004))
 
-    Status: **TODO** · Stage: **2** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **DONE** · Stage: **2** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: Exact error copy and field association verified in native UI; invalid/corrected/preset cases covered by app tests.  
     Swift: `DeepWork/Features/Focus/FocusView.swift`, `DeepWork/Core/FocusConfiguration.swift`, `DeepWork/Data/JournalStore.swift`
 
-- [ ] **F-007 — Custom break validation message** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-007))
+- [x] **F-007 — Custom break validation message** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-007))
 
-    Status: **TODO** · Stage: **2** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **DONE** · Stage: **2** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: Exact break error and invalid/corrected/preset cases covered; native field accessibility help uses the error.  
     Swift: `DeepWork/Features/Focus/FocusView.swift`, `DeepWork/Core/FocusConfiguration.swift`, `DeepWork/Data/JournalStore.swift`
 
 ### Repeat behavior
 
-**Progress:** 0 / 2 accepted.
+**Progress:** 2 / 2 accepted.
 
-- [ ] **F-010 — Repeat cycles checkbox** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-010))
+- [x] **F-010 — Repeat cycles checkbox** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-010))
 
-    Status: **TODO** · Stage: **2** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **DONE** · Stage: **2** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: Finish-current-pair behavior, paused/completed toggles, and previous-Repeat reconciliation pass deterministic/native integration cases.  
     Swift: `DeepWork/Features/Focus/FocusView.swift`, `DeepWork/Core/TimerEngine.swift`
 
-- [ ] **F-011 — Repeat and stop-timing helper** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-011))
+- [x] **F-011 — Repeat and stop-timing helper** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-011))
 
-    Status: **TODO** · Stage: **2** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **DONE** · Stage: **2** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: All setup/focus/break/paused/completed helper strings are projected from the engine and verified.  
     Swift: `DeepWork/Features/Focus/FocusView.swift`, `DeepWork/Core/TimerEngine.swift`
 
 ### Session display
 
-**Progress:** 0 / 4 accepted.
+**Progress:** 4 / 4 accepted.
 
-- [ ] **F-012 — Phase heading and focus/break icons** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-012))
+- [x] **F-012 — Phase heading and focus/break icons** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-012))
 
-    Status: **TODO** · Stage: **2** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **DONE** · Stage: **2** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: Native headings/icons reflect focus, break, paused and complete states. Partial pairs remain partial in SQLite.  
     Swift: `DeepWork/Features/Focus/FocusView.swift`, `DeepWork/Core/TimerEngine.swift`
 
-- [ ] **F-013 — Large remaining-time display** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-013))
+- [x] **F-013 — Large remaining-time display** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-013))
 
-    Status: **TODO** · Stage: **2** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **DONE** · Stage: **2** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: Ceil countdown through 480:00, freeze/resume, menu parity and zero completion verified. External native AX exposes Time remaining independently (UI-16).  
     Swift: `DeepWork/Features/Focus/FocusView.swift`, `DeepWork/Core/TimerEngine.swift`
 
-- [ ] **F-014 — Next-phase and journal caption** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-014))
+- [x] **F-014 — Next-phase and journal caption** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-014))
 
-    Status: **TODO** · Stage: **2** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **DONE** · Stage: **2** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: Session-duration captions, paused exclusion and final-break copy verified. Saved caption waits for commit and reports pending/failure truthfully.  
     Swift: `DeepWork/Features/Focus/FocusView.swift`, `DeepWork/Core/TimerEngine.swift`
 
-- [ ] **F-015 — Current-phase progress bar** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-015))
+- [x] **F-015 — Current-phase progress bar** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-015))
 
-    Status: **TODO** · Stage: **2** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **DONE** · Stage: **2** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: Phase-clamped progress and rounded percentage verified; native bitmap rendering and explicit reduced-motion animation policy tests pass. Full system-preference/VoiceOver sweep remains Stage 6.  
     Swift: `DeepWork/Features/Focus/FocusView.swift`, `DeepWork/Core/TimerEngine.swift`
 
 ### Session controls
 
-**Progress:** 0 / 7 accepted.
+**Progress:** 7 / 7 accepted.
 
-- [ ] **F-016 — Pause current phase** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-016))
+- [x] **F-016 — Pause current phase** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-016))
 
-    Status: **TODO** · Stage: **2** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **DONE** · Stage: **2** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: Pause reconciles first, seals focus, freezes remainder/progress and does not restart after a stale final-break click.  
     Swift: `DeepWork/Core/TimerEngine.swift`, `DeepWork/Core/SessionRecord.swift`, `DeepWork/Features/Focus/FocusView.swift`
 
-- [ ] **F-017 — Resume paused phase** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-017))
+- [x] **F-017 — Resume paused phase** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-017))
 
-    Status: **TODO** · Stage: **2** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **DONE** · Stage: **2** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: Resume retains UUID/remainder, excludes pause/downtime and clears recovery; real Quit/relaunch/resume produced exactly 60 seconds in two segments.  
     Swift: `DeepWork/Core/TimerEngine.swift`, `DeepWork/Core/SessionRecord.swift`, `DeepWork/Features/Focus/FocusView.swift`
 
-- [ ] **F-018 — Start again after completion** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-018))
+- [x] **F-018 — Start again after completion** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-018))
 
-    Status: **TODO** · Stage: **2** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **DONE** · Stage: **2** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: Start again uses snapshotted durations/current Repeat and a fresh UUID without altering history; native UI exercised.  
     Swift: `DeepWork/Core/TimerEngine.swift`, `DeepWork/Core/SessionRecord.swift`, `DeepWork/Features/Focus/FocusView.swift`
 
-- [ ] **F-019 — Take break before focus finishes** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-019))
+- [x] **F-019 — Take break before focus finishes** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-019))
 
-    Status: **TODO** · Stage: **2** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **DONE** · Stage: **2** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: 17-second partial and zero discard covered; paused Take break starts running; native recovered paused focus transition verified.  
     Swift: `DeepWork/Core/TimerEngine.swift`, `DeepWork/Core/SessionRecord.swift`, `DeepWork/Features/Focus/FocusView.swift`
 
-- [ ] **F-020 — Skip break when Repeat is enabled** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-020))
+- [x] **F-020 — Skip break when Repeat is enabled** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-020))
 
-    Status: **TODO** · Stage: **2** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **DONE** · Stage: **2** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: Skip break creates a fresh running focus, including from pause, without adding break time or completion.  
     Swift: `DeepWork/Core/TimerEngine.swift`, `DeepWork/Core/SessionRecord.swift`, `DeepWork/Features/Focus/FocusView.swift`
 
-- [ ] **F-021 — Finish break when Repeat is disabled** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-021))
+- [x] **F-021 — Finish break when Repeat is disabled** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-021))
 
-    Status: **TODO** · Stage: **2** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **DONE** · Stage: **2** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: Finish break completes from running/paused final break without changing prior focus outcomes; controls/menu projection verified.  
     Swift: `DeepWork/Core/TimerEngine.swift`, `DeepWork/Core/SessionRecord.swift`, `DeepWork/Features/Focus/FocusView.swift`
 
-- [ ] **F-022 — End session and return to setup** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-022))
+- [x] **F-022 — End session and return to setup** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-022))
 
-    Status: **TODO** · Stage: **2** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **DONE** · Stage: **2** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: End preserves positive partial time, discards zero, clears checkpoint and returns to retained setup; SQLite integration passes.  
     Swift: `DeepWork/Core/TimerEngine.swift`, `DeepWork/Core/SessionRecord.swift`, `DeepWork/Features/Focus/FocusView.swift`
 
 ### Automatic phase transitions
 
-**Progress:** 0 / 2 accepted.
+**Progress:** 2 / 2 accepted.
 
-- [ ] **F-023 — Focus deadline: record completion and start break** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-023))
+- [x] **F-023 — Focus deadline: record completion and start break** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-023))
 
-    Status: **TODO** · Stage: **2** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **DONE** · Stage: **2** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: Exact focus deadline finalizes once and starts break. Real native 60-second cycle persisted exactly once; repeated callbacks do not duplicate.  
     Swift: `DeepWork/Core/TimerEngine.swift`, `DeepWork/Core/SessionRecord.swift`, `DeepWork/Features/Focus/FocusView.swift`
 
-- [ ] **F-024 — Break deadline, repeat progression and delayed callbacks** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-024))
+- [x] **F-024 — Break deadline, repeat progression and delayed callbacks** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-024))
 
-    Status: **TODO** · Stage: **2** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **DONE** · Stage: **2** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: Multi-boundary catch-up and old-Repeat reconciliation pass. ContinuousClock includes sleep; wall-clock jumps do not change accounting. Real hidden-window boundary observed; physical sleep remains unverified.  
     Swift: `DeepWork/Core/TimerEngine.swift`, `DeepWork/Core/SessionRecord.swift`, `DeepWork/Features/Focus/FocusView.swift`
 
 ### Recovery and ownership
 
-**Progress:** 0 / 2 accepted.
+**Progress:** 2 / 2 accepted.
 
-- [ ] **F-025 — Recovered-session notice** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-025))
+- [x] **F-025 — Recovered-session notice** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-025))
 
-    Status: **TODO** · Stage: **2** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **DONE** · Stage: **2** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: Five-second/action/visibility checkpoints and Quit drain tested. Real Quit and SIGKILL relaunch restore exact paused remainder/UUID/segments; no process downtime credited.  
     Swift: `DeepWork/Core/TimerEngine.swift`, `DeepWork/Data/JournalStore.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **F-026 — Other-window timer ownership notice and disabled controls** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-026))
+- [x] **F-026 — Other-window timer ownership notice and disabled controls** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-026))
 
-    Status: **TODO** · Stage: **2** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **DONE** · Stage: **2** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: One app owner plus canonical per-store process lock. Actual second native process denied ownership; same-record recovery and duplicate prevention verified.  
     Swift: `DeepWork/Core/TimerEngine.swift`, `DeepWork/Data/JournalStore.swift`, `DeepWork/App/AppModel.swift`
 
 ### Slack status preview
@@ -833,8 +841,8 @@ The native Swift build and test evidence, UI regression use cases, and exact Xco
 - [ ] **J-052 — Saved-on-device footer and failure message** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-052))
 
     Status: **IN PROGRESS** · Stage: **1** · Owner: Codex  
-    Evidence / commit: [Native verification, October 18, 2026](docs/VERIFICATION.md); `./scripts/test.sh`, compiled native app and macOS acceptance.  
-    Blocker / notes: SQLite storage, typed validation, preservation/rollback, migration and visible failure path implemented. Interim warning truthfully says CSV unavailable. Native timing/CSV usability during failure require Stages 2/4.  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: SQLite records/checkpoints and usable in-memory timing on failure pass native tests. CSV-on-failure remains Stage 4, so this cross-stage item is incomplete.  
     Swift: `DeepWork/Data/JournalStore.swift`, `DeepWork/Features/Journal/JournalView.swift`
 
 ### Live journal
@@ -843,9 +851,9 @@ The native Swift build and test evidence, UI regression use cases, and exact Xco
 
 - [ ] **J-053 — Actual history, active observations, and automatic refresh** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-053))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
+    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
+    Blocker / notes: Engine exposes one live observation with current segments and stable identity; boundary/tab reconciliation is tested. Native journal metrics/table updates remain Stage 3.  
     Swift: `DeepWork/Core/TimerEngine.swift`, `DeepWork/Data/JournalStore.swift`, `DeepWork/Reports/ReportEngine.swift`
 
 ### Accessibility

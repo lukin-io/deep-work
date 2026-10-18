@@ -19,6 +19,7 @@ struct RootView: View {
         .frame(minWidth: 320, minHeight: 420)
         .background(Color(nsColor: .windowBackgroundColor))
         .tint(.accentColor)
+        .disabled(model.isTerminating)
     }
 }
 

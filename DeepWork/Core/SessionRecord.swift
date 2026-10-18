@@ -66,7 +66,7 @@ public struct SessionRecord: Codable, Equatable, Identifiable, Sendable {
 public enum SessionPhase: String, Codable, Sendable { case focus, `break` }
 
 /// A sealed snapshot only. No persisted deadline or open segment can count
-/// process downtime. Stage 2 must restore this snapshot paused before resuming.
+/// process downtime. Recovery restores this snapshot paused before resuming.
 public struct ActiveCheckpoint: Codable, Equatable, Sendable {
     public var phase: SessionPhase
     public var focusMinutes: Int

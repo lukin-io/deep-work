@@ -26,6 +26,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = "0EC668B65540AFA41961BCB1";
 		};
+		"7C853BA4A41AF387C7206B7F" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "DeepWork/App/MenuBarController.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		"F346C53EFA3DEE1DEB01741E" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "7C853BA4A41AF387C7206B7F";
+		};
 		"60EDB10781FBE12B96098D51" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -46,6 +56,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = "5BA6EAB426690EF951C2E9CE";
 		};
+		"F560F9D9376B9EA02D4CC7C6" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "DeepWork/App/TimerClock.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		"2F3AD550750CCB52656D2827" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "F560F9D9376B9EA02D4CC7C6";
+		};
 		"D2C9E7B8C5F16DF535FBDF77" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -55,6 +75,16 @@
 		"893BB4FBE3B5E3B681A2F232" = {
 			"isa" = "PBXBuildFile";
 			"fileRef" = "D2C9E7B8C5F16DF535FBDF77";
+		};
+		"8FAFEB4B51ABD634DCEAB566" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "DeepWork/Features/Focus/FocusProgressView.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		"703F2AD45A4AE010855C659E" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "8FAFEB4B51ABD634DCEAB566";
 		};
 		"70D5962BC0428A98A6A17C09" = {
 			"isa" = "PBXFileReference";
@@ -91,9 +121,12 @@
 			"children" = (
 				"BC7305616E768B644C01BDD1",
 				"0EC668B65540AFA41961BCB1",
+				"7C853BA4A41AF387C7206B7F",
 				"60EDB10781FBE12B96098D51",
 				"5BA6EAB426690EF951C2E9CE",
+				"F560F9D9376B9EA02D4CC7C6",
 				"D2C9E7B8C5F16DF535FBDF77",
+				"8FAFEB4B51ABD634DCEAB566",
 				"70D5962BC0428A98A6A17C09",
 				"236C304192143C2861E76E66",
 				"97DFA66E4F056526FA8F264C",
@@ -107,9 +140,12 @@
 			"files" = (
 				"98E90DFF6FABC595B450C330",
 				"C145AA2EA118C5928632AD49",
+				"F346C53EFA3DEE1DEB01741E",
 				"B2F0297D784A3D09BDAC85F4",
 				"D89395D4023DF053A10EEC7E",
+				"2F3AD550750CCB52656D2827",
 				"893BB4FBE3B5E3B681A2F232",
+				"703F2AD45A4AE010855C659E",
 				"AACE082BCF7013E5BE89FC87",
 				"DF1ACA1F665B5E047D2C9E49",
 				"559FCF4F51D81E828AE83106",
@@ -136,6 +172,26 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = "1EC524E8692E5F9D70BD4344";
 		};
+		"FD3B8372AF3A15CAF1D27328" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "DeepWorkTests/Core/PersistenceWorkerTests.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		"56E418545920E09969C0E320" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "FD3B8372AF3A15CAF1D27328";
+		};
+		"EE5A6735F545F496AE71C05A" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "DeepWorkTests/Core/StoreOwnershipTests.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		"4E3FE3F6FE888C8909004F25" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "EE5A6735F545F496AE71C05A";
+		};
 		"FDA4A452F23D9483F3F3C5B5" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -146,12 +202,25 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = "FDA4A452F23D9483F3F3C5B5";
 		};
+		"D49BF1DEF694648D174DFED6" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "DeepWorkTests/Core/TimerEngineTests.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		"A5D83235D56046E95B883101" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "D49BF1DEF694648D174DFED6";
+		};
 		"3E9962F6691CF73AD5EB2411" = {
 			"isa" = "PBXGroup";
 			"children" = (
 				"FDFF4D6D4AFA6BD73F3F19B5",
 				"1EC524E8692E5F9D70BD4344",
+				"FD3B8372AF3A15CAF1D27328",
+				"EE5A6735F545F496AE71C05A",
 				"FDA4A452F23D9483F3F3C5B5",
+				"D49BF1DEF694648D174DFED6",
 			);
 			"name" = "Core tests";
 			"sourceTree" = "<group>";
@@ -162,7 +231,10 @@
 			"files" = (
 				"C5897CC77ED6D2581FB54F39",
 				"2D52CA498B50FC5D706F5E42",
+				"56E418545920E09969C0E320",
+				"4E3FE3F6FE888C8909004F25",
 				"86A851D77C45943CE95581E4",
+				"A5D83235D56046E95B883101",
 			);
 			"runOnlyForDeploymentPostprocessing" = 0;
 		};

@@ -33,9 +33,11 @@
 
 ## Build and verification
 
-- Verified locally: `./scripts/test.sh` runs 45 native tests; `./scripts/build-app.sh` compiles and packages `.build/Deep Work.app`; `open ".build/Deep Work.app"` launches it. Current results and environment limits are in `docs/VERIFICATION.md`.
+- Verified locally: `./scripts/test.sh` runs 99 native tests; `./scripts/build-app.sh` compiles and packages `.build/Deep Work.app`; `open ".build/Deep Work.app"` launches it. Current results and environment limits are in `docs/VERIFICATION.md`.
 - `plutil -lint DeepWork/Resources/Info.plist DeepWork.xcodeproj/project.pbxproj` validates project/plist syntax. Regenerate explicit Xcode references with `python3 scripts/generate-xcode-project.py` after adding/removing app or core test sources.
-- Stage 1 was compiled with Swift 6.4 and the Command Line Tools macOS SDK. Full Xcode is not installed; never claim `xcodebuild` verification until it succeeds. Xcode 16+ instructions are in `README.md`.
+- Stages 1–2 were compiled with Swift 6.4 and the Command Line Tools macOS SDK. Full Xcode is not installed; never claim `xcodebuild` verification until it succeeds. Xcode 16+ instructions are in `README.md`.
+- `swift build -Xswiftc -strict-concurrency=complete` verifies production concurrency checking. Require complete Swift Testing summaries; the test script rejects premature hostless exits even when SwiftPM returns success.
+- Nest AppKit integration suites under serialized `NativeApplicationTests`. For hostless status-button integration, dispatch the real target/action with `sendAction`; synthetic `performClick` can stop SwiftPM’s main run loop. Test foreground activation through the compiled app; record adapter boundaries explicitly.
 - Run native model/store tests, compile the native app, and exercise changed window/navigation behavior. JavaScript reference tests are not native completion evidence.
 
 ## Progress updates

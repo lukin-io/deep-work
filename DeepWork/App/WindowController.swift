@@ -13,6 +13,8 @@ final class WindowController: NSWindowController, NSWindowDelegate {
                               styleMask: [.titled, .closable, .miniaturizable, .resizable],
                               backing: .buffered, defer: false)
         window.title = "Deep Work"
+        window.standardWindowButton(.closeButton)?.setAccessibilityLabel("Close window and keep timer running")
+        window.standardWindowButton(.closeButton)?.toolTip = "Hide window · keep timer running"
         window.contentMinSize = NSSize(width: 320, height: 420)
         window.isReleasedWhenClosed = false
         window.collectionBehavior = [.fullScreenPrimary]

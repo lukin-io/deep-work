@@ -1,6 +1,6 @@
 # Deep Work for macOS
 
-A native SwiftUI/AppKit application implementing the Stage 1 foundation of the approved Deep Work handoff. The specification defines **137 implementation items**; `IMPLEMENTATION_CHECKLIST.md` is the sole progress tracker. The timer is the next milestone.
+A native SwiftUI/AppKit application implementing the Stage 1 foundation and Stage 2 focus timer of the approved Deep Work handoff. The specification defines **137 implementation items**; `IMPLEMENTATION_CHECKLIST.md` is the sole progress tracker. Journal reporting and work schedules are the next milestone.
 
 ## Start here
 
@@ -38,8 +38,8 @@ The JSON is an initial import snapshot, not a live mirror of the Markdown checkl
 
 ## Important implementation boundaries
 
-- Native menu-bar behavior, real Launch at Login, and Slack authorization/status changes require macOS/service implementation; the browser preview cannot prove them complete.
-- Feedback currently supports **Save Draft** and **Copy Feedback**. No Send button or delivery destination exists.
+- The native menu-bar timer and close/reopen behavior are implemented. Real Launch at Login and Slack authorization/status changes remain later milestones.
+- The approved feedback surface contains **Save Draft** and **Copy Feedback**. Native Save Draft works; clipboard copy remains Stage 4. No Send button or delivery destination exists.
 - CSV is a session report export, not a lossless backup or import format.
 - The three dashboard metrics are Focus time, Completed cycles, and Days with focus. No averaging metric is implemented in this baseline.
 - The detailed specification records unresolved native policies and small prototype quirks so they can be resolved deliberately without accidentally redesigning the app.
@@ -65,7 +65,7 @@ From this project directory, run these commands in order:
 open ".build/Deep Work.app"
 ```
 
-`test.sh` runs the native Swift Testing suites, including actual AppKit window integration. It resolves the Testing macro plugin shipped with standalone Command Line Tools; no dependency download is needed. The integration test briefly creates, minimizes, zooms, and closes a native test window. `build-app.sh` compiles and creates an ad hoc signed `.build/Deep Work.app` for local use. It is not a notarized distribution build.
+`test.sh` runs the native Swift Testing suites, including actual AppKit window integration. It resolves the Testing macro plugin shipped with standalone Command Line Tools; no dependency download is needed. It also rejects an incomplete test run even if the hostless runner exits with status 0. The AppKit suites briefly create, minimize, zoom, hide, and reopen native test windows and exercise real status-item buttons. They serialize access to AppKit’s shared application state. `build-app.sh` compiles and creates an ad hoc signed `.build/Deep Work.app` for local use. It is not a notarized distribution build.
 
 After editing source, run the tests and build again. Quit the previous app before opening the rebuilt bundle, so the running process uses the new code. Keep this README current whenever setup, build, test, run, or data-migration commands change.
 
@@ -77,7 +77,14 @@ open DeepWork.xcodeproj
 
 Select scheme **DeepWork**, destination **My Mac**, then **Run** (Command-R). Command-U runs the scheme's core tests; `./scripts/test.sh` also covers app-model and AppKit integration tests. The project uses local ad hoc signing. If adding app or core test source files, regenerate explicit Xcode file references with `python3 scripts/generate-xcode-project.py`.
 
-The corresponding Xcode command is:
+If Xcode is installed but the selected developer directory is still Command Line Tools, select it first (adjust the path if you installed Xcode elsewhere):
+
+```sh
+sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
+sudo xcodebuild -runFirstLaunch
+```
+
+The corresponding Xcode build command is:
 
 ```sh
 xcodebuild -project DeepWork.xcodeproj -scheme DeepWork \
@@ -100,11 +107,14 @@ The last command should print nothing until a remote is explicitly added.
 
 ## Local data and current behavior
 
-- Journal opens on launch. Focus, Journal, and Settings share one app-owned model; native window close hides the window. The idle menu-bar item or File → Show Deep Work reopens Focus. Quit exits the process.
+- Journal opens on launch. Focus, Journal, and Settings share one app-owned model; native window close hides the window. The live menu-bar countdown or File → Show Deep Work (Command-0) reopens Focus without restarting. Command-W hides the window. Quit (Command-Q) seals a checkpoint, finishes queued writes, and exits.
 - Valid duration preferences, Repeat, the saved work schedule, session records/checkpoint, launch preference, and explicitly saved feedback drafts use SQLite at `~/Library/Application Support/app.deepwork.mac/DeepWork.sqlite`. Foundation resolves the user-domain Application Support URL. Each journal record has its own database row; raw segments are retained without rounding.
-- Writes use transactions. Existing interim JSON files are migrated without deleting the originals; unsupported/corrupt data is preserved and reported. WAL/SHM files may accompany the database; do not treat a copy of only the main file while the app runs as a backup.
+- Writes run in order off the UI thread and use transactions. Existing interim JSON files are migrated without deleting the originals; unsupported/corrupt data is preserved and reported. WAL/SHM files may accompany the database; do not treat a copy of only the main file while the app runs as a backup.
+- Focus supports the approved presets and custom whole minutes 1–480, Repeat, Pause/Resume, Take break, Skip/Finish break, Start again, and End session. Only active focus segments count; zero-time abandoned cycles are discarded. Full duration creates one Complete record; an early exit retains positive time as Partial.
+- While the process lives, elapsed time includes background operation and Mac sleep. Wall-clock changes do not alter accounting. Closed-process downtime never counts: relaunch restores unfinished focus/break paused at its last committed remainder, with explicit Resume required. Checkpoints are saved about every five seconds and at actions/boundaries; an abrupt crash can lose the latest uncommitted interval.
+- One process owns each data directory through an advisory lock. Normal `open` reuses the app; an independent second process targeting the same store is refused. Do not remove `DeepWork.owner.lock` while an owner is running.
 - Save Draft persists feedback; unsaved edits survive tab changes but intentionally do not survive Quit. Report selection and unsaved schedule drafts remain transient as specified. No feedback is sent.
-- Timer, reports, schedule editor, examples, CSV, clipboard, login registration, and Slack integration are not yet available. Their controls are disabled and do not simulate success. The checklist retains their pending acceptance checks.
+- Reports, schedule editor, examples, CSV, clipboard, login registration, and Slack integration are not yet available. Their controls are disabled and do not simulate success. The checklist retains their pending acceptance checks.
 
 For isolated development/UI testing, Debug builds accept a separate directory:
 
@@ -114,6 +124,26 @@ DEEP_WORK_DATA_DIR="$PWD/.build/manual-data" \
 ```
 
 Quit any running copy first. Release builds ignore this override. This location is useful for testing empty data, relaunch, migration, and failures without touching the normal store.
+
+## Focus milestone verification
+
+Run all native tests, or select the relevant suites:
+
+```sh
+./scripts/test.sh
+./scripts/test.sh --filter TimerEngineTests
+./scripts/test.sh --filter NativeApplicationTests
+swift build -Xswiftc -strict-concurrency=complete
+python3 scripts/generate-xcode-project.py
+plutil -lint DeepWork/Resources/Info.plist DeepWork.xcodeproj/project.pbxproj
+codesign --verify --strict ".build/Deep Work.app"
+```
+
+The engine tests use an injected clock for exact deadlines, multi-cycle delays, pauses, clock changes and recovery. SQLite integration verifies real persisted records/checkpoints; AppKit integration exercises windows, tab focus and status-button actions. Full Xcode, macOS 13/Intel execution, physical sleep/wake, and complete VoiceOver/light/dark acceptance remain separately identified in the verification record.
+
+For a short manual check with the isolated data command above: choose Custom → 1 minute for both phases, turn Repeat off, start, pause/resume, and hide/reopen with Command-W/Command-0. The focus should become one complete 60-second record and its break should end at Cycle complete. Quit with an unfinished phase and relaunch using the same isolated directory: it must be paused at its saved point. Reports are Stage 3, so the current Journal presents saved-record availability rather than report metrics.
+
+Native button focus follows macOS Keyboard navigation preferences. Tab-strip arrows/Home/End retain focus on the tab strip. No test changes the user's system preferences. The progress view reads the system Reduce Motion environment and disables interpolation when requested.
 
 ## Optional reference test run
 

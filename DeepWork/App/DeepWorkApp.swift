@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import DeepWorkCore
 
 /// The delegate owns one model and one window for the entire process lifetime.
 @main
@@ -17,18 +18,26 @@ struct DeepWorkApplication {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var model: AppModel!
     private var windowController: WindowController!
-    private var statusItem: NSStatusItem!
+    private var menuBarController: MenuBarController!
+    private var terminationPending = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        model = AppModel.live()
+        do { model = try AppModel.live() }
+        catch {
+            let alert = NSAlert()
+            alert.messageText = "Deep Work is already open"
+            alert.informativeText = "Another process owns this data folder. Use its window or quit it before opening another copy."
+            alert.addButton(withTitle: "OK")
+            alert.runModal()
+            NSApp.terminate(nil)
+            return
+        }
         windowController = WindowController(model: model)
+        menuBarController = MenuBarController(model: model, windowController: windowController)
         installMenus()
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        statusItem.button?.title = "Deep Work"
-        statusItem.button?.toolTip = "Show Deep Work"
-        statusItem.button?.setAccessibilityLabel("Show Deep Work window")
-        statusItem.button?.target = self
-        statusItem.button?.action = #selector(showFocus)
+        let workspace = NSWorkspace.shared.notificationCenter
+        workspace.addObserver(self, selector: #selector(willSleep), name: NSWorkspace.willSleepNotification, object: nil)
+        workspace.addObserver(self, selector: #selector(didWake), name: NSWorkspace.didWakeNotification, object: nil)
         windowController.showWindow(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
@@ -40,13 +49,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return true
     }
 
-    func applicationWillTerminate(_ notification: Notification) { model?.persistCommittedState() }
-
-    @objc private func showFocus() {
-        model.selectedTab = .focus
-        windowController.showWindow(nil)
-        NSApp.activate(ignoringOtherApps: true)
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard let model else { return .terminateNow }
+        guard !terminationPending else { return .terminateLater }
+        terminationPending = true
+        Task { @MainActor in
+            await model.prepareForTermination()
+            sender.reply(toApplicationShouldTerminate: true)
+        }
+        return .terminateLater
     }
+
+    func applicationDidHide(_ notification: Notification) { model?.persistCommittedState() }
+    @objc private func willSleep() { model?.persistCommittedState() }
+    @objc private func didWake() { model?.refreshTimer() }
+
+    @objc private func showFocus() { menuBarController.showFocus() }
 
     private func installMenus() {
         let menu = NSMenu()

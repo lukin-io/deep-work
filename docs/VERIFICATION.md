@@ -1,8 +1,8 @@
-# Stage 1 native verification
+# Native verification
 
 October 18, 2026. Progress and acceptance status are maintained only in [IMPLEMENTATION_CHECKLIST.md](../IMPLEMENTATION_CHECKLIST.md). These are observed results and reproducible use cases, not claims that later milestones are complete.
 
-## Environment and commands
+## Stage 1 environment and commands
 
 - macOS 27.0.1 (26A434), arm64; Apple Swift 6.4; Command Line Tools SDK.
 - Production deployment floor: macOS 13. macOS 13 runtime and Intel hardware are unverified. The installed Swift Testing runtime targets macOS 14+.
@@ -52,7 +52,7 @@ Test names include stable handoff IDs. Core tests are in `DeepWorkTests/Core`; a
 | UI-07: native window controls | AppKit integration proves minimize/deminimize, zoom/restore, and close/hide without destroying owner state. The green control entered full screen; Control-Command-F entered/exited full screen and returned the native title-bar controls while retaining the draft. |
 | UI-08: SQLite on normal path | Native app shows Saved on this device and Settings saved on this device. Read-only inspection of `~/Library/Application Support/app.deepwork.mac/DeepWork.sqlite` reports integrity_check=ok, user_version=1, journal_mode=wal, and the expected three tables. Directory permissions are 0700 and database permissions 0600. The known acceptance draft migrated successfully. |
 
-The ordinary window and tab behavior above was exercised on macOS. Full VoiceOver announcements, exhaustive light/dark review, all 320 pt content layouts, actual timer continuity, menu countdown, reports/examples, exports, clipboard, real login, and Slack remain unverified or unimplemented according to their later stages.
+The ordinary window and tab behavior above was exercised on macOS. At the Stage 1 exit, full VoiceOver announcements, exhaustive light/dark review, all 320 pt content layouts, timer continuity, menu countdown, reports/examples, exports, clipboard, real login, and Slack remained unverified or unimplemented. Stage 2 results below supersede the timer/menu portions.
 
 ## Reproduce an isolated persistence failure
 
@@ -63,3 +63,62 @@ Quit the normal app first. Use a disposable test directory, create a regular fil
 Review exposed an unreadable-legacy-source bug: probing with `fileExists` could interpret access denial as absence and publish empty defaults. The implemented fix reads legacy files directly, treats only an actually absent source as absent, and refuses to publish the canonical database on a read/validation failure. Passing regressions cover denied source access and a non-directory source path. Independent native reproduction verified failure publishes no database, then restores the original preference after access is repaired and a new store is opened.
 
 Known dummy acceptance data was moved, without deletion, into `.build/ui-acceptance-archive` after the test app exited. The final app was reopened on Journal with fresh SQLite defaults and a healthy saved status. No example records or dummy feedback remain in the normal store.
+
+
+## Stage 2 — Focus, October 18, 2026
+
+Stage 2 adds the deterministic timer, Focus controls, exact active-segment accounting, ordered background SQLite checkpoints, paused recovery, process ownership, and native status-item projection. The reference and initial JSON tracker remain unchanged. Progress by stable ID remains in the checklist.
+
+### Native automated verification
+
+Final verification commands:
+
+| Command | Result |
+| --- | --- |
+| `./scripts/test.sh` | **99 passed: 78 core + 21 app**, both terminal summaries present; `.build/stage2-tests.log`. Parameterized cases run in addition to these test-function counts. |
+| `./scripts/build-app.sh` | Native compile/package/ad hoc signing passed; `.build/stage2-build.log`. |
+| `swift build -Xswiftc -strict-concurrency=complete` | Passed, no product-source concurrency warnings; `.build/stage2-strict-build.log`. |
+| `python3 scripts/generate-xcode-project.py` | Generated 11 app source references and 6 core-test references. |
+| `plutil -lint DeepWork/Resources/Info.plist DeepWork.xcodeproj/project.pbxproj` | Both OK. |
+| `codesign --verify --strict ".build/Deep Work.app"` | Passed. |
+| Manifest hash/length comparison | All 8 approved reference files unchanged; initial JSON tracker unchanged in Git. |
+| `xcodebuild -project DeepWork.xcodeproj -scheme DeepWork -configuration Debug -destination 'platform=macOS' build` | Still blocked before compilation by the exact missing-Xcode error above. |
+
+CLT's known linker search-path/test-runtime-floor warnings remain; they are separate from test results.
+
+A synthetic `NSStatusBarButton.performClick` caused SwiftPM's hostless main run loop to exit with status 0 before later async tests finished. Native integration now dispatches the real button's configured target/action with `sendAction`, asserts successful dispatch, and records the foreground-activation request through an injected adapter. Production still calls native app activation; the compiled app's Command-0/Focus reopen path was exercised manually. No test-delegate, retention, or private-API workaround remains. AppKit suites serialize process-global window/focus access. `scripts/test.sh` now requires a terminal result for every started run; its guard rejected the captured incomplete run and accepted the complete final run.
+
+- Timer engine cases cover AC-03–10/12/13: exact deadlines, repeated reconciliation, multiple crossed pairs, old Repeat value before a delayed change, stale same-phase identity, paused manual transitions, zero/17-second partial records, start-again identity, ceil countdown through 480:00, progress/copy, sleep-equivalent elapsed advances, forward/backward wall-clock changes, and sealed recovery.
+- App/SQLite cases cover AC-02–13: exact custom errors and boundaries, handler revalidation, stored hidden custom choices, five-second checkpoints, transition records/checkpoint in one transaction, Quit drain, crash-point recovery, unchanged live UUID, no downtime, independent settings, storage failure with usable timing, and no false saved caption.
+- Native AppKit cases cover actual windows and status-item target/action dispatch: hidden Settings → Focus with the same running/paused record, menu text/font/icons/accessibility projection, boundary reconciliation on tab change, and tab first-responder retention in setup/running/paused states.
+- Reduced-motion presentation is injected into the native progress component without changing system preferences. The production adapter reads SwiftUI's native Reduce Motion environment. Actual system preference propagation and exhaustive VoiceOver remain Stage 6 acceptance.
+
+### Native UI and process acceptance
+
+All Stage 2 manual sessions below used the isolated Debug directory `.build/stage2-native-data`; they are not real user history.
+
+| Case | Observed native result |
+| --- | --- |
+| UI-09: setup and validation | Fresh launch selected Journal. Focus showed blank selectors, Repeat on, disabled Start. Approved preset menus were present. Custom focus/break selected all of the defaults 75/15 for editing. Focus 0 displayed exactly “Choose a whole number from 1 to 480.” in the UI and field accessibility help; correcting to 1 cleared the error. Valid 1/1 choices updated the summary and enabled Start. |
+| UI-10: real countdown/pause | Start hid setup and displayed Deep work / 01:00 / 1-minute break next. Progress advanced with elapsed time. Pause at 23.557982083 seconds remaining displayed 00:24 and the paused-time caption; repeated observation remained frozen. SQLite contained one sealed live checkpoint and no finalized row. |
+| UI-11: graceful Quit/relaunch | Command-Q exited the process after checkpoint persistence. Relaunch opened Journal; Command-0 showed the recovery notice, Deep work paused, and the same 00:24 remainder. The original focus UUID and active segment were retained. Resume cleared recovery, then hiding from Settings with Command-W allowed the timer to cross its focus deadline. Command-0 reopened Focus in its final break. |
+| UI-12: automatic completion | The real one-minute focus finalized once as Complete with exactly 60.0 seconds across two active segments. The original UUID was unchanged. Break time added no row. The final break reached Cycle complete / 00:00 / Saved to your journal, with 100 percent progress, Start again and End session, and no next-phase button. SQLite integrity_check was ok and the active checkpoint was absent. |
+| UI-13: independent process ownership | A copied native app bundle with a distinct test-only bundle ID targeted the same isolated data directory. It displayed “Deep Work is already open” and refused to open a second controllable session. Dismissing OK exited that process. The owner remained paused with the same checkpoint. This exercises an actual second process, not only two lock objects. |
+| UI-14: abrupt process recovery | Start again created a new UUID. After periodic saving, SIGKILL terminated only the known isolated acceptance process, bypassing Quit. Relaunch restored it paused at the exact last committed 49.61512375000004 seconds (display 00:50). Read-only SQLite comparison proved identical UUID, remaining seconds, and active segments; the earlier complete row remained exactly once. |
+| UI-15: paused manual transition | Take break from recovered paused focus cleared recovery and started an unpaused full one-minute break. The existing positive focus was retained as Partial. Pause changed it to Break paused / Resume without adding focus. Quit saved the break checkpoint. Final-build relaunch restored Break paused at 00:54; Finish break completed immediately, and End session restored the saved 1/1 custom setup. |
+| UI-16: accessible timer regression | Parent SwiftUI identifiers initially replaced leaf identifiers and adjacent static text merged the countdown into phase/recovery text. Explicit accessibility containers plus a distinct frequently updated timer element fixed it. Native AX inspection now exposes dw-recovery-note, dw-phase-name, dw-timer named Time remaining with value 00:50, dw-run-caption, dw-progress with its rounded percentage, and separate dw-pause/dw-next/dw-end buttons. |
+
+### Regression and platform decisions verified
+
+- Invalid duration error copy was corrected with unit/app validation cases; invalid raw edits cannot start using an older valid stored value.
+- Tab appearance initially moved focus from the tab strip into Focus. The explicit menu focus request is now separate from normal tab selection. Native key routing checks Right/Left wrap and Home/End while retaining the actual segmented first responder and session identity.
+- Changing tabs now reconciles crossed boundaries before presenting Journal and queues the corresponding snapshot; a deterministic integration test verifies the record in SQLite immediately after flushing.
+- Pending/failed persistence cannot claim “Saved to your journal.” A completion shows saving until its transaction succeeds; failure shows an in-memory-only message.
+- Quit freezes timer/configuration actions while its final writes drain, preventing Resume or edits from enqueueing work after the termination barrier.
+- Button focus requests honor the user's macOS Keyboard navigation setting; the implementation does not change global preferences or create duplicate custom focus targets. Text-field focus/select-all was verified. See Apple's focus guidance in native decisions.
+
+### Remaining verification boundaries
+
+Full Xcode is still not installed: the exact `xcodebuild` blocker above remains. macOS 13 and Intel execution, actual physical sleep/wake, abrupt power loss, exhaustive VoiceOver announcements, system Reduce Motion preference propagation, light/dark and narrow-window review remain unverified. Clock-policy tests exercise sleep-equivalent elapsed time deterministically, and real hidden-window timing was observed; neither is presented as a physical sleep test.
+
+Journal reports/examples/work-schedule editing, CSV/clipboard, actual login registration and Slack remain future milestones. J-052 is still incomplete because CSV must remain usable under storage failure; J-053 still needs actual live report rows/metrics. No JavaScript result was used as native completion evidence.
