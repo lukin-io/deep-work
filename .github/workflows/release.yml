@@ -35,7 +35,7 @@ jobs:
       - name: Release publication regression tests
         run: python3 DeepWorkTests/Release/test-publish-release.py
       - name: Compile with complete concurrency checking
-        run: swift build -Xswiftc -strict-concurrency=complete
+        run: swift build -Xswiftc -strict-concurrency=complete -Xswiftc -warnings-as-errors
       - name: Validate Xcode project and property list
         run: plutil -lint DeepWork/Resources/Info.plist DeepWork.xcodeproj/project.pbxproj
 
@@ -64,6 +64,11 @@ jobs:
           # Validate before writing a GitHub output or using the tag in paths.
           [[ "$release_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-preview\.[1-9][0-9]*$ ]]
           printf 'tag=%s\n' "$release_tag" >> "$GITHUB_OUTPUT"
+      - name: Build native Xcode project
+        run: >-
+          xcodebuild -project DeepWork.xcodeproj -scheme DeepWork
+          -configuration Release -destination 'platform=macOS'
+          -derivedDataPath .build/Xcode CODE_SIGNING_ALLOWED=NO build
       - name: Build optimized universal app and verified archive
         env:
           RELEASE_TAG: ${{ steps.version.outputs.tag }}

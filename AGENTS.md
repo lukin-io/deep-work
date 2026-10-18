@@ -36,7 +36,7 @@
 
 ## Build and verification
 
-- Verified locally: `./scripts/test.sh` runs 109 native Swift tests plus 12 native icon packaging checks; `./scripts/build-app.sh` compiles and packages `.build/Deep Work.app`; `open ".build/Deep Work.app"` launches it. Current results and environment limits are in `docs/VERIFICATION.md`.
+- Verified locally: `./scripts/test.sh` runs 110 native Swift tests plus 12 native icon packaging checks; `./scripts/build-app.sh` compiles and packages `.build/Deep Work.app`; `open ".build/Deep Work.app"` launches it. Current results and environment limits are in `docs/VERIFICATION.md`.
 - `plutil -lint DeepWork/Resources/Info.plist DeepWork.xcodeproj/project.pbxproj` validates project/plist syntax. Regenerate explicit Xcode references with `python3 scripts/generate-xcode-project.py` after adding/removing app or core test sources.
 - Stages 1–2 were compiled with Swift 6.4 and the Command Line Tools macOS SDK. Full Xcode is not installed; never claim `xcodebuild` verification until it succeeds. Xcode 16+ instructions are in `README.md`.
 - `swift build -Xswiftc -strict-concurrency=complete` verifies production concurrency checking. Require complete Swift Testing summaries; the test script rejects premature hostless exits even when SwiftPM returns success.

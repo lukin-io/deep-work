@@ -122,6 +122,35 @@ struct AppModelTests {
 extension NativeApplicationTests {
 @Suite(.serialized)
 struct WindowIntegrationTests {
+    @Test @MainActor func testG009_G010_G011_G012NativeTabActionUpdatesBindingAndIgnoresNoSelection() async throws {
+        prepareNativeTestApplication()
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let model = AppModel(journalStore: JournalStore(directory: directory), settingsStore: SettingsStore(directory: directory))
+        let controller = WindowController(model: model)
+        let window = try #require(controller.window)
+        defer { window.orderOut(nil) }
+        controller.showWindow(nil)
+        let content = try #require(window.contentView)
+        content.layoutSubtreeIfNeeded()
+        func findTabs(_ view: NSView) -> TabSegmentedControl? {
+            if let tabs = view as? TabSegmentedControl { return tabs }
+            return view.subviews.lazy.compactMap { findTabs($0) }.first
+        }
+        let tabs = try #require(findTabs(content))
+        // Exercise the actual coordinator target/action created by SwiftUI. The
+        // action must update the shared binding synchronously on the main actor.
+        for tab in AppTab.allCases {
+            tabs.selectedSegment = tab.rawValue
+            #expect(tabs.sendAction(tabs.action, to: tabs.target))
+            #expect(model.selectedTab == tab)
+        }
+        tabs.selectedSegment = -1
+        #expect(tabs.sendAction(tabs.action, to: tabs.target))
+        #expect(model.selectedTab == .settings)
+        await model.flushPersistence()
+    }
+
     @Test @MainActor func testG001_G006_G007_G008_G011NativeLifecycleAndG009PanelResizeRegression() async throws {
         prepareNativeTestApplication()
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)

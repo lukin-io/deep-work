@@ -60,6 +60,7 @@ struct NavigationTabs: NSViewRepresentable {
         control.selectedSegment = selection.rawValue
     }
     func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
+    @MainActor
     final class Coordinator: NSObject {
         var parent: NavigationTabs
         init(parent: NavigationTabs) { self.parent = parent }
