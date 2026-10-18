@@ -126,6 +126,13 @@ git push -u origin HEAD
 
 Follow `AGENTS.md` for tests, progress evidence, and commit/PR wording. Use GitHub's pull-request UI or an authenticated GitHub client after pushing; no GitHub CLI is required to build or test. Before the initial app PR merges, run `git switch --track origin/feature/native-macos-stage-2` in a fresh clone to build the native app.
 
+Pushing requires GitHub authentication. This development machine uses an existing authorized SSH key; its `origin` is `git@github.com:lukin-io/deep-work.git`. To use an already configured GitHub SSH key after an HTTPS clone:
+
+```sh
+git remote set-url origin git@github.com:lukin-io/deep-work.git
+git remote -v
+```
+
 ## Local data and current behavior
 
 - Journal opens on launch. Focus, Journal, and Settings share one app-owned model. The red close button or Command-W only hides the main window: running timers, phase transitions and SQLite checkpoints continue; already paused timers stay paused. The native menu bar shows the running countdown and **Deep work** or **Break**. Click that timer to bring the same window to the front on Focus without restarting; File → Show Deep Work (Command-0) does the same. Hide (Command-H) and Minimize also preserve timing.
