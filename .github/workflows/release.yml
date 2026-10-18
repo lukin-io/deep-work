@@ -1,6 +1,6 @@
 name: Native tests and release
 
-on:
+'on':
   pull_request:
     branches: [main]
   push:
@@ -12,20 +12,44 @@ permissions:
 
 concurrency:
   group: release-${{ github.ref }}
-  cancel-in-progress: false
+  # Superseded PR checks are disposable; a tag publication must finish intact.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   PYTHONDONTWRITEBYTECODE: '1'
 
 jobs:
   native-tests:
-    name: Native tests (Apple Silicon)
-    runs-on: macos-15
+    name: Native tests (macOS ${{ matrix.macos }}, Xcode ${{ matrix.xcode }}, arm64)
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Explicit GA images/toolchains: minimum supported OS and current GA.
+          - runner: macos-15
+            macos: '15'
+            xcode: '16.4'
+            sdk: '15.5'
+          - runner: macos-26
+            macos: '26'
+            xcode: '26.6'
+            sdk: '26.5'
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 20
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_${{ matrix.xcode }}.app/Contents/Developer
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Verify selected Apple Silicon runner and Xcode
+        env:
+          EXPECTED_MACOS: ${{ matrix.macos }}
+          EXPECTED_XCODE: ${{ matrix.xcode }}
+          EXPECTED_SDK: ${{ matrix.sdk }}
+        run: ./scripts/verify-ci-environment.sh "$EXPECTED_MACOS" "$EXPECTED_XCODE" "$EXPECTED_SDK"
+      - name: CI environment and publication-gate regressions
+        run: python3 DeepWorkTests/Build/test-ci-policy.py
       - name: Native model, SQLite, AppKit and icon tests
         run: ./scripts/test.sh
       - name: Release publication regression tests
@@ -34,11 +58,18 @@ jobs:
         run: swift build -Xswiftc -strict-concurrency=complete -Xswiftc -warnings-as-errors
       - name: Validate Xcode project and property list
         run: plutil -lint DeepWork/Resources/Info.plist DeepWork.xcodeproj/project.pbxproj
+      - name: Build native Xcode project
+        run: >-
+          xcodebuild -project DeepWork.xcodeproj -scheme DeepWork
+          -configuration Release -destination 'platform=macOS,arch=arm64'
+          -derivedDataPath .build/Xcode CODE_SIGNING_ALLOWED=NO build
 
   package:
     needs: native-tests
     runs-on: macos-15
     timeout-minutes: 20
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
     outputs:
       tag: ${{ steps.version.outputs.tag }}
     steps:
@@ -46,6 +77,8 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Verify packaging toolchain
+        run: ./scripts/verify-ci-environment.sh 15 16.4 15.5
       - name: Select package version
         id: version
         shell: bash
@@ -60,11 +93,6 @@ jobs:
           # Validate before writing a GitHub output or using the tag in paths.
           [[ "$release_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-preview\.[1-9][0-9]*$ ]]
           printf 'tag=%s\n' "$release_tag" >> "$GITHUB_OUTPUT"
-      - name: Build native Xcode project
-        run: >-
-          xcodebuild -project DeepWork.xcodeproj -scheme DeepWork
-          -configuration Release -destination 'platform=macOS'
-          -derivedDataPath .build/Xcode CODE_SIGNING_ALLOWED=NO build
       - name: Build optimized Apple Silicon app and verified archive
         env:
           RELEASE_TAG: ${{ steps.version.outputs.tag }}
@@ -88,6 +116,8 @@ jobs:
     needs: package
     runs-on: macos-15
     timeout-minutes: 10
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
     permissions:
       contents: write
     steps:
@@ -95,6 +125,8 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Verify publication verification toolchain
+        run: ./scripts/verify-ci-environment.sh 15 16.4 15.5
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: macOS-release

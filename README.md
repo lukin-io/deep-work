@@ -10,6 +10,14 @@ Previews are **ad hoc signed and unnotarized**; macOS may block first launch. On
 
 The first preview passed [release CI and public-download verification](https://github.com/lukin-io/deep-work/actions/runs/39108209226). Download `SHA256SUMS` and `release-metadata.json` alongside the app ZIP and verify them with `shasum -a 256 -c SHA256SUMS`. The metadata records the source commit and build configuration. Quit an older running copy before replacing it; user data stays in Application Support.
 
+## TODO
+
+- [ ] **This Mac has no Developer ID signing identity.** Configure an Apple Developer Program team's **Developer ID Application** certificate and its matching private key, either in this Mac's signing keychain or a protected CI signing environment. The local check is `security find-identity -v -p codesigning`; it currently reports zero valid identities. Never commit certificates, private keys or passwords.
+- [ ] Implement and verify the stable distribution path: hardened runtime, secure timestamp, notarization with `notarytool`, stapling on the app before the final ZIP, and Gatekeeper checks. Current automation intentionally publishes only clearly labelled unnotarized previews.
+- [ ] Complete the remaining physical Mac acceptance checks, including VoiceOver/keyboard access, light/dark appearance, menu-bar clicking and sleep/wake. Product acceptance stays in `IMPLEMENTATION_CHECKLIST.md`.
+
+Read the [10-point Apple development and distribution guide](docs/MACOS_RELEASE_GUIDE.md) for requirements, conditional App Store rules, current gaps and official sources. This TODO covers release readiness; it does not replace the product progress tracker.
+
 ## Start here
 
 | File | Use it for |
@@ -140,7 +148,7 @@ git commit
 git push -u origin HEAD
 ```
 
-Follow `AGENTS.md` for tests, progress evidence, and commit/PR wording. Use GitHub's pull-request UI or an authenticated GitHub client after pushing; no GitHub CLI is required to build or test. Before the initial app PR merges, run `git switch --track origin/feature/native-macos-stage-2` in a fresh clone to build the native app.
+Follow `AGENTS.md` for tests, progress evidence, and commit/PR wording. Use GitHub's pull-request UI or an authenticated GitHub client after pushing; no GitHub CLI is required to build or test.
 
 Pushing requires GitHub authentication. This development machine uses an existing authorized SSH key; its `origin` is `git@github.com:lukin-io/deep-work.git`. To use an already configured GitHub SSH key after an HTTPS clone:
 
@@ -148,6 +156,30 @@ Pushing requires GitHub authentication. This development machine uses an existin
 git remote set-url origin git@github.com:lukin-io/deep-work.git
 git remote -v
 ```
+
+## GitHub Actions CI
+
+The implemented pipeline is [`.github/workflows/release.yml`](.github/workflows/release.yml). PRs targeting `main`, pushes to `main`, and version tags run it:
+
+| Job | Actual checks |
+| --- | --- |
+| Native tests — macOS 15 / Xcode 16.4 / SDK 15.5 | Apple Silicon environment validation; CI policy, model, SQLite, AppKit, platform, icon and publisher tests; complete concurrency checking with Swift warnings as errors; plist/project lint; Xcode Release build |
+| Native tests — macOS 26 / Xcode 26.6 / SDK 26.5 | The same native checks on the newer supported OS/toolchain, still arm64 only |
+| Package — macOS 15 / Xcode 16.4 | Wait for both native jobs, build the optimized arm64 app, verify its exact deployment floor and contents, run archive regressions, retain the ZIP/checksums/metadata as temporary artifacts |
+| Publish — version-tag pushes only | Verify annotated tag, source and `main` ancestry; upload a draft prerelease, verify downloaded bytes, publish, then verify public downloads without credentials |
+
+Every job explicitly selects `DEVELOPER_DIR`; `scripts/verify-ci-environment.sh` rejects unexpected architecture, OS, Xcode, SDK or Swift selection. Update the pinned toolchain and tests together when runner images change. The [official macOS 15 image](https://github.com/actions/runner-images/blob/main/images/macos/macos-15-arm64-Readme.md) and [macOS 26 image](https://github.com/actions/runner-images/blob/main/images/macos/macos-26-arm64-Readme.md) list installed versions. Only superseded PR runs cancel automatically; a tag publication runs to completion. Actions are pinned to commit SHAs, and only the tag-only publication job has repository write permission.
+
+For CI/release-script changes, run the native checks above plus:
+
+```sh
+python3 DeepWorkTests/Build/test-ci-policy.py
+python3 DeepWorkTests/Release/test-publish-release.py
+./DeepWorkTests/Release/test-release.sh
+bash -n scripts/verify-ci-environment.sh scripts/package-release.sh scripts/publish-release.sh
+```
+
+This pipeline is verified preview infrastructure. A production signed/notarized job remains gated by the TODO above: provision a protected signing environment with a temporary keychain, sign with Developer ID and Hardened Runtime, notarize/staple, verify Gatekeeper, and only then package the final downloadable ZIP. The current workflow never treats missing Apple credentials as a successful stable release. Protect `main` and release tags in GitHub rulesets when managing collaborators; workflow checks do not themselves configure repository access policy.
 
 ## Build and publish a preview release
 
@@ -177,7 +209,7 @@ git tag -a "$release_tag" -m "Deep Work $release_tag"
 git push origin "$release_tag"
 ```
 
-Do not repeat those commands once the version exists or move a published tag. Normal releases should be based on reviewed `main`; the initial requested preview may come from the app feature branch while PR #1 is open.
+Do not repeat those commands once the version exists or move a published tag. New releases must already belong to `origin/main`; the publisher refreshes that ref and verifies ancestry before creating a draft and again before publication. The initial preview was created before PR #1 merged and remains immutable.
 
 The workflow runs native tests on Apple Silicon, checks the Xcode Release build, builds and tests an arm64 package, and creates a draft GitHub prerelease. It uploads the app ZIP, checksums and metadata, downloads and verifies them, then publishes with Latest disabled and verifies the public downloads without authentication. PR runs only validate and retain temporary Actions artifacts; they cannot publish. CI assigns its run number as the packaged build number.
 

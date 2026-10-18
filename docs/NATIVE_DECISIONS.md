@@ -95,3 +95,8 @@ Stage 1 and Stage 2 decisions, October 18, 2026. The specification remains the p
 Every new feature and fix requires the unit, integration, and acceptance coverage appropriate to its behavior under `AGENTS.md`. Documented policies and structural checks are not substitutes for native acceptance evidence.
 
 - With the macOS 15 floor, SwiftUI change handlers use the supported zero/two-argument `onChange` overload. New-value side effects and default `initial: false` semantics are preserved. [Apple: onChange](https://developer.apple.com/documentation/swiftui/view/onchange(of:initial:_:)-4psgg). Native progress integration synchronizes with the real `NSProgressIndicator`; supplementary layer snapshots use the model-layer renderer and do not claim to verify animation timing. [Apple: CALayer rendering](https://developer.apple.com/documentation/quartzcore/calayer/render(in:)).
+
+## CI and Apple distribution readiness
+
+- CI explicitly selects and verifies Apple Silicon macOS 15/Xcode 16.4/SDK 15.5 and macOS 26/Xcode 26.6/SDK 26.5. Both perform native testing, strict compilation and Xcode Release builds; packaging stays on the macOS 15 toolchain and waits for both. New tag publications require the commit to belong to freshly fetched `origin/main`. The existing preview and source tag are immutable.
+- No Developer ID identity is present on the implementation Mac. Current publication remains an unnotarized preview path; a secure CI identity can eventually remove that distribution blocker without installing the private key on this Mac. [MACOS_RELEASE_GUIDE.md](MACOS_RELEASE_GUIDE.md) distinguishes direct-distribution requirements, conditional App Store rules, HIG and remaining acceptance. No signing credentials or account setup are invented.

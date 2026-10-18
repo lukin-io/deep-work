@@ -46,6 +46,19 @@ verify_remote_tag() {
 }
 verify_remote_tag
 
+verify_main_ancestry() {
+  # Every new release follows the merged main history. Refresh the public ref
+  # before checking; stale checkout refs cannot authorize publication.
+  git fetch --quiet --no-tags origin refs/heads/main:refs/remotes/origin/main ||
+    fail 'could not refresh origin/main for release ancestry verification'
+  local main_commit
+  main_commit="$(git rev-parse --verify 'refs/remotes/origin/main^{commit}' 2>/dev/null)" ||
+    fail 'origin/main does not resolve to a commit'
+  git merge-base --is-ancestor "$commit" "$main_commit" ||
+    fail 'the release commit must already belong to origin/main'
+}
+verify_main_ancestry
+
 artifact_directory="${2:-.build/releases/$tag}"
 [[ -d "$artifact_directory" ]] || fail 'the artifact directory is missing'
 artifact_directory="$(cd "$artifact_directory" && pwd -P)"
@@ -109,6 +122,7 @@ done
 
 # Recheck both identities immediately before the only publication operation.
 verify_remote_tag
+verify_main_ancestry
 gh release view "$tag" --repo "$repository" --json id,isDraft,isPrerelease,tagName > "$download_directory/current.json"
 python3 - "$download_directory/created.json" "$download_directory/current.json" <<'PY'
 import json, sys

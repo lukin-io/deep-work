@@ -73,6 +73,20 @@ else:
 MOCK_GIT = r'''#!/usr/bin/env python3
 import json, os, pathlib, sys
 args = sys.argv[1:]
+if args and args[0] == 'fetch':
+    root = pathlib.Path(os.environ['TEST_STATE'])
+    with (root / 'events.jsonl').open('a') as stream:
+        stream.write(json.dumps(['git'] + args) + '\n')
+    counter = root / 'main-fetch-count'
+    count = int(counter.read_text()) + 1 if counter.exists() else 1
+    counter.write_text(str(count))
+    if os.environ.get('TEST_MAIN_FETCH_FAIL'): sys.exit(128)
+    if os.environ.get('TEST_MAIN_REF_MISSING'): sys.exit(0)
+    commit = os.environ.get('TEST_MAIN_COMMIT', os.environ['GITHUB_SHA'])
+    if count > 1 and os.environ.get('TEST_MAIN_CHANGED'):
+        commit = os.environ['TEST_MAIN_CHANGED']
+    os.execv(os.environ['TEST_REAL_GIT'], [os.environ['TEST_REAL_GIT'], 'update-ref',
+                                        'refs/remotes/origin/main', commit])
 if args and args[0] == 'ls-remote':
     root = pathlib.Path(os.environ['TEST_STATE'])
     with (root / 'events.jsonl').open('a') as stream:
@@ -234,6 +248,7 @@ class PublicationTests(unittest.TestCase):
         self.assertFalse(self.release_state()["isDraft"])
         self.assertEqual(sum(event[0] == "verify" for event in events), 3)
         self.assertEqual(sum(event[:2] == ["git", "ls-remote"] for event in events), 2)
+        self.assertEqual(sum(event[:2] == ["git", "fetch"] for event in events), 2)
         self.assertEqual(sum(event[0] == "curl" for event in events), 3)
         self.assertEqual(events[-1][0], "verify")
         publication_index = next(index for index, event in enumerate(events) if event[:3] == ["gh", "release", "edit"])
@@ -242,6 +257,35 @@ class PublicationTests(unittest.TestCase):
         self.assertTrue(any(event[:3] == ["gh", "release", "download"] for event in events[:publication_index]))
         self.assertLess(publication_index, public_index)
         self.assertEqual(sorted(file.name for file in (self.state / "uploaded").iterdir()), sorted(self.assets))
+
+    def test_release_commit_can_be_an_ancestor_of_main(self):
+        self.git("commit", "--allow-empty", "-qm", "Later merged work")
+        main = self.git("rev-parse", "HEAD").strip()
+        self.git("checkout", "--detach", self.commit)
+        self.run_publication(expected_success=True, TEST_MAIN_COMMIT=main)
+
+    def test_rejects_release_commit_outside_main(self):
+        other = self.git("commit-tree", "HEAD^{tree}", "-m", "Unrelated main").strip()
+        result = self.run_publication(TEST_MAIN_COMMIT=other)
+        self.assertIn("must already belong to origin/main", result.stderr)
+        self.assert_no_creation()
+
+    def test_main_refresh_failure_does_not_trust_a_stale_ref(self):
+        self.git("update-ref", "refs/remotes/origin/main", self.commit)
+        result = self.run_publication(TEST_MAIN_FETCH_FAIL="1")
+        self.assertIn("could not refresh origin/main", result.stderr)
+        self.assert_no_creation()
+
+    def test_missing_main_ref_prevents_publication(self):
+        result = self.run_publication(TEST_MAIN_REF_MISSING="1")
+        self.assertIn("origin/main does not resolve", result.stderr)
+        self.assert_no_creation()
+
+    def test_main_history_changed_during_upload_retains_draft(self):
+        other = self.git("commit-tree", "HEAD^{tree}", "-m", "Rewritten main").strip()
+        result = self.run_publication(TEST_MAIN_CHANGED=other)
+        self.assertIn("must already belong to origin/main", result.stderr)
+        self.assert_unpublished_draft()
 
     def test_rejects_local_lightweight_tag(self):
         self.git("tag", "-d", TAG)
