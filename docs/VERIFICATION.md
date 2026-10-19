@@ -304,3 +304,16 @@ Compiled accessibility inspection found merged container identifiers in the init
 ### Hosted CI compatibility correction
 
 The first Stage 3 [PR run 39235692951](https://github.com/lukin-io/deep-work/actions/runs/39235692951) exposed an Xcode 16.4/Swift 6.1.2 test-compilation difference: `[0, 23 * 3_600, 0]` was inferred as `[Int]` inside the Swift Testing macro despite a `[TimeInterval]` comparison. The DST fixture now declares `[TimeInterval]` explicitly; the expected values and production code are unchanged. `./scripts/test.sh --filter JournalReportTests` passes all 22 affected native tests locally, plus platform/icon checks (`.build/stage3-xcode16-fixture-tests.log`). Hosted verification must pass on the corrected revision before claiming matrix success.
+
+### Hosted Stage 3 result
+
+[PR run 39236029448](https://github.com/lukin-io/deep-work/actions/runs/39236029448) **passed** for source head `fbb590580f8efb990894f066013eab14e40d1c8a`, tested as GitHub's merge preview `1c06b24` against `main` at `2ea0b94bc3cb320087921fbb3ff0670d361a44dc`.
+
+| Runner | Verified toolchain | Native/policy tests | Xcode Release |
+| --- | --- | --- | --- |
+| macOS 15.7.9, arm64 | Xcode 16.4, Swift 6.1.2, SDK 15.5 | 170 Swift, 4 platform, 12 icon, 22 CI policy and 38 publication regressions passed | BUILD SUCCEEDED |
+| macOS 26.6.2, arm64 | Xcode 26.6, Swift 6.3.3, SDK 26.5 | 170 Swift, 4 platform, 12 icon, 22 CI policy and 38 publication regressions passed | BUILD SUCCEEDED |
+
+Both strict-concurrency builds with Swift warnings treated as errors and project/plist validation passed. Both runners passed the four native report/schedule geometry cases; hostless SwiftUI chart/picker accessibility remained unavailable and explicitly unverified. Hosted success does not change the remaining keyboard/VoiceOver/visual acceptance gates.
+
+The dependent package job built the optimized arm64/macOS 15+ app, verified the archive and passed **20 release-policy plus 17 actual archive regressions**. Its temporary `macOS-release` Actions artifact is 2,181,510 bytes (artifact ID `12179421907`); it is not a GitHub Release or public app download. Publication correctly remained **skipped**. PR #2 remains open against `main`; no merge or new version tag was requested or performed. The follow-up documentation commit records this completed run without changing product code or tests.

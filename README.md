@@ -128,7 +128,7 @@ xcodebuild -project DeepWork.xcodeproj -scheme DeepWork \
   -configuration Debug -destination 'platform=macOS' build
 ```
 
-**Local full Xcode remains unavailable:** `xcode-select -p` returns `/Library/Developer/CommandLineTools`; local `xcodebuild` requires an Xcode installation. Separately, [hosted CI passed](https://github.com/lukin-io/deep-work/actions/runs/39107935588) the native tests and an Apple Silicon Release build with **Xcode 16.4 and macOS SDK 15.5**. CI uses this project-build check; the downloadable app is packaged and signed separately by the release script:
+**Local full Xcode remains unavailable:** `xcode-select -p` returns `/Library/Developer/CommandLineTools`; local `xcodebuild` requires an Xcode installation. Separately, [Stage 3 hosted CI passed](https://github.com/lukin-io/deep-work/actions/runs/39236029448) all 170 native tests and Apple Silicon Xcode Release builds on **macOS 15/Xcode 16.4/SDK 15.5** and **macOS 26/Xcode 26.6/SDK 26.5**, followed by optimized packaging and archive tests. CI uses this project-build check; the downloadable app is packaged and signed separately by the release script:
 
 ```sh
 xcodebuild -project DeepWork.xcodeproj -scheme DeepWork \
@@ -256,7 +256,7 @@ Quit any running copy first. Release builds ignore this override. This location 
 
 ## Native milestone verification
 
-Stage 3 passes **170 native Swift tests (115 core + 55 app)**, 4 platform checks and 12 icon checks locally, plus strict concurrency compilation and app packaging. The [verification record](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026) separates local results, compiled UI observations, hosted CI and unverified keyboard/VoiceOver/visual checks.
+Stage 3 passes **170 native Swift tests (115 core + 55 app)**, 4 platform checks and 12 icon checks locally, plus strict concurrency compilation and app packaging. [PR CI](https://github.com/lukin-io/deep-work/actions/runs/39236029448) passes the macOS 15/26 matrix, both Xcode Release builds and packaging. The [verification record](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026) separates local results, compiled UI observations, hosted CI and unverified keyboard/VoiceOver/visual checks.
 
 Run all native tests, or select the relevant suites:
 
