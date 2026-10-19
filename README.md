@@ -115,7 +115,7 @@ swift build -Xswiftc -strict-concurrency=complete -Xswiftc -warnings-as-errors
 plutil -lint DeepWork/Resources/Info.plist DeepWork.xcodeproj/project.pbxproj
 ```
 
-For manual acceptance with disposable data, **quit the normal app first**, then launch the Debug executable explicitly:
+For user-directed manual acceptance with disposable data, **quit the normal app first**, then launch the Debug executable explicitly:
 
 ```sh
 test_data_dir="${TMPDIR%/}/deep-work-manual"
@@ -124,7 +124,7 @@ DEEP_WORK_DATA_DIR="$test_data_dir" \
   ".build/Deep Work.app/Contents/MacOS/DeepWork"
 ```
 
-Reuse the same test directory and launch command on every test relaunch: opening the app normally uses the real Application Support store. The override is Debug-only. For simultaneous automated UI testing, use a separate test bundle with a distinct executable and bundle identifier, preserve the override for every launch, and verify its store ownership lock points inside the fixture directory before editing. Never quit or alter a running personal session for acceptance testing.
+Reuse the same test directory and launch command on every test relaunch: opening the app normally uses the real Application Support store. The override is Debug-only. For simultaneous automated UI testing, use a separate test bundle with a distinct executable and bundle identifier, preserve the override for every launch, and verify its store ownership lock points inside the fixture directory before editing. Automated verification must never quit or alter a running personal session.
 
 The approved app icon has one source: `DeepWork/Resources/Assets.xcassets/AppIcon.appiconset`. Xcode compiles that catalog; the command-line build packages its unchanged PNGs with the macOS `iconutil` tool and validates all ten representations. Generated ICNS files stay in build output. No image editor or extra setup is needed. See [icon organization and provenance](docs/APP_ICON.md) for replacement steps and the preserved local originals. The test script also runs native icon packaging checks. To check only the icon or an existing built bundle:
 

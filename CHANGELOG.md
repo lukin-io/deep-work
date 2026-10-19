@@ -2,7 +2,7 @@
 
 One consolidated entry per PR or stage, newest first. Follow-up commits update the same entry. Detailed acceptance and test evidence stay in [the checklist](IMPLEMENTATION_CHECKLIST.md) and [verification](docs/VERIFICATION.md).
 
-## Stage 4 — CSV export and feedback
+## Stage 4 — CSV export and feedback ([PR #3](https://github.com/lukin-io/deep-work/pull/3))
 
 **Unreleased.** Source branch: `codex/settings-export-stage-4`.
 

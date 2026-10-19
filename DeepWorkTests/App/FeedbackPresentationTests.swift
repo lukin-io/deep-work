@@ -76,7 +76,12 @@ struct FeedbackPresentationTests {
 
         message.string = String(repeating: "😀", count: 2501)
         message.didChangeText()
-        try await wait(in: fixture.host) { fixture.model.feedbackMessage.utf16.count == 5000 }
+        let limitedMessage = String(repeating: "😀", count: 2500)
+        // AppModel updates before SwiftUI renders the capped binding back into
+        // AppKit. Wait for both boundaries before exercising native range edits.
+        try await wait(in: fixture.host) {
+            fixture.model.feedbackMessage == limitedMessage && message.string == limitedMessage
+        }
         #expect(message.string == String(repeating: "😀", count: 2500))
         let delegate = try #require(message.delegate)
         #expect(delegate.textView?(message, shouldChangeTextIn: NSRange(location: 5000, length: 0), replacementString: "a") == false)
