@@ -1,6 +1,6 @@
 # Deep Work for macOS
 
-A native SwiftUI/AppKit application with the Stage 1 foundation, Stage 2 focus timer, Stage 3 Journal and work schedules, and Stage 4 CSV export and local feedback tools. The specification defines **137 implementation items**; `IMPLEMENTATION_CHECKLIST.md` is the sole progress tracker and records remaining native acceptance checks.
+A native SwiftUI/AppKit application with the foundation, focus timer, Journal, schedules, CSV export, local feedback and Stage 5 native login/Slack services. The specification defines **137 implementation items**; `IMPLEMENTATION_CHECKLIST.md` is the sole progress tracker and records remaining native acceptance checks.
 
 ## Download the app
 
@@ -8,7 +8,7 @@ A native SwiftUI/AppKit application with the Stage 1 foundation, Stage 2 focus t
 
 Previews are **ad hoc signed and unnotarized**; macOS may block first launch. Only open a build you trust, following [Apple's app-opening guidance](https://support.apple.com/en-us/102445). Stable notarized releases are not yet available. Each release lists its tested platforms and known limitations; macOS 15+ is the deployment target, not a claim that every OS version was tested.
 
-The published first preview contains **Stage 1/2 only**; Stage 3/4 source changes require a local build until a new release is published. The first preview passed [release CI and public-download verification](https://github.com/lukin-io/deep-work/actions/runs/39108209226). Download `SHA256SUMS` and `release-metadata.json` alongside the app ZIP and verify them with `shasum -a 256 -c SHA256SUMS`. The metadata records the source commit and build configuration. Quit an older running copy before replacing it; user data stays in Application Support.
+The published first preview contains **Stage 1/2 only**; Stage 3–5 source changes require a local build until a new release is published. The first preview passed [release CI and public-download verification](https://github.com/lukin-io/deep-work/actions/runs/39108209226). Download `SHA256SUMS` and `release-metadata.json` alongside the app ZIP and verify them with `shasum -a 256 -c SHA256SUMS`. The metadata records the source commit and build configuration. Quit an older running copy before replacing it; user data stays in Application Support.
 
 ## TODO
 
@@ -25,6 +25,7 @@ Read the [10-point Apple development and distribution guide](docs/MACOS_RELEASE_
 | [AGENTS.md](AGENTS.md) | Required development workflow, Swift/Apple practices, tests, verification, and release rules |
 | [CHANGELOG.md](CHANGELOG.md) | One consolidated change summary per PR or stage, with release links when available |
 | [Apple development and distribution guide](docs/MACOS_RELEASE_GUIDE.md) | Detailed Apple guidance, Human Interface Guidelines, official sources, and applicability to development or distribution; consult relevant sections as required by `AGENTS.md` |
+| [Slack setup](docs/SLACK_SETUP.md) | Public Client ID, PKCE configuration, connection behavior, data handling and required live acceptance |
 | `DEEP_WORK_SPECIFICATION.md` | Full behavior reference, all controls and states, data/CSV rules, native decisions, build order and 29 integration acceptance scenarios |
 | `IMPLEMENTATION_CHECKLIST.md` | Editable progress by view → feature → element, with status, owner, evidence and notes |
 | `implementation-tracker.json` | Initial structured import for your issue tracker or coding tool |
@@ -72,13 +73,19 @@ Journal **Export CSV** saves every row in the current report, including rows on 
 
 Both export paths use the same 13-column CSV contract: UTF-8 BOM, quoted fields, CRLF separators, precise focus seconds and local timestamps with UTC offsets. Example exports are explicitly labelled. CSV is a report, not a full database backup.
 
-Feedback supports validated optional email, a 5–5,000 UTF-16-unit message, multiline editing and Undo/Redo. **Save Draft** commits to SQLite; **Copy Feedback** copies the current form without changing the saved draft. Nothing is sent. Return from the email field or Command-Return submits Save Draft; Return in the message inserts a newline. Relaunch restores only the explicitly saved draft. Launch at Login and Slack remain Stage 5 work.
+Feedback supports validated optional email, a 5–5,000 UTF-16-unit message, multiline editing and Undo/Redo. **Save Draft** commits to SQLite; **Copy Feedback** copies the current form without changing the saved draft. Nothing is sent. Return from the email field or Command-Return submits Save Draft; Return in the message inserts a newline. Relaunch restores only the explicitly saved draft. Stage 5 adds the native services below.
 
 No dependency, permission prompt or schema migration is added. See [Stage 4 verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026) for native tests, compiled-app checks and remaining keyboard/VoiceOver acceptance. One consolidated entry is kept in [CHANGELOG.md](CHANGELOG.md).
 
-## Important implementation boundaries
+## Stage 5 — Native services and remaining acceptance
 
-- The native menu-bar timer and close/reopen behavior are implemented. Real Launch at Login and Slack authorization/status changes remain later milestones.
+Stage 5 adds **Settings… / Command-comma**, native **Redo / Shift-Command-Z**, and actual Launch at Login registration through `SMAppService`. The launch switch reflects macOS approval/registration, refreshes when returning to the app, and preserves unsaved feedback. Approval-required and failure states are explicit. Install the app at a stable Applications path for login use; an actual logout/login is still required to verify automatic launching.
+
+Slack uses native browser sign-in with PKCE, device-local Keychain credentials and SQLite restoration receipts. Read [Slack setup and live acceptance](docs/SLACK_SETUP.md) to create/configure the Slack app and enter its public Client ID. No client secret or backend is needed. This build leaves Connect Slack unavailable until configured. Pause retains the focus status; break/end/Quit/disconnect conditionally restore it while preserving detected manual changes. Notifications and macOS Focus are unchanged.
+
+**Upgrade note:** Stage 5 migrates SQLite schema 1 → 2 transactionally, preserving existing history, settings and checkpoints. Older Stage 1–4 binaries cannot read schema 2 and refuse to overwrite it. Quit the old app and back up its entire Application Support directory before upgrading if you need a rollback option. No manual SQL or dependency installation is required.
+
+- Native menus and Launch at Login use actual macOS services. Slack authorization/status changes require the public Client ID and user consent described in the setup guide. Actual logout/login and live Slack acceptance remain unverified.
 - The approved feedback surface contains **Save Draft** and **Copy Feedback**. Save Draft persists explicitly to SQLite; Copy Feedback uses the native clipboard without saving edits. No Send button or delivery destination exists.
 - CSV is a session report export, not a lossless backup or import format.
 - The three dashboard metrics are Focus time, Completed cycles, and Days with focus. No averaging metric is implemented in this baseline.
@@ -107,10 +114,10 @@ open ".build/Deep Work.app"
 
 `test.sh` runs the native Swift Testing suites, including actual AppKit window integration. It resolves the Testing macro plugin shipped with standalone Command Line Tools; no dependency download is needed. It checks the Apple Silicon/macOS 15 build settings and rejects unsupported local build hosts. It also rejects an incomplete test run even if the hostless runner exits with status 0. The AppKit suites briefly create, minimize, zoom, hide, and reopen native test windows and exercise real status-item buttons. They serialize access to AppKit’s shared application state. `build-app.sh` compiles and creates an ad hoc signed `.build/Deep Work.app` for local use. It is not a notarized distribution build.
 
-For focused Stage 4 checks:
+For focused Stage 5 checks:
 
 ```sh
-./scripts/test.sh --filter 'ReportCSVExporterTests|CSVFileExportServiceTests|ExportIntegrationTests|FeedbackTests|FeedbackClipboardTests|FeedbackIntegrationTests|FeedbackPresentationTests'
+./scripts/test.sh --filter 'ApplicationMenuTests|LoginItem|Slack'
 swift build -Xswiftc -strict-concurrency=complete -Xswiftc -warnings-as-errors
 plutil -lint DeepWork/Resources/Info.plist DeepWork.xcodeproj/project.pbxproj
 ```
@@ -264,7 +271,8 @@ Stable tags are rejected until Developer ID signing, hardened runtime, timestamp
 
 - Journal opens on launch. Focus, Journal, and Settings share one app-owned model. The red close button or Command-W only hides the main window: running timers, phase transitions and SQLite checkpoints continue; already paused timers stay paused. The native menu bar shows the running countdown and **Deep work** or **Break**. Click that timer to bring the same window to the front on Focus without restarting; File → Show Deep Work (Command-0) does the same. Hide (Command-H) and Minimize also preserve timing.
 - Full Quit (Command-Q) pauses, saves, and finishes queued writes before exiting. Relaunch restores the unfinished phase paused until Resume. If saving fails, Quit offers **Keep Open** by default or an explicit **Quit Without Saving**. Closing the main window never waits for disk writes or forces a pause; storage failures remain available in the retained app state and visible on reopening.
-- Valid duration preferences, Repeat, the saved work schedule, session records/checkpoint, launch preference, and explicitly saved feedback drafts use SQLite at `~/Library/Application Support/app.deepwork.mac/DeepWork.sqlite`. Foundation resolves the user-domain Application Support URL. Each journal record has its own database row; raw segments are retained without rounding.
+- Valid duration preferences, Repeat, the saved work schedule, session records/checkpoint, last observed login-registration state, Slack status restoration receipts, and explicitly saved feedback drafts use SQLite at `~/Library/Application Support/app.deepwork.mac/DeepWork.sqlite`. Foundation resolves the user-domain Application Support URL. Each journal record has its own database row; raw segments are retained without rounding.
+- Slack access/refresh credentials use device-local Keychain, never SQLite. The Debug data override also isolates its Keychain namespace; Release uses the application namespace. See [Slack setup](docs/SLACK_SETUP.md).
 - Writes run in order off the UI thread and use transactions. Existing interim JSON files are migrated without deleting the originals; unsupported/corrupt data is preserved and reported. WAL/SHM files may accompany the database; do not treat a copy of only the main file while the app runs as a backup.
 - Focus supports the approved presets and custom whole minutes 1–480, Repeat, Pause/Resume, Take break, Skip/Finish break, Start again, and End session. Only active focus segments count; zero-time abandoned cycles are discarded. Full duration creates one Complete record; an early exit retains positive time as Partial.
 - While a cycle is running, elapsed time includes background operation and Mac sleep. Hiding the main window does not interrupt timing; only explicit Pause or Quit pauses it. Wall-clock changes do not alter accounting. Closed-process downtime never counts: relaunch restores unfinished focus/break paused at its last committed remainder, with explicit Resume required. Checkpoints are saved about every five seconds and at actions/boundaries; Force Quit or a crash can lose the latest uncommitted interval.
@@ -279,7 +287,7 @@ Use the isolated Debug launch steps in [Build, test, and run locally](#build-tes
 
 ## Native milestone verification
 
-Stage 4 passes **232 native Swift tests (133 core + 99 app)**, 4 platform checks and 12 icon checks locally, plus strict concurrency compilation and app packaging. Compiled-app CSV Save/Cancel, full-report export, feedback Return/Command-Return, clipboard and SQLite restoration checks pass. The [verification record](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026) separates local results, compiled UI observations, hosted CI and unverified keyboard/VoiceOver/visual checks.
+Stage 5 passes **335 native Swift tests (144 core + 191 app)**, 4 platform checks and 12 icon checks locally, plus strict concurrency compilation and app packaging. Compiled Settings/Undo/Redo, actual login registration/removal, unsaved-draft preservation and Quit/relaunch checks pass. The [verification record](docs/VERIFICATION.md#stage-5--native-services--october-19-2026) separates local results, compiled UI, hosted CI and pending live Slack/login acceptance. **Stage 5 remains IN PROGRESS; Stage 6 is the one remaining implementation stage**, covering keyboard/VoiceOver, appearance/layout, background/recovery and cross-feature acceptance.
 
 Run all native tests, or select the relevant suites:
 

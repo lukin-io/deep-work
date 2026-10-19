@@ -376,4 +376,53 @@ Each runner also passes 22 CI policy regressions, 4 platform checks, 12 icon che
 
 Package job `118042957194` also **passed**: optimized arm64/macOS 15+ build, archive verification, 20 release-policy tests and 17 actual archive regressions. The temporary `macOS-release` Actions artifact is 2,254,825 bytes (artifact ID `12184600250`), with the verified icon, ad hoc signature, license, source metadata and checksums. Tag-only publication was correctly **skipped**. This is a CI artifact, not a new GitHub Release or a notarized app.
 
-PR #3 remains open against `main`. The follow-up documentation commit records the verified production/test revision above; it changes no app code or tests.
+At the Stage 4 handoff, PR #3 remained open against `main`. The follow-up documentation commit recorded the verified production/test revision above without changing app code or tests. Its later authorized merge is recorded below.
+
+## Stage 5 — Native services — October 19, 2026
+
+### Starting revision and scope
+
+PR #3 head `113a6c42b1f982eecff96562dd6748b0136e7098` passed [CI run 39247749536](https://github.com/lukin-io/deep-work/actions/runs/39247749536). It was then merged into `main` as `731e0e71d7d82993e1672de0a7b2df9fffd445c9`. After fetching and fast-forwarding local `main`, `codex/native-services-stage-5` was created from that merge. This stage adds native menu commands, actual login registration, Slack authorization/status adapters and SQLite recovery receipts. The owner chose to configure the Slack app afterward; no live Slack credentials, consent or remote status changes are claimed.
+
+### Local native verification
+
+Environment: Apple Silicon, macOS 27.0.1, Swift 6.4 and `/Library/Developer/CommandLineTools`. Full Xcode remains unavailable locally. The complete suites, strict production compilation and packaging pass; a project/plist lint is not an Xcode build.
+
+| Check | Result |
+| --- | --- |
+| `./scripts/test.sh` | 335 native Swift tests: 144 core + 191 app; 4 platform and 12 icon checks pass. |
+| `swift build -Xswiftc -strict-concurrency=complete -Xswiftc -warnings-as-errors` | Pass; the existing CLT linker search-path warnings are separate from Swift diagnostics. |
+| `./scripts/build-app.sh` | Pass; produces the ad hoc signed `.build/Deep Work.app` and verifies its native icon. |
+| `python3 scripts/generate-xcode-project.py` | Explicit project references regenerated for 26 app sources and 10 core test sources. |
+| `plutil -lint DeepWork/Resources/Info.plist DeepWork.xcodeproj/project.pbxproj` | Both pass. |
+| `git diff --check` and unchanged `reference/` / initial JSON | Pass. |
+
+Ignored logs: `.build/stage5-full-tests.log`, `stage5-strict-build.log`, `stage5-app-build.log` and the focused `stage5-*-tests.log` files. No product data or credentials are included in test evidence.
+
+- **Menus:** real AppKit command dispatch and native editor responders cover Settings from running/paused/hidden windows, retained window/model identity, Quit guards and Undo/Redo without implicitly saving feedback. Hostless runners cannot establish the application's key-window menu dispatch; compiled shortcuts were checked separately below.
+- **Login items:** native status mapping, approval, revocation, missing services, registration/unregistration failure, concurrent requests and cancellation are exercised through the injectable ServiceManagement boundary. Real SQLite integration covers stale stored Booleans, status refresh, successful/failed writes, unsaved/saved draft preservation, delayed registration and Quit draining. Automated tests never register the person's real app as a login item.
+- **Authentication and Keychain:** random PKCE/state, S256, exact callback/state validation, cancellation, scopes, user/workspace identity, null/malformed errors, HTTP/offline failures, 429 cooldown and rotating-token serialization are covered. An isolated actual Keychain service verifies create/read/atomic replacement/delete. Injected HTTP responses establish adapter behavior, not real Slack consent or API acceptance. Debug fixture directories receive separate Keychain namespaces.
+- **Slack ownership:** meaningful transitions only, paused-focus retention, break/end/disconnect/Quit restoration, expired prior statuses, detected manual changes, pre-existing identical status, write-ahead storage failure, ambiguous remote writes, crash recovery, missing/mismatched accounts, delayed writes and retry are covered. Integration tests combine the actual timer, SQLite and a native window with a recorded Slack client. Local accounting remains usable during service failures.
+- **SQLite migration:** schema 1 → 2 preserves journal/settings/checkpoint bytes, creates one validated ownership document, rolls back schema conflicts, and retries safely. Missing/malformed/future receipt documents are preserved and surfaced without disabling valid journal/settings stores. Future database schemas remain untouched. Failed receipt clearing rolls back. Downgrading to Stage 1–4 binaries is unsupported.
+- **Quit regressions:** failed Quit does not reapply Slack while the user is still choosing Keep Open versus Quit Without Saving; only explicit Keep Open reprojects the paused focus. Rotated credentials whose Keychain commit failed remain in memory for retry; Quit flushes that pending commit and stays cancellable on failure. With no receipt or pending commit, a locked credential store does not unnecessarily block Quit.
+
+### Compiled-app observations and isolation
+
+The disposable bundle used executable `DeepWorkStage5Acceptance`, bundle ID `app.deepwork.mac.stage5acceptance` and a temporary `DEEP_WORK_DATA_DIR` embedded in its Debug `LSEnvironment`. It was installed under `~/Applications` for ServiceManagement testing. The open ownership lock was verified inside the fixture before edits and after relaunch; personal storage and running sessions were not used. The fixture copy removed its OAuth URL registration to avoid claiming the production callback scheme.
+
+- Command-comma opened the existing Settings tab; Command-0 returned to Focus. Command-Z removed the typed feedback draft and Shift-Command-Z restored it using the native menu responder chain. Switching tabs preserved the unsaved draft.
+- The actual `SMAppService.mainApp` registration succeeded and the switch showed enabled. Unregistering succeeded and showed disabled. Both operations preserved the unsaved draft. Inspecting real SQLite afterward confirmed `launchAtLogin=false` and the saved feedback message still empty. The test item was unregistered before Quit.
+- On this ad hoc isolated bundle, the native status was `notFound` before registration and again after a later relaunch, even under Applications. Registration still succeeded. This exposed misleading “unavailable/move to Applications” copy; the regression and corrected retry wording are recorded below. Actual logout/login, approval and external revocation were not exercised.
+- Unconfigured Focus shows Preview, a disabled Connect Slack control and “Slack is not configured in this build. No status changes are made.” The card keeps the approved status preview and makes no restoration claim.
+- A disposable 60-minute focus continued through Settings and Command-W/Show Focus navigation. The automation's observation can reopen a hidden window, so this check proves continued timing, not a new independent hidden-display measurement; existing status-button/hidden-checkpoint integration and prior compiled lifecycle evidence remain applicable.
+- Command-Q exited the isolated process. Relaunch opened Journal with the same paused session and 28 seconds of focus, without counting downtime; Settings restored only the explicitly saved empty draft and kept login Off. The isolated process was then quit again.
+
+### Remaining acceptance and next stage
+
+**Stage 5 is IN PROGRESS.** G-002 is newly accepted; total **105/137**. F-027–F-029 are BLOCKED until the owner configures the public Slack Client ID and performs sign-in/live remote checks in [SLACK_SETUP.md](SLACK_SETUP.md). S-003–S-005 remain IN PROGRESS until actual enable/disable login cycles, approval and externally changed OS state are exercised. This session does not log out the active Mac user. Full screen-reader reception, keyboard traversal, appearance/layout and physical sleep/wake remain unverified.
+
+**Stage 6 is the one remaining implementation stage**, alongside these Stage 5 checks: keyboard/VoiceOver, light/dark/narrow layouts, background/recovery and final cross-feature regressions. Developer ID signing/notarization remains unavailable. No release or published download is produced by this PR; the existing preview remains Stage 1/2.
+
+The `.notFound` copy regression failed before the fix (`.build/stage5-login-not-found-before.log`). Corrected wording describes the observed missing login item and offers enabling again; the switch remains actionable. The focused suite then passed **36 login tests**, plus 4 platform and 12 icon checks (`stage5-login-not-found-fixed.log`). It covers successful registration from both notRegistered and notFound, real SQLite status persistence and the exact new caption. The final full suite includes this regression.
+
+The final rebuilt acceptance app displayed the corrected caption through its native accessibility tree. After unregistering the disposable login item and quitting, the test bundle was moved back into ignored `.build/`; no acceptance login item remains enabled.

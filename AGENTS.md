@@ -13,6 +13,7 @@
 - One app-owned `AppModel`, independent of view/window lifetime. Keep value models and local stores lightweight and injectable. Never persist example records as actual history.
 - Follow the October 18 native product clarification: red close/Command-W only hide the main window; running timers and menu-bar updates continue, and paused timers stay paused. Menu-bar click brings the existing Focus window to the front. Only Command-Q pauses, saves, drains and exits; relaunch stays paused. Protect recoverable edits on failed Quit saves and retain explicit Save Draft semantics. The approved application icon lives only in `DeepWork/Resources/Assets.xcassets/AppIcon.appiconset`; generate ICNS into build output and keep delivery archives out of build/test inputs.
 - Persist journal records, configuration, schedule, settings, and explicitly saved feedback drafts in SQLite under the user-domain Application Support directory, using the app bundle ID (`app.deepwork.mac`) as its subdirectory. Resolve the directory through Foundation; do not hard-code a user's home path. Keep the original explicit Save Draft semantics.
+- Slack credentials belong only in device-local Keychain; persist restoration ownership in SQLite before remote changes. Keep timing usable during network failures, preserve detected manual Slack changes, and require actual authorization/status evidence before accepting Slack IDs. See `docs/SLACK_SETUP.md`; do not commit secrets or confuse injected HTTP tests with live workspace acceptance.
 - Preserve raw timestamps/segments. Validate versioned data at the storage boundary; serialize writes with SQLite transactions; expose failures without losing in-memory edits or overwriting unreadable data. Test migrations and preserve legacy source data until migration commits successfully.
 - Keep future-stage integrations visibly unavailable; do not simulate success or count scaffolding as accepted behavior.
 - Tests belong in `DeepWorkTests`; use stable element IDs in relevant test names/evidence. Do not change unrelated files.
@@ -37,7 +38,7 @@
 
 ## Build and verification
 
-- Verified locally: `./scripts/test.sh` runs 232 native Swift tests, 12 native icon packaging checks and 4 platform build checks; `./scripts/build-app.sh` compiles and packages `.build/Deep Work.app`; `open ".build/Deep Work.app"` launches it. Current results and environment limits are in `docs/VERIFICATION.md`.
+- Verified locally: `./scripts/test.sh` runs 335 native Swift tests, 12 native icon packaging checks and 4 platform build checks; `./scripts/build-app.sh` compiles and packages `.build/Deep Work.app`; `open ".build/Deep Work.app"` launches it. Current results and environment limits are in `docs/VERIFICATION.md`.
 - `plutil -lint DeepWork/Resources/Info.plist DeepWork.xcodeproj/project.pbxproj` validates project/plist syntax. Regenerate explicit Xcode references with `python3 scripts/generate-xcode-project.py` after adding/removing app or core test sources.
 - Local builds use Swift 6.4 and Command Line Tools; full Xcode remains unavailable locally. Separately, [hosted CI](https://github.com/lukin-io/deep-work/actions/runs/39246777987) passed all 232 native tests and arm64 Release project builds on macOS 15/Xcode 16.4/SDK 15.5 and macOS 26/Xcode 26.6/SDK 26.5. Keep local and hosted evidence distinct; never infer a successful Xcode build from plist validation. Xcode 16+ commands are in `README.md`.
 - `swift build -Xswiftc -strict-concurrency=complete -Xswiftc -warnings-as-errors` verifies production concurrency checking and rejects Swift warnings. Require complete Swift Testing summaries; the test script rejects premature hostless exits even when SwiftPM returns success.
@@ -51,6 +52,7 @@
 - Record milestone evidence in `docs/VERIFICATION.md`; update checklist rollups consistently. Do not maintain a second progress tracker.
 - Always keep `README.md` current with required setup, dependencies, build/test/run commands, migration steps, and known tooling limits whenever implementation changes them.
 - Report local compile, native tests, UI observations, and unverified tooling separately.
+- End each stage handoff with a short status (DONE, IN PROGRESS or BLOCKED), stages remaining, recent-stage changes and next-stage tasks. Distinguish finished implementation from pending native acceptance; do not mark a stage DONE while required external or native checks are incomplete.
 
 ## Changelog
 

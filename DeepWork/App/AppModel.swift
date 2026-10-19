@@ -15,6 +15,7 @@ final class AppModel: ObservableObject {
             guard !isTerminating, selectedTab != oldValue else { return }
             refreshTimer()
             refreshReport()
+            if selectedTab == .settings { refreshLoginItemStatus() }
             persistJournal()
         }
     }
@@ -55,18 +56,24 @@ final class AppModel: ObservableObject {
     @Published var feedbackMessage: String { didSet { clearFeedbackResult() } }
     @Published private(set) var feedbackError: String?
     @Published private(set) var feedbackStatus: String?
+    @Published private(set) var loginItemStatus: LoginItemStatus?
+    @Published private(set) var isChangingLoginItem = false
+    @Published private(set) var loginItemError: String?
     @Published private(set) var isTerminating = false
     @Published private(set) var lifecycleFailureMessage: String?
     @Published private(set) var timer: TimerEngine
     @Published private(set) var pendingJournalWrites = 0
     @Published private(set) var pendingSettingsWrites = 0
     @Published private(set) var focusRequest = 0
+    let slack: SlackStatusController?
     private let persistence: PersistenceWorker
     private let clock: any TimerClock
     private let automaticRefresh: Bool
     private let ownershipLock: StoreOwnershipLock?
     private let csvFileExporter: any CSVFileExporting
     private let feedbackClipboard: any FeedbackCopying
+    private let loginItemService: (any LoginItemServicing)?
+    private var loginItemTask: Task<Void, Never>?
     private var ticker: Task<Void, Never>?
     private var lastCheckpointElapsed: TimeInterval
     private var feedbackRevision = 0
@@ -82,17 +89,23 @@ final class AppModel: ObservableObject {
     private var consumedScheduleNavigationRequest = 0
     private var settingsExportRevision = 0
     private var terminationExportFailure: String?
+    private var terminationSlackFailure: String?
+    private var awaitingQuitChoice = false
 
     init(journalStore: JournalPersisting, settingsStore: SettingsPersisting,
          clock: (any TimerClock)? = nil, automaticRefresh: Bool = true,
          ownershipLock: StoreOwnershipLock? = nil, reportingTimeZone: TimeZone? = nil,
          csvFileExporter: (any CSVFileExporting)? = nil,
-         feedbackClipboard: (any FeedbackCopying)? = nil) {
+         feedbackClipboard: (any FeedbackCopying)? = nil,
+         loginItemService: (any LoginItemServicing)? = nil,
+         slack: SlackStatusController? = nil) {
         self.clock = clock ?? ContinuousTimerClock()
         self.automaticRefresh = automaticRefresh
         self.ownershipLock = ownershipLock
         self.csvFileExporter = csvFileExporter ?? NativeCSVFileExportService()
         self.feedbackClipboard = feedbackClipboard ?? FeedbackClipboard()
+        self.loginItemService = loginItemService
+        self.slack = slack
         self.reportingTimeZone = reportingTimeZone ?? .current
         let instant = self.clock.now()
         lastCheckpointElapsed = instant.elapsed
@@ -117,6 +130,7 @@ final class AppModel: ObservableObject {
         feedbackEmail = settingsLoad.value.feedbackDraft.email
         feedbackMessage = settingsLoad.value.feedbackDraft.message
         if !feedbackMessage.isEmpty { feedbackStatus = "Your saved draft is ready." }
+        reconcileLoginItemStatus(persist: false)
         initializeReports()
         if reportingTimeZone == nil {
             calendarNotifications.append(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange)
@@ -126,11 +140,17 @@ final class AppModel: ObservableObject {
         }
         for name in [Notification.Name.NSCalendarDayChanged, NSApplication.didBecomeActiveNotification] {
             calendarNotifications.append(NotificationCenter.default.publisher(for: name)
-                .sink { [weak self] _ in Task { @MainActor [weak self] in self?.refreshReportCalendar() } })
+                .sink { [weak self] _ in
+                    Task { @MainActor [weak self] in
+                        self?.refreshReportCalendar()
+                        if name == NSApplication.didBecomeActiveNotification { self?.refreshLoginItemStatus() }
+                    }
+                })
         }
         // Prove writes work before displaying "saved" even on a first launch.
         // Stores protect unreadable/unsupported files from fallback writes.
         persistCommittedState()
+        slack?.start()
     }
 
     static func live() throws -> AppModel {
@@ -151,13 +171,17 @@ final class AppModel: ObservableObject {
             #endif
             let ownership = try StoreOwnershipLock(directory: directory)
             return AppModel(journalStore: JournalStore(directory: directory, legacyDirectory: legacyDirectory),
-                            settingsStore: SettingsStore(directory: directory, legacyDirectory: legacyDirectory), ownershipLock: ownership)
+                            settingsStore: SettingsStore(directory: directory, legacyDirectory: legacyDirectory), ownershipLock: ownership,
+                            loginItemService: NativeLoginItemService(),
+                            slack: SlackStatusController(client: NativeSlackClient(), store: SlackStore(directory: directory)))
         } catch StoreOwnershipError.alreadyOwned {
             throw StoreOwnershipError.alreadyOwned
         } catch {
             let failure = StoreFailure(operation: .read, fileURL: URL(fileURLWithPath: NSHomeDirectory()),
                                        reason: "Application Support is unavailable: \(error.localizedDescription)")
-            return AppModel(journalStore: UnavailableJournalStore(failure: failure), settingsStore: UnavailableSettingsStore(failure: failure))
+            return AppModel(journalStore: UnavailableJournalStore(failure: failure), settingsStore: UnavailableSettingsStore(failure: failure),
+                            loginItemService: NativeLoginItemService(),
+                            slack: SlackStatusController(client: NativeSlackClient(), store: UnavailableSlackStore(failure: failure)))
         }
     }
 
@@ -203,6 +227,67 @@ final class AppModel: ObservableObject {
     var settingsStorageMessage: String {
         if settingsFailure != nil { return "Settings could not be saved. They last only while the app is open." }
         return pendingSettingsWrites > 0 ? "Saving settings on this device…" : "Settings saved on this device"
+    }
+
+    // MARK: Observed macOS login service
+
+    /// Pending approval is a registered request that the person can turn off.
+    /// Its caption must explain that macOS will not launch it until approved.
+    var launchAtLoginRequested: Bool { loginItemStatus == .enabled || loginItemStatus == .requiresApproval }
+    var canChangeLoginItem: Bool { loginItemService != nil && !isChangingLoginItem && !isTerminating }
+    var showsLoginItemSettingsAction: Bool {
+        loginItemService != nil && (loginItemStatus == .requiresApproval || loginItemStatus == .notFound ||
+            loginItemStatus == .unknown || loginItemError != nil)
+    }
+    var loginItemStatusMessage: String {
+        if isChangingLoginItem { return "Updating Launch at Login…" }
+        switch loginItemStatus {
+        case .enabled: return "Deep Work will open when you log in to your Mac."
+        case .notRegistered: return "Deep Work will not open automatically."
+        case .requiresApproval: return "Approval required. Allow Deep Work in Login Items in System Settings."
+        case .notFound: return "macOS could not find this login item. Try enabling Launch at Login again. Keep Deep Work in Applications."
+        case .unknown: return "macOS could not determine Launch at Login status. Open Login Items to review it."
+        case nil: return "Launch at Login is unavailable in this application instance."
+        }
+    }
+
+    func refreshLoginItemStatus() {
+        guard !isTerminating, !isChangingLoginItem else { return }
+        let previousStatus = loginItemStatus
+        reconcileLoginItemStatus()
+        if previousStatus != loginItemStatus { loginItemError = nil }
+    }
+
+    func setLaunchAtLogin(_ enabled: Bool) async {
+        guard canChangeLoginItem, !Task.isCancelled, let loginItemService else { return }
+        isChangingLoginItem = true
+        loginItemError = nil
+        let request = Task { @MainActor [weak self] in
+            guard let self else { return }
+            do { _ = try await loginItemService.setEnabled(enabled) }
+            catch { self.loginItemError = "Launch at Login could not be changed. \(error.localizedDescription)" }
+            // Even a failed operation can leave a new system state. Persist
+            // only that observed result and only the explicitly saved draft.
+            self.reconcileLoginItemStatus()
+        }
+        loginItemTask = request
+        await request.value
+        loginItemTask = nil
+        isChangingLoginItem = false
+    }
+
+    func openLoginItemSettings() {
+        guard canChangeLoginItem else { return }
+        loginItemService?.openSystemSettings()
+    }
+
+    private func reconcileLoginItemStatus(persist: Bool = true) {
+        guard let loginItemService else { return }
+        let observedStatus = loginItemService.status
+        loginItemStatus = observedStatus
+        guard settings.launchAtLogin != observedStatus.isEnabled else { return }
+        settings.launchAtLogin = observedStatus.isEnabled
+        if persist { persistSettings() }
     }
     var scheduleSummary: String {
         let schedule = journal.schedule
@@ -296,6 +381,7 @@ final class AppModel: ObservableObject {
             persistJournal()
         }
         updateTicker()
+        updateSlackProjection()
         if (selectedTab == .journal && scheduleDraft == nil) || selectedTab == .settings {
             refreshReport(force: !records.isEmpty || oldPhase != timer.phaseID || oldState != timer.state)
         }
@@ -322,6 +408,9 @@ final class AppModel: ObservableObject {
     }
 
     func flushPersistence() async {
+        // A pending system change enqueues its observed settings result before
+        // completion. Quit must not exit after persisting the earlier state.
+        await loginItemTask?.value
         await scheduleSaveTask?.value
         await persistence.flush()
     }
@@ -332,24 +421,33 @@ final class AppModel: ObservableObject {
     func prepareForTermination() async -> Bool {
         guard !isTerminating else {
             await flushPersistence()
-            return journalFailure == nil && settingsFailure == nil && terminationExportFailure == nil
+            await slack?.flush()
+            return journalFailure == nil && settingsFailure == nil && terminationExportFailure == nil && terminationSlackFailure == nil
         }
         isTerminating = true
+        awaitingQuitChoice = false
         lifecycleFailureMessage = nil
         terminationExportFailure = nil
+        terminationSlackFailure = nil
         sealAndSaveForTermination()
         // An accepted Save must finish before the process exits. An untouched
         // destination panel is cancelled rather than holding Quit indefinitely.
         if case .failed(let reason) = await csvFileExporter.prepareForTermination() {
             terminationExportFailure = reason
         }
+        terminationSlackFailure = await slack?.prepareForTermination()
         // The pending schedule transaction owns the next journal write. Its
         // completion merges only the accepted schedule into the latest timer
         // state and enqueues that state before Quit drains the worker.
         await scheduleSaveTask?.value
         await flushPersistence()
         let saved = recordLifecycleSaveResult()
-        if !saved { isTerminating = false; scheduleCalendarBoundary() }
+        if !saved {
+            awaitingQuitChoice = true
+            isTerminating = false
+            slack?.cancelTermination()
+            scheduleCalendarBoundary()
+        }
         return saved
     }
 
@@ -360,10 +458,20 @@ final class AppModel: ObservableObject {
         persistSettings()
     }
 
+    /// Called only after the person chooses Keep Open. Do not reapply a remote
+    /// focus status while they could still choose Quit Without Saving.
+    func keepOpenAfterCancelledQuit() {
+        guard !isTerminating else { return }
+        awaitingQuitChoice = false
+        updateSlackProjection()
+    }
+
     private func recordLifecycleSaveResult() -> Bool {
-        let saved = journalFailure == nil && settingsFailure == nil && terminationExportFailure == nil
+        let saved = journalFailure == nil && settingsFailure == nil && terminationExportFailure == nil && terminationSlackFailure == nil
         if let reason = terminationExportFailure {
             lifecycleFailureMessage = "The CSV export could not be saved. \(reason) Keep Deep Work open to retry."
+        } else if let reason = terminationSlackFailure {
+            lifecycleFailureMessage = "Slack changes could not be saved or restored. \(reason) Keep Deep Work open to retry. Quitting can lose unsaved authorization or leave the focus status in Slack; any recovery receipt stays on this Mac."
         } else {
             lifecycleFailureMessage = saved ? nil : "Changes could not be saved. Keep Deep Work open to preserve changes that are still in memory."
         }
@@ -375,7 +483,15 @@ final class AppModel: ObservableObject {
         journal.activeCheckpoint = timer.activeCheckpoint
         persistJournal()
         updateTicker()
+        updateSlackProjection()
         refreshReport()
+    }
+
+    private func updateSlackProjection() {
+        guard !isTerminating, !awaitingQuitChoice else { return }
+        // Recovered focus remains paused without reapplying a remote status.
+        // Normal Pause retains ownership; Resume starts/reconciles it again.
+        slack?.update(focusCycle: timer.state == .focus && !timer.isRecovered ? timer.phaseID : nil)
     }
 
     private func updateTicker() {
@@ -765,4 +881,9 @@ private struct UnavailableSettingsStore: SettingsPersisting {
     let failure: StoreFailure
     func load() -> StoreLoad<SettingsDocument> { StoreLoad(value: SettingsDocument(), failure: failure) }
     func save(_ settings: SettingsDocument) -> StoreFailure? { failure }
+}
+private struct UnavailableSlackStore: SlackStateStoring {
+    let failure: StoreFailure
+    func load() async throws -> SlackDocument { throw failure }
+    func save(_ document: SlackDocument) async throws { throw failure }
 }

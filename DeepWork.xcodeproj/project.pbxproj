@@ -16,6 +16,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = "BC7305616E768B644C01BDD1";
 		};
+		"51DAAC204938E03A82DF96F3" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "DeepWork/App/ApplicationMenuController.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		"EF164448E16A291058F6ED1D" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "51DAAC204938E03A82DF96F3";
+		};
 		"91A27560F68C207F5F73CB49" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -35,6 +45,16 @@
 		"C145AA2EA118C5928632AD49" = {
 			"isa" = "PBXBuildFile";
 			"fileRef" = "0EC668B65540AFA41961BCB1";
+		};
+		"FB433735F2F0A84688A9BBF9" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "DeepWork/App/LoginItemService.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		"0B0DDBFA23E322EC43E9D5B6" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "FB433735F2F0A84688A9BBF9";
 		};
 		"7C853BA4A41AF387C7206B7F" = {
 			"isa" = "PBXFileReference";
@@ -65,6 +85,46 @@
 		"D89395D4023DF053A10EEC7E" = {
 			"isa" = "PBXBuildFile";
 			"fileRef" = "5BA6EAB426690EF951C2E9CE";
+		};
+		"FA874B3ED4FDF85292AE3657" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "DeepWork/App/SlackAuthentication.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		"751E43BEE94D2613CB381452" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "FA874B3ED4FDF85292AE3657";
+		};
+		"F64894316B1ED193F47325E9" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "DeepWork/App/SlackClient.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		"61AA685071D33377AFF2624F" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "F64894316B1ED193F47325E9";
+		};
+		"69B859C6A526E2ECD221052B" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "DeepWork/App/SlackCredentialStore.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		"B21047C84B5011E4A3151757" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "69B859C6A526E2ECD221052B";
+		};
+		"74B3F18F77661E42533F72D9" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "DeepWork/App/SlackStatusController.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		"E58A1C79CB707F3947C3F6CD" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "74B3F18F77661E42533F72D9";
 		};
 		"F560F9D9376B9EA02D4CC7C6" = {
 			"isa" = "PBXFileReference";
@@ -105,6 +165,16 @@
 		"AACE082BCF7013E5BE89FC87" = {
 			"isa" = "PBXBuildFile";
 			"fileRef" = "70D5962BC0428A98A6A17C09";
+		};
+		"BB5890DF85A4B1527CD88BA6" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "DeepWork/Features/Focus/SlackStatusView.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		"2D5551954B032DD4895AA063" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "BB5890DF85A4B1527CD88BA6";
 		};
 		"97DDC64195C79F3684DF465E" = {
 			"isa" = "PBXFileReference";
@@ -200,15 +270,22 @@
 			"isa" = "PBXGroup";
 			"children" = (
 				"BC7305616E768B644C01BDD1",
+				"51DAAC204938E03A82DF96F3",
 				"91A27560F68C207F5F73CB49",
 				"0EC668B65540AFA41961BCB1",
+				"FB433735F2F0A84688A9BBF9",
 				"7C853BA4A41AF387C7206B7F",
 				"60EDB10781FBE12B96098D51",
 				"5BA6EAB426690EF951C2E9CE",
+				"FA874B3ED4FDF85292AE3657",
+				"F64894316B1ED193F47325E9",
+				"69B859C6A526E2ECD221052B",
+				"74B3F18F77661E42533F72D9",
 				"F560F9D9376B9EA02D4CC7C6",
 				"D2C9E7B8C5F16DF535FBDF77",
 				"8FAFEB4B51ABD634DCEAB566",
 				"70D5962BC0428A98A6A17C09",
+				"BB5890DF85A4B1527CD88BA6",
 				"97DDC64195C79F3684DF465E",
 				"E153FA034620F22B82677AAB",
 				"236C304192143C2861E76E66",
@@ -227,15 +304,22 @@
 			"buildActionMask" = 2147483647;
 			"files" = (
 				"98E90DFF6FABC595B450C330",
+				"EF164448E16A291058F6ED1D",
 				"93D7BCD67F1C9FD129A94569",
 				"C145AA2EA118C5928632AD49",
+				"0B0DDBFA23E322EC43E9D5B6",
 				"F346C53EFA3DEE1DEB01741E",
 				"B2F0297D784A3D09BDAC85F4",
 				"D89395D4023DF053A10EEC7E",
+				"751E43BEE94D2613CB381452",
+				"61AA685071D33377AFF2624F",
+				"B21047C84B5011E4A3151757",
+				"E58A1C79CB707F3947C3F6CD",
 				"2F3AD550750CCB52656D2827",
 				"893BB4FBE3B5E3B681A2F232",
 				"703F2AD45A4AE010855C659E",
 				"AACE082BCF7013E5BE89FC87",
+				"2D5551954B032DD4895AA063",
 				"9DDED3B396683C653A5FA91D",
 				"968D646D5148A6A1ED2998B2",
 				"DF1ACA1F665B5E047D2C9E49",
@@ -298,6 +382,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = "723342E292C549002E2633F8";
 		};
+		"36E7AA9A58E78EF3F72BCCF0" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "DeepWorkTests/Core/SlackStoreTests.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		"97D569944CC4884DDA4EBF5F" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "36E7AA9A58E78EF3F72BCCF0";
+		};
 		"EE5A6735F545F496AE71C05A" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -346,6 +440,7 @@
 				"1EC524E8692E5F9D70BD4344",
 				"FD3B8372AF3A15CAF1D27328",
 				"723342E292C549002E2633F8",
+				"36E7AA9A58E78EF3F72BCCF0",
 				"EE5A6735F545F496AE71C05A",
 				"FDA4A452F23D9483F3F3C5B5",
 				"D49BF1DEF694648D174DFED6",
@@ -363,6 +458,7 @@
 				"2D52CA498B50FC5D706F5E42",
 				"56E418545920E09969C0E320",
 				"E5A56D4DF222821ABFF74EE3",
+				"97D569944CC4884DDA4EBF5F",
 				"4E3FE3F6FE888C8909004F25",
 				"86A851D77C45943CE95581E4",
 				"A5D83235D56046E95B883101",

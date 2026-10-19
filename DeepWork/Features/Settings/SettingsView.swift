@@ -12,13 +12,25 @@ struct SettingsView: View {
                 .accessibilityAddTraits(.isHeader).accessibilityIdentifier("dw-settings-title")
             section("General") {
                 Surface {
-                    Toggle(isOn: .constant(false)) {
+                    Toggle(isOn: Binding(get: { model.launchAtLoginRequested }, set: { enabled in
+                        Task { await model.setLaunchAtLogin(enabled) }
+                    })) {
                         VStack(alignment: .leading, spacing: 5) {
                             Text("Launch at Login")
                             AvailabilityNote(text: "Open Deep Work automatically when you log in to your Mac.")
+                                .accessibilityIdentifier("dw-launch-helper")
                         }
-                    }.toggleStyle(.switch).disabled(true).accessibilityIdentifier("dw-launch-login")
-                    AvailabilityNote(text: "Launch at Login is not available yet.")
+                    }.toggleStyle(.switch).disabled(!model.canChangeLoginItem).accessibilityIdentifier("dw-launch-login")
+                        .accessibilityHint("Open Deep Work automatically when you log in to your Mac. \(model.loginItemStatusMessage)")
+                    AvailabilityNote(text: model.loginItemStatusMessage).accessibilityIdentifier("dw-launch-preview")
+                    if let error = model.loginItemError {
+                        Text(error).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true)
+                            .accessibilityIdentifier("dw-launch-error")
+                    }
+                    if model.showsLoginItemSettingsAction {
+                        Button("Open Login Items…", action: model.openLoginItemSettings)
+                            .disabled(!model.canChangeLoginItem).accessibilityIdentifier("dw-launch-open-settings")
+                    }
                 }
             }
             section("Export") {
@@ -104,6 +116,9 @@ struct SettingsView: View {
                 .accessibilityIdentifier("dw-settings-storage-status")
         }.font(.system(size: 12))
             .accessibilityElement(children: .contain).accessibilityIdentifier("dw-settings-panel")
+            .onAppear { model.refreshLoginItemStatus() }
+            .onChange(of: model.loginItemError) { _, error in if let error { announce(error, priority: .high) } }
+            .onChange(of: model.loginItemStatus) { _, _ in announce(model.loginItemStatusMessage) }
             .onChange(of: model.feedbackError) { _, error in if let error { announce(error, priority: .high) } }
             .onChange(of: model.feedbackStatus) { _, status in if let status { announce(status) } }
             .onChange(of: model.settingsExportError) { _, error in if let error { announce(error, priority: .high) } }

@@ -1,6 +1,6 @@
 # Deep Work implementation checklist
 
-**Baseline:** October 17, 2026 · **Progress:** 104 of 137 items accepted in native Swift.
+**Baseline:** October 17, 2026 · **Progress:** 105 of 137 items accepted in native Swift.
 
 This is the canonical manual progress tracker for the current three-view app. The initial handoff started with every item TODO; current native evidence is recorded below. Each ID links to its full use case, behavior, input rules, source reference, and acceptance checks in `DEEP_WORK_SPECIFICATION.md`.
 
@@ -12,12 +12,12 @@ Feature completion means all of its child items are DONE. View completion means 
 
 | View or subview | Total | Done | Remaining |
 | --- | ---: | ---: | ---: |
-| Shared shell | 14 | 10 | 4 |
+| Shared shell | 14 | 11 | 3 |
 | Focus | 29 | 26 | 3 |
 | Journal | 54 | 39 | 15 |
 | Journal work schedule | 19 | 16 | 3 |
 | Settings | 21 | 13 | 8 |
-| **Total** | **137** | **104** | **33** |
+| **Total** | **137** | **105** | **32** |
 
 Work schedule remains inside Journal; its separate rollup is for tracking the nested editor.
 
@@ -74,6 +74,14 @@ There are **104/137 accepted IDs**. Newly accepted: **J-018–J-020, J-048–J-0
 
 [Stage 4 hosted CI](https://github.com/lukin-io/deep-work/actions/runs/39246777987) passes all **232 native tests** and Xcode Release builds on macOS 15/26, plus optimized arm64 packaging and 20 policy/17 archive checks. The final documentation update records the verified source/test revision `6543707`; it does not change implementation or acceptance counts.
 
+## Stage 5 implementation record — October 19, 2026
+
+**IN PROGRESS — implementation delivered; external acceptance pending.** PR #3 was merged after passing CI; this branch starts from its `main` merge. Native Settings/Redo commands, actual ServiceManagement login registration, Slack PKCE/Keychain services and persisted status ownership/recovery are implemented. SQLite schema 1 → 2 preserves existing payloads transactionally; older app versions cannot reopen the upgraded store.
+
+There are **105/137 accepted IDs**; **G-002** is newly DONE. Compiled Settings/Undo/Redo, real login registration/removal, draft preservation and Quit/relaunch checks pass. F-027–F-029 are BLOCKED on the owner's deferred Slack configuration/sign-in; S-003–S-005 remain IN PROGRESS until actual login cycles, approval and external OS changes are verified. Passing injected-service tests do not establish those live outcomes. See [Stage 5 evidence](docs/VERIFICATION.md#stage-5--native-services--october-19-2026) and [Slack setup](docs/SLACK_SETUP.md).
+
+**Next: Stage 6, one implementation stage remaining**, plus the pending Stage 5 checks. Work covers keyboard/VoiceOver, light/dark/narrow layouts, background/sleep/recovery, final cross-feature regressions and the remaining acceptance IDs. This PR does not publish a release.
+
 ## Shared shell
 
 Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitHub Releases. Packaging and publication do not complete additional product IDs; the current product count is recorded in the rollup above. The preview includes the Stage 1/2 implementation and clearly identifies later features as unavailable.
@@ -112,14 +120,14 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
 ### Menu bar
 
-**Progress:** 3 / 4 accepted.
+**Progress:** 4 / 4 accepted.
 
-- [ ] **G-002 — Deep Work, File and Window menu labels** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-002))
+- [x] **G-002 — Deep Work, File and Window menu labels** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-002))
 
-    Status: **IN PROGRESS** · Stage: **5** · Owner: Codex  
-    Evidence / commit: `./scripts/test.sh` — 109 native Swift tests; [current lifecycle evidence](docs/VERIFICATION.md#close-and-quit-clarification--october-18-2026).  
-    Blocker / notes: Real application menus exist; Show Focus, Close and Quit paths work. Remaining menu-command acceptance is not claimed.  
-    Swift: `DeepWork/App/MenuBarController.swift`, `DeepWork/App/DeepWorkApp.swift`
+    Status: **DONE** · Stage: **5** · Owner: Codex  
+    Evidence / commit: [Stage 5 native verification](docs/VERIFICATION.md#stage-5--native-services--october-19-2026); native menu inventory, AppKit command/responder tests, compiled Settings/Undo/Redo/Show Focus/Quit checks and retained direct status-item reopen evidence.  
+    Blocker / notes: Native menus are explicitly inventoried in `docs/NATIVE_DECISIONS.md`. Settings opens the existing tab/window; standard editing actions use AppKit's responder chain. Close/reopen semantics remain unchanged.  
+    Swift: `DeepWork/App/ApplicationMenuController.swift`, `DeepWork/App/MenuBarController.swift`, `DeepWork/App/DeepWorkApp.swift`
 
 - [x] **G-003 — Menu-bar timer item and reopen action** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-003))
 
@@ -414,24 +422,24 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
 - [ ] **F-027 — Slack status heading, icon and Preview label** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-027))
 
-    Status: **TODO** · Stage: **5** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Focus/FocusView.swift`, `DeepWork/Services/SlackStatusService.swift`
+    Status: **BLOCKED** · Stage: **5** · Owner: Codex  
+    Evidence / commit: [Stage 5 native verification](docs/VERIFICATION.md#stage-5--native-services--october-19-2026); native service/unit tests, real SQLite integration and compiled unconfigured UI.  
+    Blocker / notes: Implemented PKCE sign-in, Keychain rotation, transition-driven status ownership and conditional restore/recovery. Owner will configure Slack later; public Client ID, consent and actual workspace outcomes are unverified. No simulated success. See `docs/SLACK_SETUP.md`.  
+    Swift: `DeepWork/Features/Focus/FocusView.swift`, `DeepWork/App/SlackStatusController.swift`
 
 - [ ] **F-028 — Focus status text and restored-status placeholder** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-028))
 
-    Status: **TODO** · Stage: **5** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Focus/FocusView.swift`, `DeepWork/Services/SlackStatusService.swift`
+    Status: **BLOCKED** · Stage: **5** · Owner: Codex  
+    Evidence / commit: [Stage 5 native verification](docs/VERIFICATION.md#stage-5--native-services--october-19-2026); native service/unit tests, real SQLite integration and compiled unconfigured UI.  
+    Blocker / notes: Implemented PKCE sign-in, Keychain rotation, transition-driven status ownership and conditional restore/recovery. Owner will configure Slack later; public Client ID, consent and actual workspace outcomes are unverified. No simulated success. See `docs/SLACK_SETUP.md`.  
+    Swift: `DeepWork/Features/Focus/FocusView.swift`, `DeepWork/App/SlackStatusController.swift`
 
 - [ ] **F-029 — Slack helper copy by session state** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-029))
 
-    Status: **TODO** · Stage: **5** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Focus/FocusView.swift`, `DeepWork/Services/SlackStatusService.swift`
+    Status: **BLOCKED** · Stage: **5** · Owner: Codex  
+    Evidence / commit: [Stage 5 native verification](docs/VERIFICATION.md#stage-5--native-services--october-19-2026); native service/unit tests, real SQLite integration and compiled unconfigured UI.  
+    Blocker / notes: Implemented PKCE sign-in, Keychain rotation, transition-driven status ownership and conditional restore/recovery. Owner will configure Slack later; public Client ID, consent and actual workspace outcomes are unverified. No simulated success. See `docs/SLACK_SETUP.md`.  
+    Swift: `DeepWork/Features/Focus/FocusView.swift`, `DeepWork/App/SlackStatusController.swift`
 
 ## Journal
 
@@ -1105,7 +1113,7 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
     Status: **IN PROGRESS** · Stage: **4** · Owner: Codex  
     Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
-    Blocker / notes: General group and unavailable login control are present and labelled. Complete light/dark accessible group review remains unverified; login registration belongs to S-003–S-005.  
+    Blocker / notes: General group and actual login control are present and labelled. Stage 5 verifies native registration/removal and draft preservation; complete light/dark accessibility review and actual login-cycle acceptance remain unverified under S-003–S-005.  
     Swift: `DeepWork/Features/Settings/SettingsView.swift`
 
 ### Launch at Login
@@ -1114,24 +1122,24 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
 - [ ] **S-003 — Launch at Login** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-003))
 
-    Status: **TODO** · Stage: **5** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Services/LoginItemService.swift`
+    Status: **IN PROGRESS** · Stage: **5** · Owner: Codex  
+    Evidence / commit: [Stage 5 native verification](docs/VERIFICATION.md#stage-5--native-services--october-19-2026); native service/SQLite tests and compiled actual registration/removal, status and unsaved-draft preservation.  
+    Blocker / notes: Actual SMAppService registration/removal passes on the isolated app. Deliberate logout/login, approval/revocation and external state changes remain unverified; the active Mac user was not logged out. OS state is authoritative; stored preference never establishes success.  
+    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/App/LoginItemService.swift`
 
 - [ ] **S-004 — Open Deep Work automatically when you log in to your Mac.** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-004))
 
-    Status: **TODO** · Stage: **5** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Services/LoginItemService.swift`
+    Status: **IN PROGRESS** · Stage: **5** · Owner: Codex  
+    Evidence / commit: [Stage 5 native verification](docs/VERIFICATION.md#stage-5--native-services--october-19-2026); native service/SQLite tests and compiled actual registration/removal, status and unsaved-draft preservation.  
+    Blocker / notes: Actual SMAppService registration/removal passes on the isolated app. Deliberate logout/login, approval/revocation and external state changes remain unverified; the active Mac user was not logged out. OS state is authoritative; stored preference never establishes success.  
+    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/App/LoginItemService.swift`
 
 - [ ] **S-005 — Preview — Your preference is saved here. Automatic launch will work in the Mac app.** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-005))
 
-    Status: **TODO** · Stage: **5** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Services/LoginItemService.swift`
+    Status: **IN PROGRESS** · Stage: **5** · Owner: Codex  
+    Evidence / commit: [Stage 5 native verification](docs/VERIFICATION.md#stage-5--native-services--october-19-2026); native service/SQLite tests and compiled actual registration/removal, status and unsaved-draft preservation.  
+    Blocker / notes: Actual SMAppService registration/removal passes on the isolated app. Deliberate logout/login, approval/revocation and external state changes remain unverified; the active Mac user was not logged out. OS state is authoritative; stored preference never establishes success.  
+    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/App/LoginItemService.swift`
 
 ### CSV export
 
