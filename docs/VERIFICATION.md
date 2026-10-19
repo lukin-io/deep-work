@@ -363,4 +363,17 @@ An early UI test copy shared the `DeepWork` executable name. After automation Qu
 
 ### Hosted Stage 4 verification
 
-The initial [PR #3 run 39246280425](https://github.com/lukin-io/deep-work/actions/runs/39246280425) exposed a test synchronization issue on macOS 15: the input-limit fixture waited for the model's clipped text, then asserted the native editor before SwiftUI had rendered that text. The corrected wait requires both observable values; the original maximum-length and replacement assertions remain. This changes the fixture, not production behavior. A passing corrected matrix is required before claiming hosted Stage 4 completion.
+The initial [PR #3 run 39246280425](https://github.com/lukin-io/deep-work/actions/runs/39246280425) exposed a test synchronization issue on macOS 15: the input-limit fixture waited for the model's clipped text, then asserted the native editor before SwiftUI had rendered that text. The corrected wait requires both observable values; the original maximum-length and replacement assertions remain. This changes the fixture, not production behavior. The corrected local `./scripts/test.sh --filter Feedback` passes all 23 affected native tests, plus platform/icon checks (`stage4-feedback-ci-render-wait.log`).
+
+[Corrected PR run 39246777987](https://github.com/lukin-io/deep-work/actions/runs/39246777987) tested source head `65437072a80f87ca02ffe8d5f68bcb22a495559c` as merge preview `60a392f4a6ee5364a361e008c1582d88b37241ea` against `main` at `e2cee410dfe1e5fe87e54c6a186416a2ab453425`.
+
+| Hosted environment | Native / Xcode result |
+| --- | --- |
+| macOS 15.7.9, arm64, Xcode 16.4, SDK 15.5 — job `118041112584` | All 232 Swift tests pass; strict concurrency compilation and Xcode Release build pass. |
+| macOS 26.6.2, arm64, Xcode 26.6, SDK 26.5 — job `118041112256` | All 232 Swift tests pass; strict concurrency compilation and Xcode Release build pass. |
+
+Each runner also passes 22 CI policy regressions, 4 platform checks, 12 icon checks and 38 release-publication regressions. These hosted results verify the supported toolchains; they do not establish the remaining interactive accessibility acceptance or local full-Xcode availability.
+
+Package job `118042957194` also **passed**: optimized arm64/macOS 15+ build, archive verification, 20 release-policy tests and 17 actual archive regressions. The temporary `macOS-release` Actions artifact is 2,254,825 bytes (artifact ID `12184600250`), with the verified icon, ad hoc signature, license, source metadata and checksums. Tag-only publication was correctly **skipped**. This is a CI artifact, not a new GitHub Release or a notarized app.
+
+PR #3 remains open against `main`. The follow-up documentation commit records the verified production/test revision above; it changes no app code or tests.

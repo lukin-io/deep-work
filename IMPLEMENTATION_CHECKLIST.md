@@ -72,6 +72,8 @@ Shared CSV serialization, all-row Journal export, Settings export scopes, native
 
 There are **104/137 accepted IDs**. Newly accepted: **J-018–J-020, J-048–J-052, S-006–S-011, S-013–S-016, S-018, S-020–S-021**. Native tests, compiled CSV/draft/copy checks, exact build commands and remaining limits are in [Stage 4 verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026). S-001/S-002/S-012/S-017/S-019 retain their complete keyboard/VoiceOver/appearance acceptance gaps; J-017 retains narrow-banner review. Launch at Login and Slack remain Stage 5. No release is published by this milestone.
 
+[Stage 4 hosted CI](https://github.com/lukin-io/deep-work/actions/runs/39246777987) passes all **232 native tests** and Xcode Release builds on macOS 15/26, plus optimized arm64 packaging and 20 policy/17 archive checks. The final documentation update records the verified source/test revision `6543707`; it does not change implementation or acceptance counts.
+
 ## Shared shell
 
 Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitHub Releases. Packaging and publication do not complete additional product IDs; the current product count is recorded in the rollup above. The preview includes the Stage 1/2 implementation and clearly identifies later features as unavailable.

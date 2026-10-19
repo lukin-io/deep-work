@@ -158,7 +158,7 @@ xcodebuild -project DeepWork.xcodeproj -scheme DeepWork \
   -configuration Debug -destination 'platform=macOS' build
 ```
 
-**Local full Xcode remains unavailable:** `xcode-select -p` returns `/Library/Developer/CommandLineTools`; local `xcodebuild` requires an Xcode installation. Separately, [Stage 3 hosted CI passed](https://github.com/lukin-io/deep-work/actions/runs/39236029448) all 170 native tests and Apple Silicon Xcode Release builds on **macOS 15/Xcode 16.4/SDK 15.5** and **macOS 26/Xcode 26.6/SDK 26.5**, followed by optimized packaging and archive tests. CI uses this project-build check; the downloadable app is packaged and signed separately by the release script:
+**Local full Xcode remains unavailable:** `xcode-select -p` returns `/Library/Developer/CommandLineTools`; local `xcodebuild` requires an Xcode installation. Separately, [Stage 4 hosted CI passed](https://github.com/lukin-io/deep-work/actions/runs/39246777987) all 232 native tests and Apple Silicon Xcode Release builds on **macOS 15/Xcode 16.4/SDK 15.5** and **macOS 26/Xcode 26.6/SDK 26.5**, followed by optimized packaging and archive tests. CI uses this project-build check; the downloadable app is packaged and signed separately by the release script:
 
 ```sh
 xcodebuild -project DeepWork.xcodeproj -scheme DeepWork \
