@@ -2,7 +2,7 @@
 
 Checked against Apple's guidance on **October 18–19, 2026** and the current Deep Work sources. This guide covers our native **Apple Silicon, macOS 15+ app distributed through GitHub**. It distinguishes the production Developer ID distribution path, conditional Mac App Store requirements, and recommended engineering/Human Interface Guidelines practices. It is not an exhaustive statement of Apple's agreements or every feature-specific requirement. Implementation progress remains in [IMPLEMENTATION_CHECKLIST.md](../IMPLEMENTATION_CHECKLIST.md).
 
-The published `v0.1.0-preview.1` is **ad hoc signed and unnotarized**. Passing compilation, tests, signature-integrity checks, or GitHub publication does not establish Developer ID identity, notarization, or Gatekeeper acceptance. Its actual evidence is in [VERIFICATION.md](VERIFICATION.md#published-preview-and-public-download-verification).
+The published `v0.1.0-preview.2` and earlier preview are **ad hoc signed and unnotarized**. Passing compilation, tests, signature-integrity checks, or GitHub publication does not establish Developer ID identity, notarization, or Gatekeeper acceptance. Current release evidence is in [VERIFICATION.md](VERIFICATION.md#preview-2--stages-16--october-19-2026).
 
 ## 1. Obtain the right signing identity and protect its private key
 

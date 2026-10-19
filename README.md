@@ -4,13 +4,13 @@ A native SwiftUI/AppKit application with the foundation, focus timer, Journal, s
 
 ## Download the app
 
-[Download Deep Work 0.1.0 preview 1](https://github.com/lukin-io/deep-work/releases/download/v0.1.0-preview.1/Deep-Work-v0.1.0-preview.1-macOS-arm64.zip), extract the ZIP, and move **Deep Work.app** to Applications. Read the [release notes and checksums](https://github.com/lukin-io/deep-work/releases/tag/v0.1.0-preview.1), or browse [all releases](https://github.com/lukin-io/deep-work/releases). Requires **Apple Silicon (M1 or later) and macOS 15 or later**. Intel Macs are unsupported. GitHub's automatic Source code ZIP is for developers, not an installed app.
+[Download Deep Work 0.1.0 preview 2](https://github.com/lukin-io/deep-work/releases/download/v0.1.0-preview.2/Deep-Work-v0.1.0-preview.2-macOS-arm64.zip), extract the ZIP, and move **Deep Work.app** to Applications. Read the [release notes and checksums](https://github.com/lukin-io/deep-work/releases/tag/v0.1.0-preview.2), or browse [all releases](https://github.com/lukin-io/deep-work/releases). Requires **Apple Silicon (M1 or later) and macOS 15 or later**. Intel Macs are unsupported. GitHub's automatic Source code ZIP is for developers, not an installed app.
 
 Previews are **ad hoc signed and unnotarized**; macOS may block first launch. Only open a build you trust, following [Apple's app-opening guidance](https://support.apple.com/en-us/102445). Stable notarized releases are not yet available. Each release lists its tested platforms and known limitations; macOS 15+ is the deployment target, not a claim that every OS version was tested.
 
-The published first preview contains **Stage 1/2 only**; Stage 3–6 source changes require a local build until a new release is published. The first preview passed [release CI and public-download verification](https://github.com/lukin-io/deep-work/actions/runs/39108209226). Download `SHA256SUMS` and `release-metadata.json` alongside the app ZIP and verify them with `shasum -a 256 -c SHA256SUMS`. The metadata records the source commit and build configuration. Quit an older running copy before replacing it; user data stays in Application Support.
+Preview 2 contains **all implemented Stages 1–6**, including Journal reports, schedules, CSV export, feedback drafts and native keyboard/layout fixes. **127/137 product items are accepted**; actual VoiceOver, login-cycle and live Slack acceptance remain pending. Connect Slack is unavailable in this build because no public Client ID is configured. The release passed [macOS 15/26 CI and publication](https://github.com/lukin-io/deep-work/actions/runs/39264831816), plus independent public-download verification. Download `SHA256SUMS` and `release-metadata.json` alongside the app ZIP and run `shasum -a 256 -c SHA256SUMS`. Metadata identifies source `4c5d504848c0c6709d286137e9514b43aa8662f9`, build **24**, and the Release configuration.
 
-[Preview 2 release notes](docs/releases/v0.1.0-preview.2.md) describe the prepared Stages 1–6 package and schema 1 → 2 upgrade. Publication and public-download verification are pending; the download above remains the existing first preview until they pass.
+**Upgrading from preview 1:** quit the old app successfully and back up the entire `~/Library/Application Support/app.deepwork.mac` folder, including any SQLite companion files, before replacing it. Preview 2 migrates schema **1 → 2** while preserving settings and history; preview 1 cannot reopen the upgraded store. A rollback needs the separate pre-upgrade backup and omits newer changes, so retain the upgraded folder separately. CSV is not a restorable database backup. See [release notes](docs/releases/v0.1.0-preview.2.md) and [publication evidence](docs/VERIFICATION.md#preview-2--stages-16--october-19-2026).
 
 ## TODO
 
@@ -257,13 +257,13 @@ This pipeline is verified preview infrastructure. A production signed/notarized 
 
 The release pipeline uses the native macOS tools already described above, plus Python 3 and Git. GitHub-hosted runners include these tools and the GitHub CLI. No local GitHub CLI or long-lived upload token is needed: pushing an annotated preview tag triggers `.github/workflows/release.yml` with its scoped job token.
 
-Before tagging, prepare `docs/releases/<tag>.md`, commit the changes and release notes, ensure the numeric version in `DeepWork/Resources/Info.plist` matches the tag, and require the PR's native test/package checks to pass. Preview tags follow `vX.Y.Z-preview.N`, with N starting at 1. **`v0.1.0-preview.1` is the first release; do not recreate or move it.** The next commands use `v0.1.0-preview.2` as an example: first fetch tags and choose the next unused version and a positive local build number.
+Before tagging, prepare `docs/releases/<tag>.md`, commit the changes and release notes, ensure the numeric version in `DeepWork/Resources/Info.plist` matches the tag, and require the PR's native test/package checks to pass. Preview tags follow `vX.Y.Z-preview.N`, with N starting at 1. **Previews 1 and 2 are published; do not recreate or move their tags.** The next commands use `v0.1.0-preview.3` as an example: first fetch tags and choose the next unused version and a local build number greater than the last published build (preview 2 is build 24).
 
 ```sh
 git fetch origin --tags
 git tag --list 'v0.1.0-preview.*'
-release_tag='v0.1.0-preview.2' # Replace if already used; match the committed notes.
-release_build=2
+release_tag='v0.1.0-preview.3' # Replace if already used; match the committed notes.
+release_build=25 # Local example; increase beyond the latest published build.
 ./scripts/test.sh
 python3 DeepWorkTests/Release/test-publish-release.py
 ./DeepWorkTests/Release/test-release.sh
@@ -311,7 +311,7 @@ Use the isolated Debug launch steps in [Build, test, and run locally](#build-tes
 
 Stage 6 passes **361 native Swift tests (144 core + 217 app)**, 4 platform checks, 4 acceptance-fixture checks and 12 icon checks locally, plus strict concurrency compilation and app packaging. Compiled keyboard traversal, chart drilldown/live focus, clipboard-failure selection and light/dark layouts at 320 and 696 points were checked separately. See [Stage 6 verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026) for exact evidence and limits.
 
-**Stage 6: IN PROGRESS — implementation delivered, 127/137 IDs accepted; 10 remain blocked. There are no subsequent numbered implementation stages.** Remaining work is actual VoiceOver speech/traversal, configured live Slack and login-cycle acceptance, plus physical sleep/wake and distribution readiness. No new release is published. VoiceOver and Keyboard navigation were temporarily enabled with permission and restored to their original Off settings.
+**Stage 6: IN PROGRESS — implementation delivered, 127/137 IDs accepted; 10 remain blocked. There are no subsequent numbered implementation stages.** Remaining work is actual VoiceOver speech/traversal, configured live Slack and login-cycle acceptance, plus physical sleep/wake and distribution readiness. [Preview 2](https://github.com/lukin-io/deep-work/releases/tag/v0.1.0-preview.2) includes all implemented stages; publication does not complete those acceptance checks. VoiceOver and Keyboard navigation were temporarily enabled with permission and restored to their original Off settings.
 
 Run all native tests, or select the relevant suites:
 

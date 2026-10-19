@@ -442,7 +442,7 @@ Each runner also passes 22 CI policy regressions, 4 platform checks, 12 icon che
 
 Package job `118070093061` passed: optimized arm64/macOS 15+ packaging, native archive verification, **20 release-policy and 17 archive regressions**. Temporary `macOS-release` artifact `12186808384` is 2,439,572 bytes; icon, license, ad hoc signature, metadata and checksums were verified. Tag-only publication was correctly skipped. This is an Actions artifact, not a GitHub Release or a notarized download.
 
-The evidence-only follow-up updates documentation for this completed source/test run. It changes no production or test files. PR #4 remains open against `main`; its subsequent CI status is visible on the PR. No merge or release was requested for Stage 5.
+The evidence-only follow-up updated documentation for this completed source/test run without changing production or test files. At that handoff PR #4 remained open against `main`; no merge or release had been requested for Stage 5. Its subsequent merge is recorded in the Stage 6 section.
 
 ## Stage 6 — Native acceptance — October 19, 2026
 
@@ -515,7 +515,7 @@ This table indexes evidence against the specification's acceptance scenarios; it
 
 ### Status and next work
 
-**Stage 6 is IN PROGRESS: implementation delivered, acceptance gaps explicit.** There are **127/137 accepted IDs**, with 10 BLOCKED: G-013/G-014/J-054/S-017 (VoiceOver), F-027–F-029 (live Slack), S-003–S-005 (actual login/approval/external-state cycles). There are **zero subsequent numbered implementation stages**. Next work is to close those acceptance gaps, perform the physical lifecycle checks, and provision signing/notarization before stable distribution. No schema migration or new app release is produced here; the downloadable first preview still contains Stage 1/2 only.
+**Stage 6 is IN PROGRESS: implementation delivered, acceptance gaps explicit.** There are **127/137 accepted IDs**, with 10 BLOCKED: G-013/G-014/J-054/S-017 (VoiceOver), F-027–F-029 (live Slack), S-003–S-005 (actual login/approval/external-state cycles). There are **zero subsequent numbered implementation stages**. Next work is to close those acceptance gaps, perform the physical lifecycle checks, and provision signing/notarization before stable distribution. Stage 6 itself adds no schema migration. At its PR handoff the downloadable first preview still contained Stage 1/2 only; the subsequent preview 2 publication below includes all implemented stages.
 
 ### Hosted Stage 6 verification
 
@@ -530,7 +530,7 @@ Each runner also passes 22 CI policy, 4 platform, 4 acceptance-fixture, 12 icon 
 
 Package job `118096364688` also passed: optimized arm64/macOS 15+ app, icon/license/ad hoc signature/metadata/checksum verification, 20 release-policy and 17 archive regressions. Temporary `macOS-release` artifact `12192195208` is 2,454,811 bytes. Publication was correctly skipped. This is an Actions artifact, not a new GitHub Release or a notarized app.
 
-The follow-up documentation commit records this verified source/test revision and links the consolidated changelog to PR #5; it changes no production or test code. PR #5 remains open against `main`. Its new CI run is visible on the PR; the successful run above covers the unchanged production/test revision.
+The follow-up documentation commit recorded this verified source/test revision and linked the consolidated changelog to PR #5 without changing production or test code. PR #5 was open against `main` at that point; its final CI and subsequent merge are recorded below.
 
 
 ## Preview 2 — Stages 1–6 — October 19, 2026
@@ -539,6 +539,43 @@ The follow-up documentation commit records this verified source/test revision an
 
 The final [PR #5 CI run 39263659547](https://github.com/lukin-io/deep-work/actions/runs/39263659547) passed for head `01018bb7d9cb0f8fa5c5c7b97952d91b9f7eca2b`: both macOS 15/26 native and Xcode jobs plus optimized packaging; tag-only publication was skipped. PR #5 was then merged with an expected-head guard as `c09ad87097dd8bc838c15d991e535cf92f7a139f`. Local `main` was fast-forwarded to that merge before preparing release notes.
 
-`v0.1.0-preview.2` is the next unused preview tag, with numeric version `0.1.0` matching Info.plist. It includes all implemented Stages 1–6 and retains schema 2, arm64 and macOS 15+. The package build number is the tag workflow run number and must exceed preview 1's published build 3. [Release notes](releases/v0.1.0-preview.2.md) disclose schema 1 → 2 migration/downgrade limits, absent Slack Client ID, pending manual acceptance and ad hoc/unnotarized signing.
+`v0.1.0-preview.2` was selected as the next unused preview tag, with numeric version `0.1.0` matching Info.plist. It includes all implemented Stages 1–6 and retains schema 2, arm64 and macOS 15+. The package build number is the tag workflow run number and must exceed preview 1's published build 3. [Release notes](releases/v0.1.0-preview.2.md) disclose schema 1 → 2 migration/downgrade limits, absent Slack Client ID, pending manual acceptance and ad hoc/unnotarized signing.
 
 Release preparation changes documentation only; the production/test revision remains the one that passed PR #5 CI. The annotated tag workflow must rerun native/Xcode checks and archive verification, then verify draft and public downloads. Publication is not yet claimed at this preparation revision. The first preview/tag/assets remain unchanged; release delivery does not advance any of the ten blocked product IDs.
+
+### Published tag and hosted verification
+
+[Release v0.1.0-preview.2](https://github.com/lukin-io/deep-work/releases/tag/v0.1.0-preview.2) was published on **October 19, 2026 at 14:05:16 UTC**, after [tag workflow 39264831816](https://github.com/lukin-io/deep-work/actions/runs/39264831816) passed all four jobs. The annotated tag resolves to **`4c5d504848c0c6709d286137e9514b43aa8662f9`**, the clean release-notes revision on `origin/main` after PR #5 merged. The published package is **version 0.1.0, build 24**, arm64 only, minimum macOS 15.0, Release configuration; it was compiled with Swift 6.1.2 / SDK 15.5 and signed ad hoc. It is a prerelease with Latest disabled and is not notarized.
+
+| Tag workflow job | Actual result |
+| --- | --- |
+| `118101584809` — macOS 15.7.9 / Xcode 16.4 / SDK 15.5 | 361 native Swift tests, 22 CI policy, 4 platform, 4 acceptance-fixture, 12 icon and 38 publisher checks passed; strict concurrency, plist lint and Xcode Release build passed. |
+| `118101584870` — macOS 26.6.2 / Xcode 26.6 / SDK 26.5 | The same native checks and Xcode Release build passed on the newer toolchain. |
+| `118103951198` — package | Optimized arm64 archive verified; 20 release-policy and 17 archive regressions passed. |
+| `118104516915` — publish | Refreshed main ancestry, draft upload/download comparison, publication and unauthenticated public-download verification passed. |
+
+### Independent public-download verification
+
+After publication, all three assets were downloaded again on this Mac using `curl --disable` with HTTPS-only redirects and **no authentication**, into `.build/public-downloads/v0.1.0-preview.2/`. The public API confirmed release `417364562` is published (`draft: false`, `prerelease: true`), and asset lengths matched the downloaded files.
+
+```sh
+./scripts/verify-release.sh .build/public-downloads/v0.1.0-preview.2 \
+  v0.1.0-preview.2 4c5d504848c0c6709d286137e9514b43aa8662f9
+./DeepWorkTests/Release/test-release.sh \
+  .build/public-downloads/v0.1.0-preview.2 v0.1.0-preview.2
+(cd .build/public-downloads/v0.1.0-preview.2 && shasum -a 256 -c SHA256SUMS)
+```
+
+All passed: exact source/tag/version/build metadata, arm64 executable and macOS deployment floor, archive contents and exclusions, icon, license, ad hoc signature integrity and checksums; **20 policy + 17 actual archive regression tests** passed against the public download. ZIP and metadata checksum results were both `OK`.
+
+| Public asset | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `Deep-Work-v0.1.0-preview.2-macOS-arm64.zip` | 2,460,987 | `9f18bad65dbf4bc925b0b1b71f8b403887e9ef3fac450bedb04cac74e999b454` |
+| `release-metadata.json` | 755 | `4b52b44aca2064d899267ce5f49f7d48b3a9e7e4075c911b03c4f749408d733f` |
+| `SHA256SUMS` | 197 | `885422532da010ebada6ce4825df8348a1fe4ef1465045dd73a9ec576f5a8265` |
+
+These checks inspect the actual downloadable app; they do not establish a downloaded-app launch, Gatekeeper approval or new runtime acceptance. No personal database was opened or migrated for this release verification. Preview 1 remains unchanged. README and the existing consolidated stage changelog entries now link to preview 2; the follow-up documentation commit does not alter its tag or assets.
+
+**Slack wording clarification after publication:** the release body's statement that remote restoration is unavailable is too broad for users upgrading from a configured custom build. New Connect/Reconnect needs the missing public Client ID, but existing canonical Keychain credentials retain their original client ID and may support status operations/restoration. This is corrected in the release-note source on `main`; the published body and immutable tagged source retain the original wording. Live Slack remains unverified. Preview 1 users have no such credentials.
+
+**Duplicate run:** GitHub also created [tag run 39264833850](https://github.com/lukin-io/deep-work/actions/runs/39264833850) for the same tag/source. Tag concurrency serialized it behind the successful publication run; it was still rerunning checks at this documentation update. Cancellation was unavailable through the authenticated tools, and the browser sessions were signed out. The publisher refuses an existing release/draft before creating or uploading anything; the second run must not replace build 24 or its assets. Its outcome is separate from the successful artifact-producing run and verified public downloads above.

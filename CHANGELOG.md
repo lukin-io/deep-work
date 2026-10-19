@@ -4,7 +4,7 @@ One consolidated entry per PR or stage, newest first. Follow-up commits update t
 
 ## Stage 6 — Native accessibility and acceptance ([PR #5](https://github.com/lukin-io/deep-work/pull/5))
 
-**Unreleased.** Merged into `main` through PR #5; included in the prepared preview 2 release.
+Released in [v0.1.0-preview.2](https://github.com/lukin-io/deep-work/releases/tag/v0.1.0-preview.2) after PR #5 merged and macOS 15/26 CI passed. Build 24 includes all implemented stages; public assets and checksums were independently verified. This remains an ad hoc signed, unnotarized preview with the acceptance gaps below.
 
 - Announce meaningful timer/lifecycle changes from the shared app owner; keep countdown ticks silent and use the native application accessibility target.
 - Fix feedback Tab/Shift-Tab navigation, empty-Journal focus, clipped chart labels, chart focus visibility and narrow weekday layouts. Retain chart focus during live updates.
@@ -13,7 +13,7 @@ One consolidated entry per PR or stage, newest first. Follow-up commits update t
 
 ## Stage 5 — Native services ([PR #4](https://github.com/lukin-io/deep-work/pull/4))
 
-**Unreleased.** Merged into `main` through PR #4.
+Released in [v0.1.0-preview.2](https://github.com/lukin-io/deep-work/releases/tag/v0.1.0-preview.2); merged through PR #4. The downloadable build has no Slack Client ID, so Connect Slack remains unavailable.
 
 - Add native Settings and Redo commands; keep menu actions on the retained app window and shared timer.
 - Register Launch at Login through macOS, showing actual approval, revocation and failure states without saving unfinished feedback edits.
@@ -22,7 +22,7 @@ One consolidated entry per PR or stage, newest first. Follow-up commits update t
 
 ## Stage 4 — CSV export and feedback ([PR #3](https://github.com/lukin-io/deep-work/pull/3))
 
-**Unreleased.** Merged into `main` through PR #3.
+Released in [v0.1.0-preview.2](https://github.com/lukin-io/deep-work/releases/tag/v0.1.0-preview.2); merged through PR #3.
 
 - Save Journal reports and Settings All Sessions/Current Journal Report through a native CSV Save panel, including every matching row across pagination and precise live-session accounting.
 - Share one CSV format and snapshot across both paths; preserve actual/example separation, truthful cancellation and failures, and wait for accepted writes before Quit.
@@ -31,7 +31,7 @@ One consolidated entry per PR or stage, newest first. Follow-up commits update t
 
 ## Stage 3 — Journal and work schedule ([PR #2](https://github.com/lukin-io/deep-work/pull/2))
 
-**Unreleased.** Merged into `main` through PR #2.
+Released in [v0.1.0-preview.2](https://github.com/lukin-io/deep-work/releases/tag/v0.1.0-preview.2); merged through PR #2.
 
 - Add Day, Week and custom Range reports with focus time, completed cycles, days with focus, activity drilldown and paginated session history.
 - Show live/paused sessions and separate example data without saving examples as real history.

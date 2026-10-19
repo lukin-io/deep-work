@@ -86,7 +86,7 @@ There are **105/137 accepted IDs**; **G-002** is newly DONE. Compiled Settings/U
 
 ## Stage 6 implementation record — October 19, 2026
 
-**IN PROGRESS — implementation delivered; acceptance remains open.** This milestone fixes native announcement delivery, process-lifetime sleep/wake observation, narrow chart/weekday layouts, chart focus visibility in both scroll axes, Feedback Tab/backtab traversal and deferred explicit Focus navigation. The approved reference and initial JSON export remain unchanged. No release is published.
+**IN PROGRESS — implementation delivered; acceptance remains open.** This milestone fixes native announcement delivery, process-lifetime sleep/wake observation, narrow chart/weekday layouts, chart focus visibility in both scroll axes, Feedback Tab/backtab traversal and deferred explicit Focus navigation. The approved reference and initial JSON export remain unchanged. After PR #5 merged, preview 2 published all implemented stages; the native release review below records that delivery separately from acceptance.
 
 `./scripts/test.sh` passes **361 native Swift tests (144 core + 217 app)**, plus **4 platform, 4 acceptance-fixture and 12 icon checks**. Native compilation and isolated compiled-app light/dark, narrow/wide, keyboard, clipboard-failure and live-chart checks pass; [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026) records commands, regression evidence and platform limits. Physical sleep/wake and actual system Reduce Motion propagation remain separate unverified checks. [Stage 6 hosted native/Xcode CI](https://github.com/lukin-io/deep-work/actions/runs/39262277404) passed both supported toolchains for source/test revision `5053c44`.
 
@@ -96,7 +96,7 @@ Current acceptance is **127/137 DONE** and **10 BLOCKED**. Promoted IDs are **G-
 
 ## Shared shell
 
-Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitHub Releases. Packaging and publication do not complete additional product IDs; the current product count is recorded in the rollup above. The preview includes the Stage 1/2 implementation and clearly identifies later features as unavailable.
+Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitHub Releases. Packaging and publication do not complete additional product IDs; the current product count is recorded in the rollup above. Preview 2 includes all implemented Stages 1–6 and explicitly records unavailable integrations and remaining acceptance checks.
 
 ### Window chrome
 
@@ -1279,6 +1279,6 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
 ## Native release review
 
-Distribution support is Apple Silicon (arm64), macOS 15+. [Preview v0.1.0-preview.1](https://github.com/lukin-io/deep-work/releases/tag/v0.1.0-preview.1) is published with a built app ZIP; native CI and public-download verification passed. Exact packaging and public-download evidence are recorded in [VERIFICATION.md](docs/VERIFICATION.md); release engineering does not advance product acceptance; the current total is recorded in the rollup above.
+Distribution support is Apple Silicon (arm64), macOS 15+. [Preview v0.1.0-preview.2](https://github.com/lukin-io/deep-work/releases/tag/v0.1.0-preview.2), build 24, includes all implemented Stages 1–6 after PR #5 merged. Both native/Xcode CI environments, archive regressions and independent public-download verification passed. It remains ad hoc signed and unnotarized; upgrading preview 1 migrates schema 1 → 2. Exact packaging, checksums and remaining limits are recorded in [VERIFICATION.md](docs/VERIFICATION.md#preview-2--stages-16--october-19-2026). Release delivery does not advance product acceptance: 127/137 IDs remain accepted and 10 blocked.
 
 Before declaring the port complete, run AC-01 through AC-29 from the specification and record the results for the affected IDs above. Verify macOS integrations on an actual Mac. Keep unresolved implementation details visible rather than marking their preview state DONE.
