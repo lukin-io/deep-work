@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import Combine
 import DeepWorkCore
 
 enum ReportPeriod: String, CaseIterable { case day = "Day", week = "Week", range = "Range" }
@@ -13,6 +14,7 @@ final class AppModel: ObservableObject {
         didSet {
             guard !isTerminating, selectedTab != oldValue else { return }
             refreshTimer()
+            refreshReport()
             persistJournal()
         }
     }
@@ -20,9 +22,20 @@ final class AppModel: ObservableObject {
     @Published private(set) var settings: SettingsDocument
     @Published private(set) var journalFailure: StoreFailure?
     @Published private(set) var settingsFailure: StoreFailure?
-    @Published var reportPeriod: ReportPeriod = .week
-    @Published var reportDate = Date()
-    @Published var scheduleDraft: WorkSchedule?
+    @Published var reportPeriod: ReportPeriod = .week { didSet { reportSelectionChanged() } }
+    @Published var reportDate = Date() { didSet { reportSelectionChanged() } }
+    @Published var rangeFromText = "" { didSet { reportSelectionChanged() } }
+    @Published var rangeUntilText = "" { didSet { reportSelectionChanged() } }
+    @Published var chartGrouping: JournalGrouping = .day { didSet { refreshReport() } }
+    @Published private(set) var reportSnapshot = JournalReport.empty()
+    @Published private(set) var showingExamples = false
+    @Published private(set) var sessionPage = 0
+    @Published private(set) var reportingTimeZone: TimeZone
+    @Published var scheduleDraft: WorkScheduleDraft?
+    @Published private(set) var isSavingSchedule = false
+    @Published private(set) var scheduleSaveError: String?
+    @Published private(set) var scheduleSaveStatus: String?
+    @Published private(set) var scheduleNavigationRequest = 0
     @Published var exportScope: ExportScope = .all
     @Published var customFocusText: String { didSet { updateCustomDuration(isFocus: true) } }
     @Published var customBreakText: String { didSet { updateCustomDuration(isFocus: false) } }
@@ -45,13 +58,23 @@ final class AppModel: ObservableObject {
     private var lastCheckpointElapsed: TimeInterval
     private var feedbackRevision = 0
     private var focusControlRequested = false
+    private var exampleRecords: [SessionRecord] = []
+    private var reportsReady = false
+    private var updatingReport = false
+    private var lastReportElapsed = -Double.infinity
+    private var calendarNotifications: [AnyCancellable] = []
+    private var calendarBoundaryTask: Task<Void, Never>?
+    private var scheduleSaveTask: Task<Void, Never>?
+    private var scheduleControlRequested = false
+    private var consumedScheduleNavigationRequest = 0
 
     init(journalStore: JournalPersisting, settingsStore: SettingsPersisting,
          clock: (any TimerClock)? = nil, automaticRefresh: Bool = true,
-         ownershipLock: StoreOwnershipLock? = nil) {
+         ownershipLock: StoreOwnershipLock? = nil, reportingTimeZone: TimeZone? = nil) {
         self.clock = clock ?? ContinuousTimerClock()
         self.automaticRefresh = automaticRefresh
         self.ownershipLock = ownershipLock
+        self.reportingTimeZone = reportingTimeZone ?? .current
         let instant = self.clock.now()
         lastCheckpointElapsed = instant.elapsed
         let journalLoad = journalStore.load()
@@ -74,6 +97,17 @@ final class AppModel: ObservableObject {
         feedbackType = settingsLoad.value.feedbackDraft.type
         feedbackEmail = settingsLoad.value.feedbackDraft.email
         feedbackMessage = settingsLoad.value.feedbackDraft.message
+        initializeReports()
+        if reportingTimeZone == nil {
+            calendarNotifications.append(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange)
+                .sink { [weak self] _ in
+                    Task { @MainActor [weak self] in self?.updateReportingTimeZone(.current) }
+                })
+        }
+        for name in [Notification.Name.NSCalendarDayChanged, NSApplication.didBecomeActiveNotification] {
+            calendarNotifications.append(NotificationCenter.default.publisher(for: name)
+                .sink { [weak self] _ in Task { @MainActor [weak self] in self?.refreshReportCalendar() } })
+        }
         // Prove writes work before displaying "saved" even on a first launch.
         // Stores protect unreadable/unsupported files from fallback writes.
         persistCommittedState()
@@ -155,7 +189,7 @@ final class AppModel: ObservableObject {
         let pattern: String
         switch schedule.mode {
         case .anyDay: pattern = "Any day"
-        case .rotatingShifts: pattern = "\(schedule.workDays) work / \(schedule.restDays) rest"
+        case .rotatingShifts: pattern = "\(schedule.workDays) on / \(schedule.restDays) off"
         case .chosenWeekdays:
             if schedule.weekdays == [.monday, .tuesday, .wednesday, .thursday, .friday] { pattern = "Monday–Friday" }
             else if schedule.weekdays.isEmpty { pattern = "No fixed workdays" }
@@ -185,12 +219,22 @@ final class AppModel: ObservableObject {
 
     func startFocus() {
         guard canStart else { return } // Revalidate raw editing text, not only last valid persisted values.
-        do { applyTimerChange(try timer.start(configuration: journal.configuration, at: clock.now())) }
+        do {
+            let records = try timer.start(configuration: journal.configuration, at: clock.now())
+            showingExamples = false
+            sessionPage = 0
+            applyTimerChange(records)
+        }
         catch { return } // Validation prevents mutation; inline field errors explain invalid inputs.
     }
     func pauseTimer() { guard !isTerminating else { return }; applyTimerChange(timer.pause(at: clock.now())) }
     func resumeTimer() { guard !isTerminating else { return }; applyTimerChange(timer.resume(at: clock.now())) }
-    func restartTimer() { guard !isTerminating else { return }; applyTimerChange(timer.restart(at: clock.now())) }
+    func restartTimer() {
+        guard !isTerminating else { return }
+        showingExamples = false
+        sessionPage = 0
+        applyTimerChange(timer.restart(at: clock.now()))
+    }
     func advanceTimer(expectedPhaseID: UUID) { guard !isTerminating else { return }; applyTimerChange(timer.advance(expectedPhaseID: expectedPhaseID, at: clock.now())) }
     func endSession() { guard !isTerminating else { return }; applyTimerChange(timer.end(at: clock.now())) }
 
@@ -209,6 +253,9 @@ final class AppModel: ObservableObject {
             persistJournal()
         }
         updateTicker()
+        if selectedTab == .journal && scheduleDraft == nil {
+            refreshReport(force: !records.isEmpty || oldPhase != timer.phaseID || oldState != timer.state)
+        }
     }
 
     func showFocus() {
@@ -231,7 +278,10 @@ final class AppModel: ObservableObject {
         persistSettings()
     }
 
-    func flushPersistence() async { await persistence.flush() }
+    func flushPersistence() async {
+        await scheduleSaveTask?.value
+        await persistence.flush()
+    }
 
     /// Seal at the Quit request and drain all queued transactions and results.
     /// A failed save cancels automatic termination and restores usable controls.
@@ -244,15 +294,20 @@ final class AppModel: ObservableObject {
         isTerminating = true
         lifecycleFailureMessage = nil
         sealAndSaveForTermination()
+        // The pending schedule transaction owns the next journal write. Its
+        // completion merges only the accepted schedule into the latest timer
+        // state and enqueues that state before Quit drains the worker.
+        await scheduleSaveTask?.value
         await flushPersistence()
         let saved = recordLifecycleSaveResult()
-        if !saved { isTerminating = false }
+        if !saved { isTerminating = false; scheduleCalendarBoundary() }
         return saved
     }
 
     private func sealAndSaveForTermination() {
         applyTimerChange(timer.pause(at: clock.now()))
         ticker?.cancel(); ticker = nil
+        calendarBoundaryTask?.cancel(); calendarBoundaryTask = nil
         persistSettings()
     }
 
@@ -267,6 +322,7 @@ final class AppModel: ObservableObject {
         journal.activeCheckpoint = timer.activeCheckpoint
         persistJournal()
         updateTicker()
+        refreshReport()
     }
 
     private func updateTicker() {
@@ -284,6 +340,10 @@ final class AppModel: ObservableObject {
     }
 
     private func persistJournal() {
+        // While a schedule candidate is being committed, coalesce newer timer
+        // state in memory. Replaying an older document here could overwrite
+        // either the accepted schedule or a newly finalized focus record.
+        guard !isSavingSchedule else { return }
         lastCheckpointElapsed = clock.now().elapsed
         pendingJournalWrites += 1
         persistence.enqueueJournal(journal) { [weak self] failure in
@@ -305,6 +365,251 @@ final class AppModel: ObservableObject {
             }
         }
     }
+
+    // MARK: Journal selection and immutable report snapshots
+
+    var reportNow: Date { clock.now().wallDate }
+    var reportCalendar: ReportingCalendar { ReportingCalendar(timeZone: reportingTimeZone) }
+    var currentReportingDay: CivilDate {
+        (try? reportCalendar.day(containing: reportNow, cutoffMinutes: journal.schedule.reportingDayStartMinutes))
+            ?? CivilDate(reportNow, timeZone: reportingTimeZone)
+    }
+    var rangeError: String? { reportSnapshot.error }
+    var visibleSessionRows: [JournalReportRow] {
+        Array(reportSnapshot.rows.dropFirst(sessionPage * 12).prefix(12))
+    }
+    var canPreviousPage: Bool { sessionPage > 0 }
+    var canNextPage: Bool { (sessionPage + 1) * 12 < reportSnapshot.rows.count }
+    var pageInfo: String {
+        guard !reportSnapshot.rows.isEmpty else { return "No sessions" }
+        return "\(sessionPage * 12 + 1)–\(min((sessionPage + 1) * 12, reportSnapshot.rows.count)) of \(reportSnapshot.rows.count)"
+    }
+
+    private func initializeReports() {
+        let calendar = reportCalendar
+        if let today = try? calendar.day(containing: reportNow, cutoffMinutes: journal.schedule.reportingDayStartMinutes),
+           let date = try? calendar.date(at: today, cutoffMinutes: 720) {
+            reportDate = date
+        }
+        if let bounds = try? calendar.weekBounds(for: CivilDate(reportDate, timeZone: reportingTimeZone), schedule: journal.schedule) {
+            rangeFromText = calendar.localDateTime(bounds.from)
+            rangeUntilText = calendar.localDateTime(bounds.until)
+        }
+        do { exampleRecords = try ExampleSessions.generate(now: reportNow, calendar: calendar) }
+        catch { exampleRecords = [] } // Examples are optional and never replace actual history.
+        showingExamples = journal.records.isEmpty && journal.activeCheckpoint == nil
+        reportsReady = true
+        refreshReport()
+        scheduleCalendarBoundary()
+    }
+
+    private func reportSelectionChanged() {
+        guard reportsReady, !updatingReport else { return }
+        sessionPage = 0
+        refreshReport()
+    }
+
+    func refreshReport(force: Bool = true) {
+        guard reportsReady, !updatingReport else { return }
+        let instant = clock.now()
+        guard force || instant.elapsed - lastReportElapsed >= 1 else { return }
+        updatingReport = true
+        defer { updatingReport = false }
+        // Selection/activation is also an observation boundary. A delayed UI
+        // tick must not leave a completed focus showing as live in a new report.
+        // The guard above prevents refreshTimer's report hook from recursing.
+        if force { refreshTimer() }
+        lastReportElapsed = instant.elapsed
+        let calendar = reportCalendar
+        var from: Date?
+        var until: Date?
+        switch reportPeriod {
+        case .range:
+            from = calendar.parseLocalDateTime(rangeFromText)
+            until = calendar.parseLocalDateTime(rangeUntilText)
+        case .day, .week:
+            let day = CivilDate(reportDate, timeZone: reportingTimeZone)
+            let bounds = try? (reportPeriod == .day
+                ? calendar.dayBounds(for: day, schedule: journal.schedule)
+                : calendar.weekBounds(for: day, schedule: journal.schedule))
+            from = bounds?.from; until = bounds?.until
+        }
+        var records = showingExamples ? exampleRecords : journal.records
+        if !showingExamples, let live = timer.liveRecord, !records.contains(where: { $0.id == live.id }) {
+            records.append(live)
+        }
+        let snapshot = JournalReport.build(records: records, from: from, until: until,
+                                           schedule: journal.schedule, grouping: chartGrouping, calendar: calendar)
+        if chartGrouping != snapshot.grouping { chartGrouping = snapshot.grouping }
+        reportSnapshot = snapshot
+        sessionPage = min(sessionPage, max(0, (snapshot.rows.count - 1) / 12))
+    }
+
+    func updateReportingTimeZone(_ timeZone: TimeZone) {
+        guard timeZone != reportingTimeZone else { refreshReportCalendar(); return }
+        // The selected date and raw range fields are civil values. Only their
+        // interpretation changes; persisted absolute timestamps never do.
+        let selectedDay = CivilDate(reportDate, timeZone: reportingTimeZone)
+        updatingReport = true
+        reportingTimeZone = timeZone
+        if let date = try? reportCalendar.date(at: selectedDay, cutoffMinutes: 720) { reportDate = date }
+        updatingReport = false
+        refreshReportCalendar()
+    }
+
+    /// One wakeup at the next reporting boundary keeps Today and draft previews
+    /// current while idle/paused, without a polling loop or an accounting tick.
+    var nextReportCalendarRefresh: Date? {
+        let now = reportNow
+        let cutoffs = Set([journal.schedule.reportingDayStartMinutes,
+                           scheduleDraft?.validatedSchedule?.reportingDayStartMinutes].compactMap { $0 })
+        return cutoffs.compactMap { cutoff -> Date? in
+            guard let today = try? reportCalendar.day(containing: now, cutoffMinutes: cutoff),
+                  let tomorrow = try? reportCalendar.addingDays(1, to: today) else { return nil }
+            return try? reportCalendar.date(at: tomorrow, cutoffMinutes: cutoff)
+        }.min()
+    }
+    func refreshReportCalendar() {
+        refreshReport()
+        scheduleCalendarBoundary()
+    }
+    private func scheduleCalendarBoundary() {
+        calendarBoundaryTask?.cancel(); calendarBoundaryTask = nil
+        guard automaticRefresh, !isTerminating, let next = nextReportCalendarRefresh else { return }
+        let delay = max(0.01, next.timeIntervalSince(reportNow))
+        calendarBoundaryTask = Task { @MainActor [weak self] in
+            do { try await Task.sleep(for: .seconds(delay)) } catch { return }
+            guard !Task.isCancelled else { return }
+            self?.refreshReportCalendar()
+        }
+    }
+
+    var reportTitle: String {
+        guard let bounds = reportSnapshot.bounds else { return "Choose a valid range" }
+        func formatted(_ date: Date, _ template: String) -> String {
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "en_US_POSIX")
+            formatter.timeZone = reportingTimeZone
+            formatter.dateFormat = template
+            return formatter.string(from: date)
+        }
+        switch reportPeriod {
+        case .range: return "\(formatted(bounds.from, "MMM d, HH:mm")) – \(formatted(bounds.until, "MMM d, HH:mm"))"
+        case .day:
+            let selected = CivilDate(reportDate, timeZone: reportingTimeZone)
+            return (selected == currentReportingDay ? "Today · " : "") + formatted(reportDate, "EEEE, MMMM d, yyyy")
+        case .week:
+            let thisWeek = try? reportCalendar.weekBounds(for: currentReportingDay, schedule: journal.schedule)
+            let prefix = thisWeek?.from == bounds.from ? "This week · " : ""
+            let lastDay = reportSnapshot.days.last?.key
+            let endDate = lastDay.flatMap { try? reportCalendar.date(at: $0, cutoffMinutes: 720) } ?? bounds.until - 1
+            return prefix + "\(formatted(bounds.from, "MMM d")) – \(formatted(endDate, "MMM d, yyyy"))"
+        }
+    }
+
+    func previousReport() { moveReport(by: reportPeriod == .week ? -7 : -1) }
+    func nextReport() { moveReport(by: reportPeriod == .week ? 7 : 1) }
+    private func moveReport(by days: Int) {
+        guard !isTerminating, reportPeriod != .range,
+              let day = try? reportCalendar.addingDays(days, to: CivilDate(reportDate, timeZone: reportingTimeZone)),
+              let date = try? reportCalendar.date(at: day, cutoffMinutes: 720) else { return }
+        reportDate = date
+    }
+    func showToday() {
+        guard !isTerminating else { return }
+        updatingReport = true
+        if reportPeriod == .range { reportPeriod = .day }
+        if let date = try? reportCalendar.date(at: currentReportingDay, cutoffMinutes: 720) { reportDate = date }
+        updatingReport = false
+        reportSelectionChanged()
+    }
+    func toggleExamples() {
+        guard !isTerminating else { return }
+        showingExamples.toggle(); reportSelectionChanged()
+    }
+    func showActualJournal() {
+        guard !isTerminating else { return }
+        showingExamples = false; reportSelectionChanged()
+    }
+    func showFocusFromJournal() { showActualJournal(); showFocus() }
+    func openReportBucket(_ bucket: JournalBucket) {
+        guard !isTerminating else { return }
+        let period: ReportPeriod = reportSnapshot.grouping == .day ? .day : .week
+        updatingReport = true
+        reportPeriod = period
+        chartGrouping = .day
+        if let date = try? reportCalendar.date(at: bucket.key, cutoffMinutes: 720) { reportDate = date }
+        updatingReport = false
+        reportSelectionChanged()
+    }
+    func previousSessionPage() { if !isTerminating && canPreviousPage { sessionPage -= 1 } }
+    func nextSessionPage() { if !isTerminating && canNextPage { sessionPage += 1 } }
+
+    // MARK: Explicit schedule drafts and commit acknowledgement
+
+    func openSchedule() {
+        guard !isTerminating, !isSavingSchedule else { return }
+        if scheduleDraft == nil { scheduleDraft = WorkScheduleDraft(schedule: journal.schedule) }
+        scheduleControlRequested = true
+        scheduleSaveError = nil
+        scheduleSaveStatus = nil
+        scheduleCalendarBoundary()
+    }
+    func consumeScheduleControlRequest() -> Bool {
+        defer { scheduleControlRequested = false }
+        return scheduleControlRequested
+    }
+    func consumeScheduleReturnFocusRequest() -> Bool {
+        guard scheduleNavigationRequest > consumedScheduleNavigationRequest else { return false }
+        consumedScheduleNavigationRequest = scheduleNavigationRequest
+        return true
+    }
+    func updateScheduleDraft(_ edit: (inout WorkScheduleDraft) -> Void) {
+        guard !isTerminating, !isSavingSchedule, var draft = scheduleDraft else { return }
+        edit(&draft); scheduleDraft = draft; scheduleSaveError = nil; scheduleSaveStatus = nil
+        scheduleCalendarBoundary()
+    }
+    func cancelSchedule() {
+        guard !isTerminating, !isSavingSchedule else { return }
+        scheduleDraft = nil; scheduleSaveError = nil; scheduleSaveStatus = nil; scheduleNavigationRequest += 1
+        refreshReport()
+        scheduleCalendarBoundary()
+    }
+    func saveSchedule() async {
+        guard !isTerminating, !isSavingSchedule, let candidate = scheduleDraft?.validatedSchedule else { return }
+        refreshTimer()
+        isSavingSchedule = true
+        scheduleSaveError = nil
+        var document = journal
+        document.schedule = candidate
+        pendingJournalWrites += 1
+        let task = Task { @MainActor [self] in
+            let failure: StoreFailure? = await withCheckedContinuation { continuation in
+                persistence.enqueueJournal(document) { failure in continuation.resume(returning: failure) }
+            }
+            pendingJournalWrites -= 1
+            if let failure {
+                journalFailure = failure
+                scheduleSaveError = "Schedule could not be saved. Your edits remain in this window."
+            } else {
+                // Merge only the accepted schedule. Timer records/configuration
+                // may have changed while the disk transaction was in flight.
+                journal.schedule = candidate
+                scheduleDraft = nil
+                scheduleSaveStatus = "Work schedule saved. Reports updated."
+                scheduleNavigationRequest += 1
+                sessionPage = 0
+            }
+            isSavingSchedule = false
+            persistJournal()
+            refreshReport()
+            scheduleCalendarBoundary()
+            scheduleSaveTask = nil
+        }
+        scheduleSaveTask = task
+        await task.value
+    }
+
     private func clearFeedbackResult() { feedbackRevision += 1; feedbackError = nil; feedbackStatus = nil }
     private func updateCustomDuration(isFocus: Bool) {
         guard !isTerminating, let minutes = validMinutes(isFocus ? customFocusText : customBreakText) else { return }

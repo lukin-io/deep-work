@@ -1,6 +1,6 @@
 # Deep Work for macOS
 
-A native SwiftUI/AppKit application implementing the Stage 1 foundation and Stage 2 focus timer of the approved Deep Work handoff. The specification defines **137 implementation items**; `IMPLEMENTATION_CHECKLIST.md` is the sole progress tracker. Journal reporting and work schedules are the next milestone.
+A native SwiftUI/AppKit application with the Stage 1 foundation, Stage 2 focus timer, and Stage 3 Journal reports and work-schedule editor. The specification defines **137 implementation items**; `IMPLEMENTATION_CHECKLIST.md` is the sole progress tracker and records remaining native acceptance checks.
 
 ## Download the app
 
@@ -8,7 +8,7 @@ A native SwiftUI/AppKit application implementing the Stage 1 foundation and Stag
 
 Previews are **ad hoc signed and unnotarized**; macOS may block first launch. Only open a build you trust, following [Apple's app-opening guidance](https://support.apple.com/en-us/102445). Stable notarized releases are not yet available. Each release lists its tested platforms and known limitations; macOS 15+ is the deployment target, not a claim that every OS version was tested.
 
-The first preview passed [release CI and public-download verification](https://github.com/lukin-io/deep-work/actions/runs/39108209226). Download `SHA256SUMS` and `release-metadata.json` alongside the app ZIP and verify them with `shasum -a 256 -c SHA256SUMS`. The metadata records the source commit and build configuration. Quit an older running copy before replacing it; user data stays in Application Support.
+The published first preview contains **Stage 1/2 only**; the Stage 3 source changes require a local build until a new release is published. The first preview passed [release CI and public-download verification](https://github.com/lukin-io/deep-work/actions/runs/39108209226). Download `SHA256SUMS` and `release-metadata.json` alongside the app ZIP and verify them with `shasum -a 256 -c SHA256SUMS`. The metadata records the source commit and build configuration. Quit an older running copy before replacing it; user data stays in Application Support.
 
 ## TODO
 
@@ -22,6 +22,8 @@ Read the [10-point Apple development and distribution guide](docs/MACOS_RELEASE_
 
 | File | Use it for |
 | --- | --- |
+| [AGENTS.md](AGENTS.md) | Required development workflow, Swift/Apple practices, tests, verification, and release rules |
+| [Apple development and distribution guide](docs/MACOS_RELEASE_GUIDE.md) | Detailed Apple guidance, Human Interface Guidelines, official sources, and applicability to development or distribution; consult relevant sections as required by `AGENTS.md` |
 | `DEEP_WORK_SPECIFICATION.md` | Full behavior reference, all controls and states, data/CSV rules, native decisions, build order and 29 integration acceptance scenarios |
 | `IMPLEMENTATION_CHECKLIST.md` | Editable progress by view → feature → element, with status, owner, evidence and notes |
 | `implementation-tracker.json` | Initial structured import for your issue tracker or coding tool |
@@ -52,18 +54,16 @@ Use `IMPLEMENTATION_CHECKLIST.md` as the manual source of progress. Change TODO 
 
 The JSON is an initial import snapshot, not a live mirror of the Markdown checklist. Choose one progress source after importing it into another tool. The prototype's Working/Simulated/Decorative status stays separate from native completion.
 
-## Next milestone: Stage 3 — Journal
+## Stage 3 — Journal and work schedule
 
-PR #1 is merged into `main`. The next branch, `feature/journal-stage-3`, starts from merge commit `2ea0b94bc3cb320087921fbb3ff0670d361a44dc`, so it includes the native app, SQLite timer/recovery, icons and release CI.
+`feature/journal-stage-3` builds on the merged Stage 1/2 app and release CI. The Journal now provides:
 
-[Stage 3 plan](docs/STAGE_3_PLAN.md) maps the existing J/W IDs to implementation and native acceptance:
+- Day, Week and custom Range reports with exact clipped focus time, completed cycles and days with focus.
+- Daily/weekly activity bars, full-period drilldown, a native four-column table and 12-row pagination.
+- Separate example data, live/paused timer observations and restored history from SQLite.
+- A nested work-schedule editor: chosen weekdays, Any day, rotating shifts, week start, reporting-day cutoff and a 14-day preview. Save waits for SQLite; failure retains the draft. Cancel discards edits, and tab changes retain them.
 
-1. Calendar/report engine: half-open ranges, clipped focus segments, completion timestamps, local cutoffs, DST and schedule rotation.
-2. Day/Week/Range selection, the three metrics, activity chart, session rows and 12-row pagination.
-3. Work-schedule drafts, Save/Cancel, SQLite persistence and failure recovery.
-4. Separate actual/example data, live report integration and native keyboard/accessibility/appearance checks.
-
-Stage 3 is planned, not implemented. The report engine will supply shared export data, but CSV serialization/native saving remain Stage 4. `IMPLEMENTATION_CHECKLIST.md` remains the only product progress tracker.
+The [Stage 3 plan](docs/STAGE_3_PLAN.md) records the original scope; [native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026) and the checklist record actual results and remaining keyboard/VoiceOver checks. Existing data needs **no schema migration**. CSV serialization and native saving remain **Stage 4**, alongside Settings export and feedback clipboard support. Export controls stay disabled until those operations work.
 
 ## Important implementation boundaries
 
@@ -240,7 +240,10 @@ Stable tags are rejected until Developer ID signing, hardened runtime, timestamp
 - While a cycle is running, elapsed time includes background operation and Mac sleep. Hiding the main window does not interrupt timing; only explicit Pause or Quit pauses it. Wall-clock changes do not alter accounting. Closed-process downtime never counts: relaunch restores unfinished focus/break paused at its last committed remainder, with explicit Resume required. Checkpoints are saved about every five seconds and at actions/boundaries; Force Quit or a crash can lose the latest uncommitted interval.
 - One process owns each data directory through an advisory lock. Normal `open` reuses the app; an independent second process targeting the same store is refused. Do not remove `DeepWork.owner.lock` while an owner is running.
 - Save Draft persists feedback; unsaved edits survive tab changes but intentionally do not survive Quit. Report selection and unsaved schedule drafts remain transient as specified. No feedback is sent.
-- Reports, schedule editor, examples, CSV, clipboard, login registration, and Slack integration are not yet available. Their controls are disabled and do not simulate success. The checklist retains their pending acceptance checks.
+- Journal reports use half-open `[From, Until)` bounds in the current device time zone. Range text accepts `YYYY-MM-DDTHH:mm`; invalid, reversed, nonexistent local times or ranges exceeding 3,660 elapsed days show an error and clear the report. Above 93 elapsed days, grouping switches to By week and stays there until changed. Today leaves Range for Day without erasing its inputs.
+- Schedules affect reporting only. They never start timers or discard off-day focus. Changing the schedule or time zone reinterprets raw history without rewriting session timestamps. An idle cutoff wakeup keeps Today and the draft preview current even when no timer runs.
+- Examples are generated once per launch, clearly labelled and never written to SQLite. Starting a real cycle selects actual history. Report period/range/grouping/source, paging and unsaved schedule drafts are transient; saved schedules survive Quit/relaunch.
+- CSV, clipboard, login registration and Slack integration remain unavailable. Their controls stay disabled and do not simulate success.
 
 For isolated development/UI testing, Debug builds accept a separate directory:
 
@@ -251,16 +254,23 @@ DEEP_WORK_DATA_DIR="$PWD/.build/manual-data" \
 
 Quit any running copy first. Release builds ignore this override. This location is useful for testing empty data, relaunch, migration, and failures without touching the normal store.
 
-## Focus milestone verification
+## Native milestone verification
+
+Stage 3 passes **170 native Swift tests (115 core + 55 app)**, 4 platform checks and 12 icon checks locally, plus strict concurrency compilation and app packaging. The [verification record](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026) separates local results, compiled UI observations, hosted CI and unverified keyboard/VoiceOver/visual checks.
 
 Run all native tests, or select the relevant suites:
 
 ```sh
 ./scripts/test.sh
 ./scripts/test.sh --filter TimerEngineTests
+./scripts/test.sh --filter JournalReportTests
+./scripts/test.sh --filter WorkScheduleDraftTests
+./scripts/test.sh --filter JournalIntegrationTests
+./scripts/test.sh --filter JournalPresentationTests
+./scripts/test.sh --filter WorkSchedulePresentationTests
 ./scripts/test.sh --filter NativeApplicationTests
 ./scripts/test.sh --filter ClosePersistenceTests
-swift build -Xswiftc -strict-concurrency=complete
+swift build -Xswiftc -strict-concurrency=complete -Xswiftc -warnings-as-errors
 python3 scripts/generate-xcode-project.py
 plutil -lint DeepWork/Resources/Info.plist DeepWork.xcodeproj/project.pbxproj
 codesign --verify --strict ".build/Deep Work.app"
@@ -268,7 +278,14 @@ codesign --verify --strict ".build/Deep Work.app"
 
 The engine tests use an injected clock for exact deadlines, multi-cycle delays, pauses, clock changes and recovery. SQLite integration verifies real persisted records/checkpoints; AppKit integration exercises windows, tab focus and status-button actions. Close/Quit regressions cover automatic hidden ticking, slow/failed saves, same-window reopening, and Quit-only pause/recovery. Local full Xcode, physical sleep/wake, and complete VoiceOver/light/dark acceptance remain separately identified in the verification record.
 
-For a short manual check with the isolated data command above: choose Custom → 1 minute for both phases, turn Repeat off, and start. Press Command-W: the menu-bar timer must keep counting with the current phase name. Click it to bring Focus to the front at the current remaining time. Repeat with the red close button during the break. One complete 60-second focus record should precede Cycle complete after its break. An already paused cycle must remain paused across close/reopen. Quit with an unfinished phase and relaunch using the same isolated directory: it must restore paused with the same remainder. Reports are Stage 3, so the current Journal presents saved-record availability rather than report metrics.
+For a short manual check with the isolated data command above: choose Custom → 1 minute for both phases, turn Repeat off, and start. Press Command-W: the menu-bar timer must keep counting with the current phase name. Click it to bring Focus to the front at the current remaining time. Repeat with the red close button during the break. One complete 60-second focus record should precede Cycle complete after its break. An already paused cycle must remain paused across close/reopen. Quit with an unfinished phase and relaunch using the same isolated directory: it must restore paused with the same remainder. Open Journal during focus and pause: time and the Live/Paused row must grow only during active focus; completion appears exactly once.
+
+For Journal acceptance in the same isolated store:
+
+1. Start empty: verify the Example data banner; switch to your journal and use Start a focus cycle without starting automatically.
+2. Select Day/Week/Range, edit both raw bounds, try equal/invalid bounds, then restore a valid range. Compare metrics with chart/rows; select a bar to open its full day/week. More than 12 matches shows pagination without changing totals.
+3. Open Schedule, try all modes, blank/fractional shift counts, zero weekdays and cutoff `04:00`. Invalid active fields disable Save and clear the preview. Switch tabs to retain edits; Cancel restores the saved schedule. Save, Quit and relaunch to verify persistence.
+4. With macOS **System Settings → Keyboard → Keyboard navigation** enabled by the tester, traverse chart buttons and weekdays, activate with Space, verify focus survives live updates and returns after Cancel/Save. Repeat with VoiceOver, light/dark appearance and a narrow window. Automated checks never change system preferences; unperformed checks remain unverified.
 
 Native button focus follows macOS Keyboard navigation preferences. Tab-strip arrows/Home/End retain focus on the tab strip. No test changes the user's system preferences. The progress view reads the system Reduce Motion environment and disables interpolation when requested.
 

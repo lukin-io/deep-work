@@ -44,7 +44,8 @@ struct ClosePersistenceTests {
         let window = try #require(controller.window); defer { window.orderOut(nil) }
         configure(model); model.repeats.wrappedValue = false
         model.feedbackMessage = "Unsaved feedback remains in the retained window"
-        model.scheduleDraft = WorkSchedule(mode: .anyDay)
+        model.openSchedule()
+        model.updateScheduleDraft { $0.mode = .anyDay }
         model.startFocus()
         let liveID = try #require(model.timer.liveRecord?.id)
         clock.advance(17)

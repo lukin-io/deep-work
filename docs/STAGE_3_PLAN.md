@@ -1,10 +1,10 @@
 # Stage 3 — Journal and work schedule
 
-This is an implementation plan, not a progress tracker or completion claim. [IMPLEMENTATION_CHECKLIST.md](../IMPLEMENTATION_CHECKLIST.md) remains the only source of acceptance status. Follow the [specification's Journal/calendar contract and element details](../DEEP_WORK_SPECIFICATION.md#journal-and-calendar-contract), approved `reference/`, and [AGENTS.md](../AGENTS.md). `feature/journal-stage-3` was created from `main` at merge commit `2ea0b94bc3cb320087921fbb3ff0670d361a44dc`, after PR #1 merged. This branch begins with the complete merged app/CI foundation and this plan; Stage 3 implementation has not started.
+This is an implementation plan, not a progress tracker or completion claim. [IMPLEMENTATION_CHECKLIST.md](../IMPLEMENTATION_CHECKLIST.md) remains the only source of acceptance status. Follow the [specification's Journal/calendar contract and element details](../DEEP_WORK_SPECIFICATION.md#journal-and-calendar-contract), approved `reference/`, and [AGENTS.md](../AGENTS.md). `feature/journal-stage-3` was created from `main` at merge commit `2ea0b94bc3cb320087921fbb3ff0670d361a44dc`, after PR #1 merged. The Stage 3 implementation now follows this plan. Consult the checklist and [verification record](VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026) for actual acceptance and remaining gaps; this document remains the original implementation plan.
 
 The outcome is a working Journal: Day/Week/Range reports, the three approved metrics, accessible activity bars, paginated sessions, isolated examples, and the nested work-schedule editor. Preserve Focus / Journal / Settings, their labels and restrained layout, the existing timer and Close/Quit behavior, and Apple Silicon/macOS 15+ support.
 
-## Reuse the existing foundation
+## Foundation at the start of Stage 3
 
 - `AppModel` already owns report period/date and an optional schedule draft. Journal opens on launch, Week is selected, and tab changes preserve the timer. Extend this shared owner with typed selection, grouping, source, pagination and draft state; do not create another timer or storage owner.
 - `SessionRecord`, `ActiveSegment`, `WorkSchedule`, `CivilDate` and `JournalDocument` already provide validated models. SQLite already stores actual records, configuration, schedule and checkpoint transactionally. `TimerEngine.liveRecord` provides a nonmutating current-focus observation. Reuse these contracts; a reporting-only change should not require a schema migration.
