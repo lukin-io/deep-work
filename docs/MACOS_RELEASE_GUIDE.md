@@ -52,6 +52,8 @@ The published `v0.1.0-preview.1` is **ad hoc signed and unnotarized**. Passing c
 
 **Deep Work:** [AppDelegate](../DeepWork/App/DeepWorkApp.swift), [WindowController](../DeepWork/App/WindowController.swift) and [MenuBarController](../DeepWork/App/MenuBarController.swift) implement the approved contract: close/⌘W hides while timing continues; ⌘Q pauses, saves and quits; menu click reopens Focus. Keep Focus, Journal and Settings and the approved visual design. Full interaction/appearance acceptance remains separate from target/action integration tests.
 
+One concrete gap in the current native menu is **Settings… / ⌘,**; **Redo / ⇧⌘Z** is also absent. These deserve native target/action and keyboard coverage during platform polish. Preserve the approved Settings tab: its placement is an intentional product choice, while a standard Settings command can open that existing tab. Apple normally describes a separate settings window; changing this product's window structure requires an explicit design decision. [Apple: settings](https://developer.apple.com/design/human-interface-guidelines/settings), [undo and redo](https://developer.apple.com/design/human-interface-guidelines/undo-and-redo).
+
 ## 9. Make accessibility part of acceptance, not a final cosmetic pass
 
 **Recommended platform design and project requirement.** Test keyboard-only use and VoiceOver, meaningful labels/values, focus order, validation announcements, contrast, light/dark appearance and Reduce Motion. Avoid color-only meaning and overriding system shortcuts. Native controls help, but do not prove the complete workflow is accessible. [Apple: accessibility HIG](https://developer.apple.com/design/human-interface-guidelines/accessibility).

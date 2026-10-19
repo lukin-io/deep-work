@@ -1,6 +1,6 @@
 # Deep Work implementation checklist
 
-**Baseline:** October 17, 2026 · **Progress:** 36 of 137 items accepted in native Swift.
+**Baseline:** October 17, 2026 · **Progress:** 83 of 137 items accepted in native Swift.
 
 This is the canonical manual progress tracker for the current three-view app. The initial handoff started with every item TODO; current native evidence is recorded below. Each ID links to its full use case, behavior, input rules, source reference, and acceptance checks in `DEEP_WORK_SPECIFICATION.md`.
 
@@ -14,10 +14,10 @@ Feature completion means all of its child items are DONE. View completion means 
 | --- | ---: | ---: | ---: |
 | Shared shell | 14 | 10 | 4 |
 | Focus | 29 | 26 | 3 |
-| Journal | 54 | 0 | 54 |
-| Journal work schedule | 19 | 0 | 19 |
+| Journal | 54 | 31 | 23 |
+| Journal work schedule | 19 | 16 | 3 |
 | Settings | 21 | 0 | 21 |
-| **Total** | **137** | **36** | **101** |
+| **Total** | **137** | **83** | **54** |
 
 Work schedule remains inside Journal; its separate rollup is for tracking the nested editor.
 
@@ -58,9 +58,17 @@ Native verification: **109 Swift tests passed (78 core + 31 app)** plus **12 ico
 
 Icon source cleanup: G-001 uses the existing `Assets.xcassets/AppIcon.appiconset` as its single production source. Top-level delivery duplicates are moved to an ignored local archive, and the CLI build generates ICNS into build output. [Icon organization](docs/APP_ICON.md) describes the current paths; [cleanup verification](docs/VERIFICATION.md#icon-source-cleanup--october-18-2026) records focused packaging results. This structural cleanup changes no acceptance counts.
 
+## Stage 3 implementation record — October 19, 2026
+
+Journal reports, exact calendar allocation, live observations, separate examples, activity bars, native session rows/paging and the nested schedule editor are implemented. Schedule Save is acknowledged by SQLite; failed or slow saves preserve edits and ongoing timer state. No schema migration or reference changes are required.
+
+`./scripts/test.sh` passes **170 native Swift tests (115 core + 55 app)**, plus 4 platform and 12 icon checks. Native compilation and compiled-app report/schedule/paging checks pass. Details, regression evidence and remaining platform limitations are in [Stage 3 verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026). There are **83/137 accepted IDs**: 31 Journal and 16 schedule IDs are newly accepted. [Hosted CI](https://github.com/lukin-io/deep-work/actions/runs/39236029448) also passed 170 native tests and Xcode Release builds on macOS 15/26, then optimized arm64 packaging and 20 policy/17 archive checks.
+
+Cross-stage CSV criteria keep J-017–J-020 and J-052 partial; J-048–J-051 remain Stage 4. Keyboard navigation is disabled on the implementation Mac and hostless SwiftUI accessibility is unavailable, so affected focus, chart keyboard and weekday checks remain IN PROGRESS. Full VoiceOver and final appearance acceptance are also explicitly unverified. These limits do not turn passing model/adapter tests into full UI acceptance. The published preview remains Stage 1/2; this branch does not publish a new release.
+
 ## Shared shell
 
-Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitHub Releases. Packaging and publication do not complete additional product IDs; the accepted count remains 36/137. The preview includes the Stage 1/2 implementation and clearly identifies later features as unavailable.
+Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitHub Releases. Packaging and publication do not complete additional product IDs; the current product count is recorded in the rollup above. The preview includes the Stage 1/2 implementation and clearly identifies later features as unavailable.
 
 ### Window chrome
 
@@ -141,7 +149,7 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
     Status: **DONE** · Stage: **1** · Owner: Codex  
     Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
-    Blocker / notes: Initial/recovered launch selects Journal. Tab switching reconciles and commits crossed boundaries without pausing; contents remain separate Stage 3 work.  
+    Blocker / notes: Initial/recovered launch selects Journal. Tab switching reconciles and commits crossed boundaries without pausing; Stage 3 reports now use the same shared owner.  
     Swift: `DeepWork/App/RootView.swift`, `DeepWork/App/AppModel.swift`
 
 - [x] **G-011 — Settings tab** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-011))
@@ -421,14 +429,14 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
 ### Navigation
 
-**Progress:** 0 / 1 accepted.
+**Progress:** 1 / 1 accepted.
 
-- [ ] **J-001 — Journal tab and initial view** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-001))
+- [x] **J-001 — Journal tab and initial view** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-001))
 
-    Status: **IN PROGRESS** · Stage: **1** · Owner: Codex  
-    Evidence / commit: [Native verification, October 18, 2026](docs/VERIFICATION.md); `./scripts/test.sh`, compiled native app and macOS acceptance.  
-    Blocker / notes: Journal initial landing/Week selection, keyboard selection and in-memory report/draft ownership verified. Active timer, reporting-day cutoff behavior and actual report-selection UI remain.  
-    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/App/AppModel.swift`
+    Status: **DONE** · Stage: **1** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Native launch/tab behavior and saved schedule summary pass; reports share the existing timer owner.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 ### Layout
 
@@ -437,27 +445,27 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 - [ ] **J-002 — Journal window and section structure** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-002))
 
     Status: **IN PROGRESS** · Stage: **1** · Owner: Codex  
-    Evidence / commit: [Native verification, October 18, 2026](docs/VERIFICATION.md); `./scripts/test.sh`, compiled native app and macOS acceptance.  
-    Blocker / notes: Reference section order and restrained native shell are present; metrics/report/example controls are explicitly unavailable. Full report layout, light/dark and narrow-window acceptance remain.  
-    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/App/AppModel.swift`
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Approved section order and light appearance observed; final light/dark and narrow-window visual acceptance remains unverified.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 ### Report context
 
-**Progress:** 0 / 2 accepted.
+**Progress:** 2 / 2 accepted.
 
-- [ ] **J-003 — Focus journal heading and saved-schedule summary** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-003))
+- [x] **J-003 — Focus journal heading and saved-schedule summary** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-003))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Reports/WorkSchedule.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Native launch/tab behavior and saved schedule summary pass; reports share the existing timer owner.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **J-015 — Selected period title** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-015))
+- [x] **J-015 — Selected period title** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-015))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Reports/WorkSchedule.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Day/Week/Range bounds, retained inputs, calendar navigation, cutoff/DST/time-zone reinterpretation, invalid ranges and idle cutoff refresh pass native tests and compiled controls.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 ### Work schedule access
 
@@ -465,99 +473,99 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
 - [ ] **J-004 — Schedule button** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-004))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/WorkScheduleView.swift`
+    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Nested Schedule opens and retains drafts; initial Reporting days keyboard focus remains unverified with Keyboard navigation disabled.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 ### Period selection
 
-**Progress:** 0 / 3 accepted.
+**Progress:** 3 / 3 accepted.
 
-- [ ] **J-005 — Day segment** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-005))
+- [x] **J-005 — Day segment** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-005))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Reports/WorkSchedule.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Day/Week/Range bounds, retained inputs, calendar navigation, cutoff/DST/time-zone reinterpretation, invalid ranges and idle cutoff refresh pass native tests and compiled controls.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **J-006 — Week segment** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-006))
+- [x] **J-006 — Week segment** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-006))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Reports/WorkSchedule.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Day/Week/Range bounds, retained inputs, calendar navigation, cutoff/DST/time-zone reinterpretation, invalid ranges and idle cutoff refresh pass native tests and compiled controls.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **J-007 — Range segment** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-007))
+- [x] **J-007 — Range segment** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-007))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Reports/WorkSchedule.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Day/Week/Range bounds, retained inputs, calendar navigation, cutoff/DST/time-zone reinterpretation, invalid ranges and idle cutoff refresh pass native tests and compiled controls.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 ### Date navigation
 
-**Progress:** 0 / 4 accepted.
+**Progress:** 4 / 4 accepted.
 
-- [ ] **J-008 — Report date picker** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-008))
+- [x] **J-008 — Report date picker** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-008))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Reports/WorkSchedule.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Day/Week/Range bounds, retained inputs, calendar navigation, cutoff/DST/time-zone reinterpretation, invalid ranges and idle cutoff refresh pass native tests and compiled controls.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **J-009 — Previous period button** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-009))
+- [x] **J-009 — Previous period button** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-009))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Reports/WorkSchedule.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Day/Week/Range bounds, retained inputs, calendar navigation, cutoff/DST/time-zone reinterpretation, invalid ranges and idle cutoff refresh pass native tests and compiled controls.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **J-010 — Next period button** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-010))
+- [x] **J-010 — Next period button** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-010))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Reports/WorkSchedule.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Day/Week/Range bounds, retained inputs, calendar navigation, cutoff/DST/time-zone reinterpretation, invalid ranges and idle cutoff refresh pass native tests and compiled controls.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **J-016 — Today button** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-016))
+- [x] **J-016 — Today button** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-016))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Reports/WorkSchedule.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Day/Week/Range bounds, retained inputs, calendar navigation, cutoff/DST/time-zone reinterpretation, invalid ranges and idle cutoff refresh pass native tests and compiled controls.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 ### Custom range
 
-**Progress:** 0 / 4 accepted.
+**Progress:** 4 / 4 accepted.
 
-- [ ] **J-011 — From endpoint** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-011))
+- [x] **J-011 — From endpoint** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-011))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Reports/WorkSchedule.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Day/Week/Range bounds, retained inputs, calendar navigation, cutoff/DST/time-zone reinterpretation, invalid ranges and idle cutoff refresh pass native tests and compiled controls.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **J-012 — Until endpoint** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-012))
+- [x] **J-012 — Until endpoint** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-012))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Reports/WorkSchedule.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Day/Week/Range bounds, retained inputs, calendar navigation, cutoff/DST/time-zone reinterpretation, invalid ranges and idle cutoff refresh pass native tests and compiled controls.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **J-013 — Range explanation** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-013))
+- [x] **J-013 — Range explanation** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-013))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Reports/WorkSchedule.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Day/Week/Range bounds, retained inputs, calendar navigation, cutoff/DST/time-zone reinterpretation, invalid ranges and idle cutoff refresh pass native tests and compiled controls.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **J-014 — Range validation and error state** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-014))
+- [x] **J-014 — Range validation and error state** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-014))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Reports/WorkSchedule.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Day/Week/Range bounds, retained inputs, calendar navigation, cutoff/DST/time-zone reinterpretation, invalid ranges and idle cutoff refresh pass native tests and compiled controls.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 ### Example data
 
@@ -565,81 +573,81 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
 - [ ] **J-017 — Example banner** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-017))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Reports/ExampleData.swift`, `DeepWork/Features/Journal/JournalView.swift`
+    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Separate generated examples, actual selection, future exclusion and SQLite isolation pass. All Sessions export exclusion is an explicit completion criterion deferred to Stage 4.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 - [ ] **J-018 — Footer View example / Show my journal button** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-018))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Reports/ExampleData.swift`, `DeepWork/Features/Journal/JournalView.swift`
+    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Separate generated examples, actual selection, future exclusion and SQLite isolation pass. All Sessions export exclusion is an explicit completion criterion deferred to Stage 4.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 - [ ] **J-019 — Banner Show my journal button** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-019))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Reports/ExampleData.swift`, `DeepWork/Features/Journal/JournalView.swift`
+    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Separate generated examples, actual selection, future exclusion and SQLite isolation pass. All Sessions export exclusion is an explicit completion criterion deferred to Stage 4.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 - [ ] **J-020 — Generated example scope and initial mode** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-020))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Reports/ExampleData.swift`, `DeepWork/Features/Journal/JournalView.swift`
+    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Separate generated examples, actual selection, future exclusion and SQLite isolation pass. All Sessions export exclusion is an explicit completion criterion deferred to Stage 4.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 ### Report totals
 
-**Progress:** 0 / 4 accepted.
+**Progress:** 4 / 4 accepted.
 
-- [ ] **J-021 — Three-metric summary layout** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-021))
+- [x] **J-021 — Three-metric summary layout** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-021))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Reports/WorkSchedule.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: One report projection verifies exact clipped active seconds, completion membership, overlapping-day denominators and off-day inclusion; raw timestamps remain unchanged.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **J-022 — Focus time metric** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-022))
+- [x] **J-022 — Focus time metric** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-022))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Reports/WorkSchedule.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: One report projection verifies exact clipped active seconds, completion membership, overlapping-day denominators and off-day inclusion; raw timestamps remain unchanged.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **J-023 — Completed cycles metric and partial-session helper** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-023))
+- [x] **J-023 — Completed cycles metric and partial-session helper** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-023))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Reports/WorkSchedule.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: One report projection verifies exact clipped active seconds, completion membership, overlapping-day denominators and off-day inclusion; raw timestamps remain unchanged.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **J-024 — Days with focus and scheduled-days helper** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-024))
+- [x] **J-024 — Days with focus and scheduled-days helper** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-024))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Reports/WorkSchedule.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: One report projection verifies exact clipped active seconds, completion membership, overlapping-day denominators and off-day inclusion; raw timestamps remain unchanged.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 ### Accounting
 
-**Progress:** 0 / 2 accepted.
+**Progress:** 2 / 2 accepted.
 
-- [ ] **J-025 — Range clipping and date-bucket rules** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-025))
+- [x] **J-025 — Range clipping and date-bucket rules** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-025))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Reports/WorkSchedule.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: One report projection verifies exact clipped active seconds, completion membership, overlapping-day denominators and off-day inclusion; raw timestamps remain unchanged.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **J-042 — Session accounting explanation** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-042))
+- [x] **J-042 — Session accounting explanation** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-042))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/SessionListView.swift`, `DeepWork/Features/Journal/JournalView.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Native table/presentation and integration tests verify original timestamps, live/partial/outside-range states, 12-row paging, unchanged totals and empty-state content; compiled table and paging observed.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 ### Activity
 
@@ -647,38 +655,38 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
 - [ ] **J-026 — Daily focus / Weekly focus heading** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-026))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/ActivityChartView.swift`, `DeepWork/Reports/ReportEngine.swift`
+    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Native arithmetic, grouping, labels and pointer drilldown pass. The shared chart completion check also requires keyboard/bar activation; that and live bucket focus retention remain unverified with Keyboard navigation disabled.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 - [ ] **J-027 — By day / By week grouping selector** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-027))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/ActivityChartView.swift`, `DeepWork/Reports/ReportEngine.swift`
+    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Native arithmetic, grouping, labels and pointer drilldown pass. The shared chart completion check also requires keyboard/bar activation; that and live bucket focus retention remain unverified with Keyboard navigation disabled.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 - [ ] **J-028 — Automatic weekly grouping for long ranges** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-028))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/ActivityChartView.swift`, `DeepWork/Reports/ReportEngine.swift`
+    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Native arithmetic, grouping, labels and pointer drilldown pass. The shared chart completion check also requires keyboard/bar activation; that and live bucket focus retention remain unverified with Keyboard navigation disabled.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 - [ ] **J-034 — Chart instruction and off-day inclusion helper** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-034))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/ActivityChartView.swift`, `DeepWork/Reports/ReportEngine.swift`
+    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Native arithmetic, grouping, labels and pointer drilldown pass. The shared chart completion check also requires keyboard/bar activation; that and live bucket focus retention remain unverified with Keyboard navigation disabled.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 - [ ] **J-035 — Day off legend** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-035))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/ActivityChartView.swift`, `DeepWork/Reports/ReportEngine.swift`
+    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Native arithmetic, grouping, labels and pointer drilldown pass. The shared chart completion check also requires keyboard/bar activation; that and live bucket focus retention remain unverified with Keyboard navigation disabled.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 ### Activity chart
 
@@ -686,131 +694,131 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
 - [ ] **J-029 — Bars, duration values, captions, and relative scale** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-029))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/ActivityChartView.swift`, `DeepWork/Reports/ReportEngine.swift`
+    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Native arithmetic, grouping, labels and pointer drilldown pass. The shared chart completion check also requires keyboard/bar activation; that and live bucket focus retention remain unverified with Keyboard navigation disabled.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 - [ ] **J-030 — Off-day, zero, and current-day visual states** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-030))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/ActivityChartView.swift`, `DeepWork/Reports/ReportEngine.swift`
+    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Native arithmetic, grouping, labels and pointer drilldown pass. The shared chart completion check also requires keyboard/bar activation; that and live bucket focus retention remain unverified with Keyboard navigation disabled.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 - [ ] **J-031 — Select a day or week to drill into its report** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-031))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/ActivityChartView.swift`, `DeepWork/Reports/ReportEngine.swift`
+    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Native arithmetic, grouping, labels and pointer drilldown pass. The shared chart completion check also requires keyboard/bar activation; that and live bucket focus retention remain unverified with Keyboard navigation disabled.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 - [ ] **J-032 — Bar accessibility and detailed tooltip** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-032))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/ActivityChartView.swift`, `DeepWork/Reports/ReportEngine.swift`
+    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Native arithmetic, grouping, labels and pointer drilldown pass. The shared chart completion check also requires keyboard/bar activation; that and live bucket focus retention remain unverified with Keyboard navigation disabled.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 - [ ] **J-033 — Scrollable chart frame** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-033))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/ActivityChartView.swift`, `DeepWork/Reports/ReportEngine.swift`
+    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Native arithmetic, grouping, labels and pointer drilldown pass. The shared chart completion check also requires keyboard/bar activation; that and live bucket focus retention remain unverified with Keyboard navigation disabled.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 ### Sessions
 
-**Progress:** 0 / 1 accepted.
+**Progress:** 1 / 1 accepted.
 
-- [ ] **J-036 — Sessions heading and result count** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-036))
+- [x] **J-036 — Sessions heading and result count** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-036))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/SessionListView.swift`, `DeepWork/Features/Journal/JournalView.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Native table/presentation and integration tests verify original timestamps, live/partial/outside-range states, 12-row paging, unchanged totals and empty-state content; compiled table and paging observed.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 ### Sessions table
 
-**Progress:** 0 / 5 accepted.
+**Progress:** 5 / 5 accepted.
 
-- [ ] **J-037 — Four-column read-only session table** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-037))
+- [x] **J-037 — Four-column read-only session table** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-037))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/SessionListView.swift`, `DeepWork/Features/Journal/JournalView.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Native table/presentation and integration tests verify original timestamps, live/partial/outside-range states, 12-row paging, unchanged totals and empty-state content; compiled table and paging observed.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **J-038 — Started date/time cell** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-038))
+- [x] **J-038 — Started date/time cell** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-038))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/SessionListView.swift`, `DeepWork/Features/Journal/JournalView.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Native table/presentation and integration tests verify original timestamps, live/partial/outside-range states, 12-row paging, unchanged totals and empty-state content; compiled table and paging observed.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **J-039 — Ended date/time and live/paused state cell** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-039))
+- [x] **J-039 — Ended date/time and live/paused state cell** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-039))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/SessionListView.swift`, `DeepWork/Features/Journal/JournalView.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Native table/presentation and integration tests verify original timestamps, live/partial/outside-range states, 12-row paging, unchanged totals and empty-state content; compiled table and paging observed.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **J-040 — Focus time with planned or total detail** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-040))
+- [x] **J-040 — Focus time with planned or total detail** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-040))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/SessionListView.swift`, `DeepWork/Features/Journal/JournalView.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Native table/presentation and integration tests verify original timestamps, live/partial/outside-range states, 12-row paging, unchanged totals and empty-state content; compiled table and paging observed.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **J-041 — Cycle status badge and Outside range helper** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-041))
+- [x] **J-041 — Cycle status badge and Outside range helper** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-041))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/SessionListView.swift`, `DeepWork/Features/Journal/JournalView.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Native table/presentation and integration tests verify original timestamps, live/partial/outside-range states, 12-row paging, unchanged totals and empty-state content; compiled table and paging observed.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 ### Sessions pagination
 
-**Progress:** 0 / 3 accepted.
+**Progress:** 3 / 3 accepted.
 
-- [ ] **J-043 — Pagination visibility and row-range status** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-043))
+- [x] **J-043 — Pagination visibility and row-range status** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-043))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/SessionListView.swift`, `DeepWork/Features/Journal/JournalView.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Native table/presentation and integration tests verify original timestamps, live/partial/outside-range states, 12-row paging, unchanged totals and empty-state content; compiled table and paging observed.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **J-044 — Previous page button** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-044))
+- [x] **J-044 — Previous page button** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-044))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/SessionListView.swift`, `DeepWork/Features/Journal/JournalView.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Native table/presentation and integration tests verify original timestamps, live/partial/outside-range states, 12-row paging, unchanged totals and empty-state content; compiled table and paging observed.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **J-045 — Next page button** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-045))
+- [x] **J-045 — Next page button** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-045))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/SessionListView.swift`, `DeepWork/Features/Journal/JournalView.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Native table/presentation and integration tests verify original timestamps, live/partial/outside-range states, 12-row paging, unchanged totals and empty-state content; compiled table and paging observed.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 ### Empty state
 
-**Progress:** 0 / 2 accepted.
+**Progress:** 1 / 2 accepted.
 
-- [ ] **J-046 — No sessions illustration and message** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-046))
+- [x] **J-046 — No sessions illustration and message** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-046))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/SessionListView.swift`, `DeepWork/Features/Journal/JournalView.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Native table/presentation and integration tests verify original timestamps, live/partial/outside-range states, 12-row paging, unchanged totals and empty-state content; compiled table and paging observed.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 - [ ] **J-047 — Start a focus cycle button** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-047))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/SessionListView.swift`, `DeepWork/Features/Journal/JournalView.swift`
+    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Compiled empty action opens Focus, selects actual history and does not start a timer. Duration-picker focus remains unverified with Keyboard navigation disabled.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 ### Export
 
@@ -851,20 +859,20 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 - [ ] **J-052 — Saved-on-device footer and failure message** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-052))
 
     Status: **IN PROGRESS** · Stage: **1** · Owner: Codex  
-    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
-    Blocker / notes: SQLite records/checkpoints and usable in-memory timing on failure pass native tests. CSV-on-failure remains Stage 4, so this cross-stage item is incomplete.  
-    Swift: `DeepWork/Data/JournalStore.swift`, `DeepWork/Features/Journal/JournalView.swift`
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: SQLite saved/failure status and recoverable edits pass; CSV availability during storage failure remains Stage 4.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 ### Live journal
 
-**Progress:** 0 / 1 accepted.
+**Progress:** 1 / 1 accepted.
 
-- [ ] **J-053 — Actual history, active observations, and automatic refresh** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-053))
+- [x] **J-053 — Actual history, active observations, and automatic refresh** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-053))
 
-    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
-    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
-    Blocker / notes: Engine exposes one live observation with current segments and stable identity; boundary/tab reconciliation is tested. Native journal metrics/table updates remain Stage 3.  
-    Swift: `DeepWork/Core/TimerEngine.swift`, `DeepWork/Data/JournalStore.swift`, `DeepWork/Reports/ReportEngine.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Live/paused metrics and rows, pause/break exclusion, delayed boundary reconciliation, exactly-once finalization and paused SQLite recovery pass.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 ### Accessibility
 
@@ -872,45 +880,45 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
 - [ ] **J-054 — Journal controls, regions, focus, and statuses** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-054))
 
-    Status: **TODO** · Stage: **6** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Accessibility/Announcements.swift`
+    Status: **IN PROGRESS** · Stage: **6** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Named native controls, chart descriptions, table headers and status hooks implemented. Full VoiceOver, keyboard traversal/focus and announcement acceptance remains unverified.  
+    Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 ## Journal work schedule
 
 ### Layout
 
-**Progress:** 0 / 1 accepted.
+**Progress:** 1 / 1 accepted.
 
-- [ ] **W-001 — Nested work-schedule view** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-001))
+- [x] **W-001 — Nested work-schedule view** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-001))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Reports/WorkSchedule.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Data/JournalStore.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Nested editor, all mode fields and raw draft retention pass native model/text-field/tab-navigation checks; no implicit save.  
+    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Core/WorkScheduleDraft.swift`, `DeepWork/Core/ReportingCalendar.swift`, `DeepWork/App/AppModel.swift`
 
 ### Draft editing
 
-**Progress:** 0 / 1 accepted.
+**Progress:** 1 / 1 accepted.
 
-- [ ] **W-002 — Draft creation and mode-specific fields** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-002))
+- [x] **W-002 — Draft creation and mode-specific fields** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-002))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Reports/WorkSchedule.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Data/JournalStore.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Nested editor, all mode fields and raw draft retention pass native model/text-field/tab-navigation checks; no implicit save.  
+    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Core/WorkScheduleDraft.swift`, `DeepWork/Core/ReportingCalendar.swift`, `DeepWork/App/AppModel.swift`
 
 ### Reporting days
 
-**Progress:** 0 / 1 accepted.
+**Progress:** 1 / 1 accepted.
 
-- [ ] **W-003 — Reporting days selector** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-003))
+- [x] **W-003 — Reporting days selector** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-003))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Reports/WorkSchedule.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Data/JournalStore.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Nested editor, all mode fields and raw draft retention pass native model/text-field/tab-navigation checks; no implicit save.  
+    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Core/WorkScheduleDraft.swift`, `DeepWork/Core/ReportingCalendar.swift`, `DeepWork/App/AppModel.swift`
 
 ### Chosen weekdays
 
@@ -918,155 +926,155 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
 - [ ] **W-004 — Seven independent weekday checkboxes** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-004))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Reports/WorkSchedule.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Data/JournalStore.swift`
+    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Pointer/input and zero-weekday semantics pass; independent keyboard activation remains unverified with macOS Keyboard navigation disabled.  
+    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Core/WorkScheduleDraft.swift`, `DeepWork/Core/ReportingCalendar.swift`, `DeepWork/App/AppModel.swift`
 
 ### Any day
 
-**Progress:** 0 / 1 accepted.
+**Progress:** 1 / 1 accepted.
 
-- [ ] **W-005 — Any-day explanation and semantics** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-005))
+- [x] **W-005 — Any-day explanation and semantics** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-005))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Reports/WorkSchedule.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Data/JournalStore.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: WorkScheduleDraftTests, JournalReportTests and native editor/SQLite cases verify validation, civil-calendar interpretation, preview and preserved history.  
+    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Core/WorkScheduleDraft.swift`, `DeepWork/Core/ReportingCalendar.swift`, `DeepWork/App/AppModel.swift`
 
 ### Rotating shifts
 
-**Progress:** 0 / 4 accepted.
+**Progress:** 4 / 4 accepted.
 
-- [ ] **W-006 — Work-day count** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-006))
+- [x] **W-006 — Work-day count** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-006))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Reports/WorkSchedule.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Data/JournalStore.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: WorkScheduleDraftTests, JournalReportTests and native editor/SQLite cases verify validation, civil-calendar interpretation, preview and preserved history.  
+    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Core/WorkScheduleDraft.swift`, `DeepWork/Core/ReportingCalendar.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **W-007 — Rest-day count** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-007))
+- [x] **W-007 — Rest-day count** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-007))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Reports/WorkSchedule.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Data/JournalStore.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: WorkScheduleDraftTests, JournalReportTests and native editor/SQLite cases verify validation, civil-calendar interpretation, preview and preserved history.  
+    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Core/WorkScheduleDraft.swift`, `DeepWork/Core/ReportingCalendar.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **W-008 — First work day anchor** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-008))
+- [x] **W-008 — First work day anchor** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-008))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Reports/WorkSchedule.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Data/JournalStore.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: WorkScheduleDraftTests, JournalReportTests and native editor/SQLite cases verify validation, civil-calendar interpretation, preview and preserved history.  
+    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Core/WorkScheduleDraft.swift`, `DeepWork/Core/ReportingCalendar.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **W-009 — Pattern helper and calendar rotation** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-009))
+- [x] **W-009 — Pattern helper and calendar rotation** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-009))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Reports/WorkSchedule.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Data/JournalStore.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: WorkScheduleDraftTests, JournalReportTests and native editor/SQLite cases verify validation, civil-calendar interpretation, preview and preserved history.  
+    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Core/WorkScheduleDraft.swift`, `DeepWork/Core/ReportingCalendar.swift`, `DeepWork/App/AppModel.swift`
 
 ### Week boundaries
 
-**Progress:** 0 / 1 accepted.
+**Progress:** 1 / 1 accepted.
 
-- [ ] **W-010 — Week starts on selector** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-010))
+- [x] **W-010 — Week starts on selector** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-010))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Reports/WorkSchedule.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Data/JournalStore.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: WorkScheduleDraftTests, JournalReportTests and native editor/SQLite cases verify validation, civil-calendar interpretation, preview and preserved history.  
+    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Core/WorkScheduleDraft.swift`, `DeepWork/Core/ReportingCalendar.swift`, `DeepWork/App/AppModel.swift`
 
 ### Reporting-day boundary
 
-**Progress:** 0 / 1 accepted.
+**Progress:** 1 / 1 accepted.
 
-- [ ] **W-011 — Reporting day starts at field** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-011))
+- [x] **W-011 — Reporting day starts at field** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-011))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Reports/WorkSchedule.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Data/JournalStore.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: WorkScheduleDraftTests, JournalReportTests and native editor/SQLite cases verify validation, civil-calendar interpretation, preview and preserved history.  
+    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Core/WorkScheduleDraft.swift`, `DeepWork/Core/ReportingCalendar.swift`, `DeepWork/App/AppModel.swift`
 
 ### Calendar and DST
 
-**Progress:** 0 / 1 accepted.
+**Progress:** 1 / 1 accepted.
 
-- [ ] **W-012 — Local calendar grouping rules** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-012))
+- [x] **W-012 — Local calendar grouping rules** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-012))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Reports/WorkSchedule.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Data/JournalStore.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: WorkScheduleDraftTests, JournalReportTests and native editor/SQLite cases verify validation, civil-calendar interpretation, preview and preserved history.  
+    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Core/WorkScheduleDraft.swift`, `DeepWork/Core/ReportingCalendar.swift`, `DeepWork/App/AppModel.swift`
 
 ### Preview
 
-**Progress:** 0 / 2 accepted.
+**Progress:** 1 / 2 accepted.
 
 - [ ] **W-013 — Next 14 days heading, legend, and preview layout** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-013))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Reports/WorkSchedule.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Data/JournalStore.swift`
+    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Fourteen dates and work/rest states pass native tests and the wide compiled view. Narrow preview-cell readability remains unverified; native field geometry alone does not establish visual acceptance.  
+    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Core/WorkScheduleDraft.swift`, `DeepWork/Core/ReportingCalendar.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **W-014 — Fourteen draft-schedule date cells** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-014))
+- [x] **W-014 — Fourteen draft-schedule date cells** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-014))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Reports/WorkSchedule.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Data/JournalStore.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: WorkScheduleDraftTests, JournalReportTests and native editor/SQLite cases verify validation, civil-calendar interpretation, preview and preserved history.  
+    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Core/WorkScheduleDraft.swift`, `DeepWork/Core/ReportingCalendar.swift`, `DeepWork/App/AppModel.swift`
 
 ### Validation
 
-**Progress:** 0 / 1 accepted.
+**Progress:** 1 / 1 accepted.
 
-- [ ] **W-015 — Draft validation error and save availability** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-015))
+- [x] **W-015 — Draft validation error and save availability** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-015))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Reports/WorkSchedule.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Data/JournalStore.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: WorkScheduleDraftTests, JournalReportTests and native editor/SQLite cases verify validation, civil-calendar interpretation, preview and preserved history.  
+    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Core/WorkScheduleDraft.swift`, `DeepWork/Core/ReportingCalendar.swift`, `DeepWork/App/AppModel.swift`
 
 ### Explanation
 
-**Progress:** 0 / 1 accepted.
+**Progress:** 1 / 1 accepted.
 
-- [ ] **W-016 — Reporting-only and history-preservation footnote** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-016))
+- [x] **W-016 — Reporting-only and history-preservation footnote** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-016))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Reports/WorkSchedule.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Data/JournalStore.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: WorkScheduleDraftTests, JournalReportTests and native editor/SQLite cases verify validation, civil-calendar interpretation, preview and preserved history.  
+    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Core/WorkScheduleDraft.swift`, `DeepWork/Core/ReportingCalendar.swift`, `DeepWork/App/AppModel.swift`
 
 ### Actions
 
-**Progress:** 0 / 2 accepted.
+**Progress:** 1 / 2 accepted.
 
 - [ ] **W-017 — Cancel button** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-017))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Reports/WorkSchedule.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Data/JournalStore.swift`
+    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: Cancel/Escape discards edits, retains raw history and refreshes the prior report. Return-to-Schedule keyboard focus remains unverified with Keyboard navigation disabled.  
+    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Core/WorkScheduleDraft.swift`, `DeepWork/Core/ReportingCalendar.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **W-018 — Save schedule button** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-018))
+- [x] **W-018 — Save schedule button** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-018))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Reports/WorkSchedule.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Data/JournalStore.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: SQLite acknowledgment, relaunch, history preservation, failed saves, concurrent timer boundaries and Quit ordering pass; success is announced only after commit.  
+    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Core/WorkScheduleDraft.swift`, `DeepWork/Core/ReportingCalendar.swift`, `DeepWork/App/AppModel.swift`
 
 ### Persistence
 
-**Progress:** 0 / 1 accepted.
+**Progress:** 1 / 1 accepted.
 
-- [ ] **W-019 — Saved schedule and historical recalculation** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-019))
+- [x] **W-019 — Saved schedule and historical recalculation** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-019))
 
-    Status: **TODO** · Stage: **3** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Reports/WorkSchedule.swift`, `DeepWork/Reports/ReportEngine.swift`, `DeepWork/Data/JournalStore.swift`
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
+    Blocker / notes: SQLite acknowledgment, relaunch, history preservation, failed saves, concurrent timer boundaries and Quit ordering pass; success is announced only after commit.  
+    Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Core/WorkScheduleDraft.swift`, `DeepWork/Core/ReportingCalendar.swift`, `DeepWork/App/AppModel.swift`
 
 ## Settings
 

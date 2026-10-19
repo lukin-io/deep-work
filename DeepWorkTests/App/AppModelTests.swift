@@ -17,7 +17,8 @@ struct AppModelTests {
         model.focusSelection.wrappedValue = .preset(60)
         model.feedbackMessage = "Unsaved form edits"
         model.reportPeriod = .range
-        model.scheduleDraft = WorkSchedule(mode: .anyDay)
+        model.openSchedule()
+        model.updateScheduleDraft { $0.mode = .anyDay }
         for tab in AppTab.allCases { model.selectedTab = tab }
         #expect(!(model.journal.configuration.repeats))
         #expect(model.journal.configuration.resolvedFocusMinutes == 60)

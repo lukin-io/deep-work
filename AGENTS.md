@@ -26,6 +26,7 @@
 
 - Apply these practices to new features, existing features, refactors, and bug fixes. Prefer the smallest clear design that satisfies the specification; avoid speculative layers and unrelated cleanup.
 - Follow Apple's current recommendations, API documentation, Human Interface Guidelines, and platform guidelines for Swift, SwiftUI, AppKit, accessibility, concurrency, application lifecycle, security, and data storage. Prefer supported native APIs; verify relevant official guidance when choosing or changing platform behavior. Record any intentional departure and its reason while preserving the approved product contract.
+- Consult the relevant sections of the [Apple development and distribution guide](docs/MACOS_RELEASE_GUIDE.md) when planning and verifying every feature, refactor, bug fix, or release. Apply its development practices throughout implementation and its distribution requirements before the applicable release; assess conditional App Store, privacy, and permission requirements against the actual features and distribution route. Keep detailed guidance and official links in that guide, document intentional departures in `docs/NATIVE_DECISIONS.md`, and record actual evidence and remaining gaps in `docs/VERIFICATION.md` and the existing checklist IDs. Reading the guide alone does not establish acceptance.
 - Use typed value models and enums for domain states, explicit access control, small cohesive types, and descriptive Swift API names. Avoid force unwraps/casts in fallible production paths; handle missing or invalid input deliberately.
 - Keep UI mutation on `@MainActor`; isolate mutable shared state and serialize persistence. Respect Swift concurrency/Sendable boundaries and cancellation; avoid long blocking work on the UI thread. Do not drive accounting from UI refresh ticks.
 - Keep business rules outside views; inject storage, clocks, and platform services where needed for deterministic tests. Views render shared state and dispatch intentions rather than owning duplicate domain state.
@@ -36,9 +37,9 @@
 
 ## Build and verification
 
-- Verified locally: `./scripts/test.sh` runs 110 native Swift tests, 12 native icon packaging checks and 4 platform build checks; `./scripts/build-app.sh` compiles and packages `.build/Deep Work.app`; `open ".build/Deep Work.app"` launches it. Current results and environment limits are in `docs/VERIFICATION.md`.
+- Verified locally: `./scripts/test.sh` runs 170 native Swift tests, 12 native icon packaging checks and 4 platform build checks; `./scripts/build-app.sh` compiles and packages `.build/Deep Work.app`; `open ".build/Deep Work.app"` launches it. Current results and environment limits are in `docs/VERIFICATION.md`.
 - `plutil -lint DeepWork/Resources/Info.plist DeepWork.xcodeproj/project.pbxproj` validates project/plist syntax. Regenerate explicit Xcode references with `python3 scripts/generate-xcode-project.py` after adding/removing app or core test sources.
-- Local builds use Swift 6.4 and Command Line Tools; full Xcode remains unavailable locally. Separately, [hosted CI](https://github.com/lukin-io/deep-work/actions/runs/39107935588) passed the native tests and an arm64 Release project build with Xcode 16.4/macOS SDK 15.5. Keep local and hosted evidence distinct; never infer a successful Xcode build from plist validation. Xcode 16+ commands are in `README.md`.
+- Local builds use Swift 6.4 and Command Line Tools; full Xcode remains unavailable locally. Separately, [hosted CI](https://github.com/lukin-io/deep-work/actions/runs/39236029448) passed all 170 native tests and arm64 Release project builds on macOS 15/Xcode 16.4/SDK 15.5 and macOS 26/Xcode 26.6/SDK 26.5. Keep local and hosted evidence distinct; never infer a successful Xcode build from plist validation. Xcode 16+ commands are in `README.md`.
 - `swift build -Xswiftc -strict-concurrency=complete -Xswiftc -warnings-as-errors` verifies production concurrency checking and rejects Swift warnings. Require complete Swift Testing summaries; the test script rejects premature hostless exits even when SwiftPM returns success.
 - Nest AppKit integration suites under serialized `NativeApplicationTests`. For hostless status-button and window-close integration, dispatch the real native button target/action with `sendAction`; synthetic `performClick`/`performClose` can stop SwiftPM’s main run loop. Test foreground activation, real red close, Command-W, and Quit failure choices through the compiled app; record adapter boundaries explicitly.
 - Run native model/store tests, compile the native app, and exercise changed window/navigation behavior. JavaScript reference tests are not native completion evidence.
@@ -49,6 +50,12 @@
 - Record milestone evidence in `docs/VERIFICATION.md`; update checklist rollups consistently. Do not maintain a second progress tracker.
 - Always keep `README.md` current with required setup, dependencies, build/test/run commands, migration steps, and known tooling limits whenever implementation changes them.
 - Report local compile, native tests, UI observations, and unverified tooling separately.
+
+## Changelog
+
+- Update root `CHANGELOG.md` with one consolidated entry per PR or stage, newest first, linked to its PR when available. Follow-up commits and fixes within that PR update the same entry; never create an entry per commit.
+- Keep entries short: observable changes, relevant compatibility/data changes and remaining limitations. Mark changes Unreleased until a published app includes them, then add the release link. Keep acceptance status and test evidence in the existing checklist and verification document.
+- Use these summaries when preparing the existing `docs/releases/<tag>.md` and GitHub Release notes. Keep this manual and simple: no changelog fragments, generators or additional tracking system.
 
 ## Commit and pull request writing
 
