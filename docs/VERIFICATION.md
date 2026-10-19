@@ -531,3 +531,14 @@ Each runner also passes 22 CI policy, 4 platform, 4 acceptance-fixture, 12 icon 
 Package job `118096364688` also passed: optimized arm64/macOS 15+ app, icon/license/ad hoc signature/metadata/checksum verification, 20 release-policy and 17 archive regressions. Temporary `macOS-release` artifact `12192195208` is 2,454,811 bytes. Publication was correctly skipped. This is an Actions artifact, not a new GitHub Release or a notarized app.
 
 The follow-up documentation commit records this verified source/test revision and links the consolidated changelog to PR #5; it changes no production or test code. PR #5 remains open against `main`. Its new CI run is visible on the PR; the successful run above covers the unchanged production/test revision.
+
+
+## Preview 2 — Stages 1–6 — October 19, 2026
+
+### Merge and release preparation
+
+The final [PR #5 CI run 39263659547](https://github.com/lukin-io/deep-work/actions/runs/39263659547) passed for head `01018bb7d9cb0f8fa5c5c7b97952d91b9f7eca2b`: both macOS 15/26 native and Xcode jobs plus optimized packaging; tag-only publication was skipped. PR #5 was then merged with an expected-head guard as `c09ad87097dd8bc838c15d991e535cf92f7a139f`. Local `main` was fast-forwarded to that merge before preparing release notes.
+
+`v0.1.0-preview.2` is the next unused preview tag, with numeric version `0.1.0` matching Info.plist. It includes all implemented Stages 1–6 and retains schema 2, arm64 and macOS 15+. The package build number is the tag workflow run number and must exceed preview 1's published build 3. [Release notes](releases/v0.1.0-preview.2.md) disclose schema 1 → 2 migration/downgrade limits, absent Slack Client ID, pending manual acceptance and ad hoc/unnotarized signing.
+
+Release preparation changes documentation only; the production/test revision remains the one that passed PR #5 CI. The annotated tag workflow must rerun native/Xcode checks and archive verification, then verify draft and public downloads. Publication is not yet claimed at this preparation revision. The first preview/tag/assets remain unchanged; release delivery does not advance any of the ten blocked product IDs.

@@ -4,7 +4,7 @@ One consolidated entry per PR or stage, newest first. Follow-up commits update t
 
 ## Stage 6 — Native accessibility and acceptance ([PR #5](https://github.com/lukin-io/deep-work/pull/5))
 
-**Unreleased.** Targets `main`; source branch: `codex/native-acceptance-stage-6`.
+**Unreleased.** Merged into `main` through PR #5; included in the prepared preview 2 release.
 
 - Announce meaningful timer/lifecycle changes from the shared app owner; keep countdown ticks silent and use the native application accessibility target.
 - Fix feedback Tab/Shift-Tab navigation, empty-Journal focus, clipped chart labels, chart focus visibility and narrow weekday layouts. Retain chart focus during live updates.

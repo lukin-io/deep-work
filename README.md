@@ -10,6 +10,8 @@ Previews are **ad hoc signed and unnotarized**; macOS may block first launch. On
 
 The published first preview contains **Stage 1/2 only**; Stage 3–6 source changes require a local build until a new release is published. The first preview passed [release CI and public-download verification](https://github.com/lukin-io/deep-work/actions/runs/39108209226). Download `SHA256SUMS` and `release-metadata.json` alongside the app ZIP and verify them with `shasum -a 256 -c SHA256SUMS`. The metadata records the source commit and build configuration. Quit an older running copy before replacing it; user data stays in Application Support.
 
+[Preview 2 release notes](docs/releases/v0.1.0-preview.2.md) describe the prepared Stages 1–6 package and schema 1 → 2 upgrade. Publication and public-download verification are pending; the download above remains the existing first preview until they pass.
+
 ## TODO
 
 - [ ] **This Mac has no Developer ID signing identity.** Configure an Apple Developer Program team's **Developer ID Application** certificate and its matching private key, either in this Mac's signing keychain or a protected CI signing environment. The local check is `security find-identity -v -p codesigning`; it currently reports zero valid identities. Never commit certificates, private keys or passwords.
@@ -95,7 +97,7 @@ Slack uses native browser sign-in with PKCE, device-local Keychain credentials a
 
 Timer action announcements now belong to the app, so they work regardless of the selected tab and remain silent on ordinary countdown ticks. Feedback Tab/Shift-Tab traverses the form without inserting tabs; the empty Journal action focuses the duration picker. Chart labels retain their full duration, focused bars scroll into view and keep focus during live updates. Weekday controls wrap at narrow widths. Sleep/wake notification handling checkpoints and reconciles the shared timer without pausing it.
 
-[PR #5](https://github.com/lukin-io/deep-work/pull/5) includes these fixes, native regression tests and isolated compiled-app checks. Stage 5 was merged through [PR #4](https://github.com/lukin-io/deep-work/pull/4) before this branch was created from `main`. No schema migration or new dependency is required; schema 2 remains unchanged. Actual VoiceOver speech, live Slack and login-cycle acceptance remain explicitly blocked in the checklist.
+[PR #5](https://github.com/lukin-io/deep-work/pull/5) merged these fixes, native regression tests and isolated compiled-app checks into `main` after final CI passed. No schema migration or new dependency is required; schema 2 remains unchanged. Actual VoiceOver speech, live Slack and login-cycle acceptance remain explicitly blocked in the checklist.
 
 ## Build, test, and run locally
 

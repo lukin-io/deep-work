@@ -58,7 +58,7 @@ Stage 5 adds **Settings… / ⌘,** and **Redo / ⇧⌘Z**, with native menu and
 
 **Recommended platform design and project requirement.** Test keyboard-only use and VoiceOver, meaningful labels/values, focus order, validation announcements, contrast, light/dark appearance and Reduce Motion. Avoid color-only meaning and overriding system shortcuts. Native controls help, but do not prove the complete workflow is accessible. [Apple: accessibility HIG](https://developer.apple.com/design/human-interface-guidelines/accessibility).
 
-**Deep Work:** native keyboard and accessibility labels have regression coverage under [DeepWorkTests/App](../DeepWorkTests/App). The [verification record](VERIFICATION.md) still identifies full VoiceOver, system preference propagation, appearance sweeps and a physical menu-bar-item click as acceptance gaps. Preserve these distinctions instead of promoting a CI screenshot or successful AX lookup to complete accessibility acceptance.
+**Deep Work:** native keyboard and accessibility labels have regression coverage under [DeepWorkTests/App](../DeepWorkTests/App). The [verification record](VERIFICATION.md) records Stage 6 compiled keyboard and light/dark/narrow layout checks. Full VoiceOver reception, system Reduce Motion propagation and a physical menu-bar-item click remain separate acceptance gaps. Preserve these distinctions instead of promoting a CI screenshot or successful AX lookup to complete accessibility acceptance.
 
 ## 10. Budget background work and respect login-service consent
 
