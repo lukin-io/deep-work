@@ -317,3 +317,46 @@ The first Stage 3 [PR run 39235692951](https://github.com/lukin-io/deep-work/act
 Both strict-concurrency builds with Swift warnings treated as errors and project/plist validation passed. Both runners passed the four native report/schedule geometry cases; hostless SwiftUI chart/picker accessibility remained unavailable and explicitly unverified. Hosted success does not change the remaining keyboard/VoiceOver/visual acceptance gates.
 
 The dependent package job built the optimized arm64/macOS 15+ app, verified the archive and passed **20 release-policy plus 17 actual archive regressions**. Its temporary `macOS-release` Actions artifact is 2,181,510 bytes (artifact ID `12179421907`); it is not a GitHub Release or public app download. Publication correctly remained **skipped**. PR #2 remains open against `main`; no merge or new version tag was requested or performed. The follow-up documentation commit records this completed run without changing product code or tests.
+
+## Stage 4 — CSV export and feedback — October 19, 2026
+
+### Starting revision and scope
+
+PR #2 head `29d7eebbf93b63964d98fb0e470507acfe861ace` passed [CI run 39241084249](https://github.com/lukin-io/deep-work/actions/runs/39241084249): both native/Xcode matrix jobs and packaging succeeded; tag-only publication was skipped. It was then merged into `main` as `e2cee410dfe1e5fe87e54c6a186416a2ab453425`. After fetching and fast-forwarding local `main`, `codex/settings-export-stage-4` was created from that merge. This stage adds shared CSV export, native saving and feedback draft/clipboard behavior. It does not publish a release, enable login registration or connect Slack.
+
+### Local native verification
+
+Environment remains Apple Silicon, macOS 27.0.1, Swift 6.4 and `/Library/Developer/CommandLineTools`. Full Xcode is unavailable locally; project/plist validation is not an Xcode build.
+
+| Check | Result |
+| --- | --- |
+| `./scripts/test.sh` | 232 native Swift tests: 133 core + 99 app; 4 platform and 12 native icon checks pass. |
+| `swift build -Xswiftc -strict-concurrency=complete -Xswiftc -warnings-as-errors` | Production compilation passes. Existing CLT linker search-path warnings are separate from Swift diagnostics. |
+| `./scripts/build-app.sh` | Compiles and packages the ad hoc signed `.build/Deep Work.app`; native icon verification passes. |
+| `python3 scripts/generate-xcode-project.py` | Explicit references regenerated for 19 app sources and 9 core test sources. |
+| `plutil -lint DeepWork/Resources/Info.plist DeepWork.xcodeproj/project.pbxproj` | Both pass. |
+| `git diff --check` | Passes. Approved `reference/` and initial JSON tracker remain unchanged. |
+
+Local logs remain ignored under `.build/`: `stage4-full-tests.log`, `stage4-final-build.log`, `stage4-feedback-strict-final.log`, and the focused regression logs below. These are local evidence, not hosted CI or release evidence.
+
+- **CSV contract:** `ReportCSVExporterTests` checks every column and quoted/BOM/CRLF byte contract, filenames, millisecond rounding, UTC/DST offsets, clipped versus lifetime focus, completed-boundary membership, live/paused rows, examples, empty/invalid inputs, duplicate records and all-history independence from report range. The half-millisecond regression first failed (`stage4-csv-rounding-before.log`) and passes after explicit rounding.
+- **Export integration:** `ExportIntegrationTests` exercises both entry points, more than one page, actual/example separation, invalid/empty/zero-live availability, live summary updates in Settings, overdue-phase reconciliation exactly once, immutable snapshots during delayed saves, duplicate export suppression, stale scope acknowledgments, failed SQLite with usable in-memory export, and accepted-write Quit success/failure/retry.
+- **Native saving:** `CSVFileExportServiceTests` uses real file creation/replacement and failure preservation, actual NSSavePanel configuration/response mapping, cancellation, late chooser responses, delayed accepted writes and failed-Quit retry. Quit ordering initially reproduced nine failed assertions (`stage4-export-quit-before.log`); all 18 service tests then pass (`stage4-file-export-tests.log`). Injected chooser responses prove service behavior, not actual user interaction with a sheet.
+- **Feedback:** typed validation covers optional/invalid email priority, raw UTF-16 boundaries, trimming, empty and over-limit input and exact payloads. Real SQLite and a named native pasteboard prove Save A → Copy B → relaunch A, retained launch preference, failed-store copying and stale asynchronous acknowledgments. A rejected pasteboard write tests failure presentation and selection intention. Native editor tests cover Unicode select-all, input limits, multiline Return, Undo/Redo synchronization, responder transitions, disabled editing during Quit and re-enabling without content loss. Regressions are in `stage4-feedback-focus-fix.log` and `stage4-feedback-disabled-fix.log`.
+
+### Compiled-app observations
+
+- Journal example Week Oct 19–26 exported 3 rows, 12,600 focus seconds and 3 completions. Settings Current Journal Report produced byte-identical output for that snapshot. Both used the actual native Save panel and exposed success text in the accessibility tree.
+- Selecting Quit Deep Work from the native app menu while an untouched Save panel was open cancelled the panel and exited the isolated process; the separate personal app remained running. No new CSV was written.
+- Cancelling the Settings Save panel produced no success claim. Settings All Sessions correctly disabled exporting for an empty actual journal even while Journal displayed examples.
+- Range Sep 15–Oct 26 showed 75 sessions, 82h30m and 65 completed cycles. Export while page 2 displayed rows 13–24 saved all 75 rows; parsed CSV contained 297,000 focus seconds and 65 completions. Files in `.build/stage4-ui-exports` were checked using Python's independent standard-library CSV reader. At the user's request, a 3-row example export was also saved and verified in `~/Downloads/deep-work-example-2026-10-19-to-2026-10-26.csv`.
+- Settings exposes distinct stable identifiers for the export and feedback controls. The compiled accessibility tree initially showed inherited container IDs; adding an explicit containing accessibility group fixes the child identifiers.
+- Command-Return saved a multiline draft, with plain Return inserting a message newline. Copy Feedback produced the exact current form payload and success caption while SQLite still held the earlier explicitly saved text. Quit/relaunch restored that earlier draft with “Your saved draft is ready.” Native Save validation identifies email before message; message focus was corrected after the compiled email-to-message case exposed the previous SwiftUI/native focus bridge problem.
+
+Final rebuilt-app keyboard regression passed: invalid email Return kept email focus; clearing it then Return showed the message error and moved focus to the message editor; multiline Return plus Command-Return saved exactly the expected draft. Editing email and switching Journal → Settings retained the unsaved edit without changing SQLite. A later explicit Return saved it. Quit exited only the isolated app. Full native suite on this final source passes **232 tests (133 core + 99 app)**; the focused feedback suite passes 23 (`stage4-feedback-return-fix.log`). The native email adapter fixes Return submission, prevents implicit Save on blur and preserves Undo/Redo/status through unchanged focus changes.
+
+### Limits and test isolation
+
+Full VoiceOver announcement reception, full keyboard traversal/Copy-button focus with macOS Keyboard navigation, integrated clipboard-rejection focus, and final light/dark/narrow visual acceptance are **unverified**. The implementation Mac has Keyboard navigation disabled; tests did not change that preference. Native editor harnesses establish selection, geometry, Undo/Redo and disabled-state behavior, not the complete screen-reader workflow or an app-wide Redo command. Launch at Login and Slack remain Stage 5. Developer ID/notarization remains unavailable; the published preview is unchanged.
+
+An early UI test copy shared the `DeepWork` executable name. After automation Quit/relaunch, it opened the normal Application Support store and the personal timer was found paused. The original app was restored and its existing session resumed; no journal records were deleted or fabricated. The test setup was corrected to a distinct executable and bundle, with an explicit Debug data override on every launch and ownership-lock verification. A later Launch Services launch blocked opening a Downloads-based fixture; its stack showed the file open, so testing moved to a temporary-directory fixture instead of changing system permissions. Test app edits and exports were kept separate from personal history. README and AGENTS now require this isolation.

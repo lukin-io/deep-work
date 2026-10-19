@@ -36,7 +36,18 @@ final class AppModel: ObservableObject {
     @Published private(set) var scheduleSaveError: String?
     @Published private(set) var scheduleSaveStatus: String?
     @Published private(set) var scheduleNavigationRequest = 0
-    @Published var exportScope: ExportScope = .all
+    @Published var exportScope: ExportScope = .all {
+        didSet {
+            settingsExportRevision += 1
+            settingsExportStatus = nil
+            settingsExportError = nil
+        }
+    }
+    @Published private(set) var isExporting = false
+    @Published private(set) var settingsExportStatus: String?
+    @Published private(set) var settingsExportError: String?
+    @Published private(set) var journalExportStatus: String?
+    @Published private(set) var journalExportError: String?
     @Published var customFocusText: String { didSet { updateCustomDuration(isFocus: true) } }
     @Published var customBreakText: String { didSet { updateCustomDuration(isFocus: false) } }
     @Published var feedbackType: FeedbackType { didSet { clearFeedbackResult() } }
@@ -54,6 +65,8 @@ final class AppModel: ObservableObject {
     private let clock: any TimerClock
     private let automaticRefresh: Bool
     private let ownershipLock: StoreOwnershipLock?
+    private let csvFileExporter: any CSVFileExporting
+    private let feedbackClipboard: any FeedbackCopying
     private var ticker: Task<Void, Never>?
     private var lastCheckpointElapsed: TimeInterval
     private var feedbackRevision = 0
@@ -67,13 +80,19 @@ final class AppModel: ObservableObject {
     private var scheduleSaveTask: Task<Void, Never>?
     private var scheduleControlRequested = false
     private var consumedScheduleNavigationRequest = 0
+    private var settingsExportRevision = 0
+    private var terminationExportFailure: String?
 
     init(journalStore: JournalPersisting, settingsStore: SettingsPersisting,
          clock: (any TimerClock)? = nil, automaticRefresh: Bool = true,
-         ownershipLock: StoreOwnershipLock? = nil, reportingTimeZone: TimeZone? = nil) {
+         ownershipLock: StoreOwnershipLock? = nil, reportingTimeZone: TimeZone? = nil,
+         csvFileExporter: (any CSVFileExporting)? = nil,
+         feedbackClipboard: (any FeedbackCopying)? = nil) {
         self.clock = clock ?? ContinuousTimerClock()
         self.automaticRefresh = automaticRefresh
         self.ownershipLock = ownershipLock
+        self.csvFileExporter = csvFileExporter ?? NativeCSVFileExportService()
+        self.feedbackClipboard = feedbackClipboard ?? FeedbackClipboard()
         self.reportingTimeZone = reportingTimeZone ?? .current
         let instant = self.clock.now()
         lastCheckpointElapsed = instant.elapsed
@@ -97,6 +116,7 @@ final class AppModel: ObservableObject {
         feedbackType = settingsLoad.value.feedbackDraft.type
         feedbackEmail = settingsLoad.value.feedbackDraft.email
         feedbackMessage = settingsLoad.value.feedbackDraft.message
+        if !feedbackMessage.isEmpty { feedbackStatus = "Your saved draft is ready." }
         initializeReports()
         if reportingTimeZone == nil {
             calendarNotifications.append(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange)
@@ -177,7 +197,7 @@ final class AppModel: ObservableObject {
         return timer.caption
     }
     var journalStorageMessage: String {
-        if journalFailure != nil { return "Saving unavailable. Changes last only while the app is open. CSV export is not available yet." }
+        if journalFailure != nil { return "Saving unavailable · export your journal to keep it" }
         return pendingJournalWrites > 0 ? "Saving on this device…" : "Saved on this device"
     }
     var settingsStorageMessage: String {
@@ -203,17 +223,40 @@ final class AppModel: ObservableObject {
 
     func saveFeedbackDraft() -> FeedbackField? {
         guard !isTerminating else { return nil }
+        clearFeedbackResult()
         let candidate = FeedbackDraft(type: feedbackType, email: feedbackEmail, message: feedbackMessage)
         do {
             settings.feedbackDraft = try candidate.validatedForSaving()
             feedbackError = nil
-            feedbackStatus = settingsFailure == nil ? "Saving draft…" : "Draft could not be saved. Your edits remain in this window."
+            feedbackStatus = settingsFailure == nil ? "Saving draft…" : "Draft could not be saved. Use Copy Feedback to keep it."
             persistSettings(savedDraftRevision: feedbackRevision)
             return nil
         } catch {
             feedbackStatus = nil
             feedbackError = error.localizedDescription
-            return error.localizedDescription.hasPrefix("Enter a valid email") ? .email : .message
+            return (error as? FeedbackValidationError) == .email ? .email : .message
+        }
+    }
+
+    /// Copy observes the edited form, never the stored draft. Invalidate an
+    /// earlier Save result so a delayed disk acknowledgment cannot replace it.
+    func copyFeedback() -> FeedbackActionFocus? {
+        guard !isTerminating else { return nil }
+        clearFeedbackResult()
+        let candidate = FeedbackDraft(type: feedbackType, email: feedbackEmail, message: feedbackMessage)
+        let text: String
+        do { text = try candidate.validatedClipboardText() }
+        catch {
+            feedbackError = error.localizedDescription
+            return (error as? FeedbackValidationError) == .email ? .email : .message
+        }
+        do {
+            try feedbackClipboard.copy(text)
+            feedbackStatus = "Feedback copied. Nothing has been sent."
+            return .copy
+        } catch {
+            feedbackStatus = "Copy is unavailable. Select and copy your message."
+            return .selectMessage
         }
     }
 
@@ -253,7 +296,7 @@ final class AppModel: ObservableObject {
             persistJournal()
         }
         updateTicker()
-        if selectedTab == .journal && scheduleDraft == nil {
+        if (selectedTab == .journal && scheduleDraft == nil) || selectedTab == .settings {
             refreshReport(force: !records.isEmpty || oldPhase != timer.phaseID || oldState != timer.state)
         }
     }
@@ -289,11 +332,17 @@ final class AppModel: ObservableObject {
     func prepareForTermination() async -> Bool {
         guard !isTerminating else {
             await flushPersistence()
-            return journalFailure == nil && settingsFailure == nil
+            return journalFailure == nil && settingsFailure == nil && terminationExportFailure == nil
         }
         isTerminating = true
         lifecycleFailureMessage = nil
+        terminationExportFailure = nil
         sealAndSaveForTermination()
+        // An accepted Save must finish before the process exits. An untouched
+        // destination panel is cancelled rather than holding Quit indefinitely.
+        if case .failed(let reason) = await csvFileExporter.prepareForTermination() {
+            terminationExportFailure = reason
+        }
         // The pending schedule transaction owns the next journal write. Its
         // completion merges only the accepted schedule into the latest timer
         // state and enqueues that state before Quit drains the worker.
@@ -312,8 +361,12 @@ final class AppModel: ObservableObject {
     }
 
     private func recordLifecycleSaveResult() -> Bool {
-        let saved = journalFailure == nil && settingsFailure == nil
-        lifecycleFailureMessage = saved ? nil : "Changes could not be saved. Keep Deep Work open to preserve changes that are still in memory."
+        let saved = journalFailure == nil && settingsFailure == nil && terminationExportFailure == nil
+        if let reason = terminationExportFailure {
+            lifecycleFailureMessage = "The CSV export could not be saved. \(reason) Keep Deep Work open to retry."
+        } else {
+            lifecycleFailureMessage = saved ? nil : "Changes could not be saved. Keep Deep Work open to preserve changes that are still in memory."
+        }
         return saved
     }
 
@@ -361,8 +414,88 @@ final class AppModel: ObservableObject {
             if let revision = savedDraftRevision, revision == self.feedbackRevision {
                 self.feedbackStatus = self.settingsFailure == nil
                     ? "Draft saved on this device. Nothing has been sent."
-                    : "Draft could not be saved. Your edits remain in this window."
+                    : "Draft could not be saved. Use Copy Feedback to keep it."
             }
+        }
+    }
+
+    // MARK: Shared CSV export
+
+    var canExportJournal: Bool {
+        !isTerminating && !isExporting && reportSnapshot.error == nil && !reportSnapshot.rows.isEmpty
+    }
+    var canExportSettings: Bool {
+        !isTerminating && !isExporting && ((try? exportSnapshot(for: exportScope).canExport) ?? false)
+    }
+    var settingsExportSummary: String {
+        guard let snapshot = try? exportSnapshot(for: exportScope) else {
+            return exportScope == .current ? "Choose a valid date range in Journal first." : "Your journal could not be prepared for export."
+        }
+        let count = snapshot.rows.count
+        let countText = "\(count) \(count == 1 ? "session" : "sessions")"
+        let duration = JournalDuration.format(seconds: snapshot.focusedSeconds, precise: true)
+        if exportScope == .all {
+            return count == 0 ? "Your journal has no sessions yet. Choose Current Journal Report to export the example."
+                : "\(countText) · \(duration) of focus. Includes all of your journal history."
+        }
+        return "\(snapshot.isExample ? "Example data" : "Your journal") · \(countText) · \(duration) of focus in the selected Journal range."
+    }
+
+    /// Callers reconcile first when taking an export. UI availability reads the
+    /// most recent observation without mutating state during view rendering.
+    func exportSnapshot(for scope: ExportScope) throws -> ReportExportSnapshot {
+        switch scope {
+        case .current:
+            return try .currentReport(reportSnapshot, isExample: showingExamples, schedule: journal.schedule,
+                                      scheduleSummary: scheduleSummary, timeZone: reportingTimeZone)
+        case .all:
+            var records = journal.records
+            if let live = timer.liveRecord, !records.contains(where: { $0.id == live.id }) { records.append(live) }
+            return try .allSessions(actualRecords: records, schedule: journal.schedule,
+                                    scheduleSummary: scheduleSummary, timeZone: reportingTimeZone)
+        }
+    }
+
+    func exportJournalCSV() async { await exportCSV(scope: .current, fromSettings: false) }
+    func exportSettingsCSV() async { await exportCSV(scope: exportScope, fromSettings: true) }
+
+    private func exportCSV(scope: ExportScope, fromSettings: Bool) async {
+        guard !isTerminating, !isExporting else { return }
+        if fromSettings { settingsExportStatus = nil; settingsExportError = nil }
+        else { journalExportStatus = nil; journalExportError = nil }
+        // Expired phases are finalized exactly once before capturing every row.
+        // The immutable snapshot is unaffected by timer ticks or save-panel delay.
+        refreshReport()
+        let snapshot: ReportExportSnapshot
+        do { snapshot = try exportSnapshot(for: scope) }
+        catch { return } // Invalid selection remains explained beside its controls.
+        guard snapshot.canExport else { return }
+        let revision = settingsExportRevision
+        isExporting = true
+        defer { isExporting = false }
+        let result: CSVFileExportResult
+        do {
+            let bytes = try await Task.detached(priority: .userInitiated) {
+                try ReportCSVExporter.data(for: snapshot)
+            }.value
+            guard !isTerminating, !Task.isCancelled else { return }
+            result = await csvFileExporter.save(data: bytes, suggestedFilename: snapshot.filename)
+        } catch { result = .failed(error.localizedDescription) }
+        // A changed scope must not acquire the result of the previous selection.
+        guard !fromSettings || revision == settingsExportRevision else { return }
+        switch result {
+        case .saved:
+            if fromSettings {
+                settingsExportStatus = snapshot.isExample ? "Example report exported as CSV." : "Your journal exported as CSV."
+            } else { journalExportStatus = "Report exported as CSV." }
+            if let window = NSApp?.keyWindow {
+                NSAccessibility.post(element: window, notification: .announcementRequested,
+                    userInfo: [.announcement: "Report exported as CSV.", .priority: NSAccessibilityPriorityLevel.medium.rawValue])
+            }
+        case .cancelled: break
+        case .failed(let reason):
+            let message = "CSV could not be saved. \(reason)"
+            if fromSettings { settingsExportError = message } else { journalExportError = message }
         }
     }
 

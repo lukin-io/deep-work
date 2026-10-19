@@ -2,6 +2,17 @@ import Foundation
 
 public enum FeedbackType: String, Codable, CaseIterable, Sendable { case idea, problem, general }
 
+public enum FeedbackValidationError: Error, LocalizedError, Equatable, Sendable {
+    case email, message
+
+    public var errorDescription: String? {
+        switch self {
+        case .email: return "Enter a valid email address, or leave it blank."
+        case .message: return "Write a message between 5 and 5,000 characters."
+        }
+    }
+}
+
 public struct FeedbackDraft: Codable, Equatable, Sendable {
     public var type: FeedbackType
     public var email: String
@@ -31,11 +42,25 @@ public struct FeedbackDraft: Codable, Equatable, Sendable {
         let trimmedEmail = email.trimmingCharacters(in: Self.trimCharacters)
         let trimmedMessage = message.trimmingCharacters(in: Self.trimCharacters)
         let emailPattern = #"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"#
-        try require(email.utf16.count <= 254 && (trimmedEmail.isEmpty || trimmedEmail.range(of: emailPattern, options: .regularExpression) != nil),
-                    "Enter a valid email address, or leave it blank.")
-        try require(trimmedMessage.utf16.count >= 5 && message.utf16.count <= 5000,
-                    "Write a message between 5 and 5,000 characters.")
+        guard email.utf16.count <= 254 && (trimmedEmail.isEmpty || trimmedEmail.range(of: emailPattern, options: .regularExpression) != nil)
+        else { throw FeedbackValidationError.email }
+        guard trimmedMessage.utf16.count >= 5 && message.utf16.count <= 5000
+        else { throw FeedbackValidationError.message }
         return FeedbackDraft(type: type, email: trimmedEmail, message: trimmedMessage)
+    }
+
+    /// The same explicit validation applies to Save and Copy. Building a payload
+    /// does not mutate the draft or imply persistence or delivery.
+    public func validatedClipboardText() throws -> String {
+        let draft = try validatedForSaving()
+        let typeName: String
+        switch draft.type {
+        case .idea: typeName = "Suggestion"
+        case .problem: typeName = "Problem report"
+        case .general: typeName = "General feedback"
+        }
+        let emailLine = draft.email.isEmpty ? "" : "\nEmail: \(draft.email)"
+        return "Deep Work feedback\nType: \(typeName)\(emailLine)\n\n\(draft.message)"
     }
 
     func validateStored() throws {
