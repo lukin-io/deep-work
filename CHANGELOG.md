@@ -2,7 +2,7 @@
 
 One consolidated entry per PR or stage, newest first. Follow-up commits update the same entry. Detailed acceptance and test evidence stay in [the checklist](IMPLEMENTATION_CHECKLIST.md) and [verification](docs/VERIFICATION.md).
 
-## Stage 6 — Native accessibility and acceptance
+## Stage 6 — Native accessibility and acceptance ([PR #5](https://github.com/lukin-io/deep-work/pull/5))
 
 **Unreleased.** Targets `main`; source branch: `codex/native-acceptance-stage-6`.
 

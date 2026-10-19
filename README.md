@@ -95,7 +95,7 @@ Slack uses native browser sign-in with PKCE, device-local Keychain credentials a
 
 Timer action announcements now belong to the app, so they work regardless of the selected tab and remain silent on ordinary countdown ticks. Feedback Tab/Shift-Tab traverses the form without inserting tabs; the empty Journal action focuses the duration picker. Chart labels retain their full duration, focused bars scroll into view and keep focus during live updates. Weekday controls wrap at narrow widths. Sleep/wake notification handling checkpoints and reconciles the shared timer without pausing it.
 
-These fixes include native regression tests and isolated compiled-app checks. Stage 5 was merged through [PR #4](https://github.com/lukin-io/deep-work/pull/4) before this branch was created from `main`. No schema migration or new dependency is required; schema 2 remains unchanged. Actual VoiceOver speech, live Slack and login-cycle acceptance remain explicitly blocked in the checklist.
+[PR #5](https://github.com/lukin-io/deep-work/pull/5) includes these fixes, native regression tests and isolated compiled-app checks. Stage 5 was merged through [PR #4](https://github.com/lukin-io/deep-work/pull/4) before this branch was created from `main`. No schema migration or new dependency is required; schema 2 remains unchanged. Actual VoiceOver speech, live Slack and login-cycle acceptance remain explicitly blocked in the checklist.
 
 ## Build, test, and run locally
 
@@ -185,7 +185,7 @@ xcodebuild -project DeepWork.xcodeproj -scheme DeepWork \
   -configuration Debug -destination 'platform=macOS' build
 ```
 
-**Local full Xcode remains unavailable:** `xcode-select -p` returns `/Library/Developer/CommandLineTools`; local `xcodebuild` requires an Xcode installation. Separately, [Stage 5 hosted CI passed](https://github.com/lukin-io/deep-work/actions/runs/39255984080) all 335 native tests and Apple Silicon Xcode Release builds on **macOS 15/Xcode 16.4/SDK 15.5** and **macOS 26/Xcode 26.6/SDK 26.5**. The pipeline then packages and verifies an optimized archive. CI uses this project-build check; the downloadable app is packaged and signed separately by the release script:
+**Local full Xcode remains unavailable:** `xcode-select -p` returns `/Library/Developer/CommandLineTools`; local `xcodebuild` requires an Xcode installation. Separately, [Stage 6 hosted CI passed](https://github.com/lukin-io/deep-work/actions/runs/39262277404) all 361 native tests and Apple Silicon Xcode Release builds on **macOS 15/Xcode 16.4/SDK 15.5** and **macOS 26/Xcode 26.6/SDK 26.5**. The pipeline then packages and verifies an optimized archive. CI uses this project-build check; the downloadable app is packaged and signed separately by the release script:
 
 ```sh
 xcodebuild -project DeepWork.xcodeproj -scheme DeepWork \

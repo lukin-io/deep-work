@@ -517,4 +517,17 @@ This table indexes evidence against the specification's acceptance scenarios; it
 
 **Stage 6 is IN PROGRESS: implementation delivered, acceptance gaps explicit.** There are **127/137 accepted IDs**, with 10 BLOCKED: G-013/G-014/J-054/S-017 (VoiceOver), F-027–F-029 (live Slack), S-003–S-005 (actual login/approval/external-state cycles). There are **zero subsequent numbered implementation stages**. Next work is to close those acceptance gaps, perform the physical lifecycle checks, and provision signing/notarization before stable distribution. No schema migration or new app release is produced here; the downloadable first preview still contains Stage 1/2 only.
 
-Stage 6 hosted CI is pending publication of this branch. Prior Stage 5 hosted results are not evidence for these source changes.
+### Hosted Stage 6 verification
+
+[PR #5 CI run 39262277404](https://github.com/lukin-io/deep-work/actions/runs/39262277404) tested source/test head `5053c44707b545640fddcfee95977838608a62ce` as merge preview `c06aacfe2fc90ee82a73cc1455ff258436c8f9ef`, against `main` at `7c6aa05a9b566729d29b4b14eb68f1e32d014db5`.
+
+| Hosted environment | Native / Xcode result |
+| --- | --- |
+| macOS 15.7.9, arm64, Xcode 16.4, SDK 15.5 — job `118092747758` | All 361 Swift tests, strict concurrency compilation and Xcode Release build pass. |
+| macOS 26.6.2, arm64, Xcode 26.6, SDK 26.5 — job `118092747400` | All 361 Swift tests, strict concurrency compilation and Xcode Release build pass. |
+
+Each runner also passes 22 CI policy, 4 platform, 4 acceptance-fixture, 12 icon and 38 publication checks. CI leaves Keyboard navigation disabled; its hostless tests do not replace the separately recorded compiled keyboard or pending VoiceOver acceptance. Production strict compilation passes; legacy test-only `String(contentsOf:)` deprecation warnings on the older compiler remain unchanged.
+
+Package job `118096364688` also passed: optimized arm64/macOS 15+ app, icon/license/ad hoc signature/metadata/checksum verification, 20 release-policy and 17 archive regressions. Temporary `macOS-release` artifact `12192195208` is 2,454,811 bytes. Publication was correctly skipped. This is an Actions artifact, not a new GitHub Release or a notarized app.
+
+The follow-up documentation commit records this verified source/test revision and links the consolidated changelog to PR #5; it changes no production or test code. PR #5 remains open against `main`. Its new CI run is visible on the PR; the successful run above covers the unchanged production/test revision.
