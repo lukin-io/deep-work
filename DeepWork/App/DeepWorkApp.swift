@@ -63,7 +63,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 alert.alertStyle = .warning
                 alert.messageText = "Changes could not be saved"
                 let timerMessage = model.timer.isPaused ? "Your timer is paused. " : ""
-                alert.informativeText = timerMessage + "Keep Deep Work open to preserve changes that are still in memory. Quitting without saving will lose those changes."
+                alert.informativeText = timerMessage + (model.lifecycleFailureMessage ?? "Keep Deep Work open to preserve changes that are still in memory.") + " Quitting without saving may lose those changes."
                 alert.addButton(withTitle: "Keep Open")
                 alert.addButton(withTitle: "Quit Without Saving")
                 shouldQuit = alert.runModal() == .alertSecondButtonReturn

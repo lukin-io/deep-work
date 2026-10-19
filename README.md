@@ -1,6 +1,6 @@
 # Deep Work for macOS
 
-A native SwiftUI/AppKit application with the Stage 1 foundation, Stage 2 focus timer, and Stage 3 Journal reports and work-schedule editor. The specification defines **137 implementation items**; `IMPLEMENTATION_CHECKLIST.md` is the sole progress tracker and records remaining native acceptance checks.
+A native SwiftUI/AppKit application with the Stage 1 foundation, Stage 2 focus timer, Stage 3 Journal and work schedules, and Stage 4 CSV export and local feedback tools. The specification defines **137 implementation items**; `IMPLEMENTATION_CHECKLIST.md` is the sole progress tracker and records remaining native acceptance checks.
 
 ## Download the app
 
@@ -8,7 +8,7 @@ A native SwiftUI/AppKit application with the Stage 1 foundation, Stage 2 focus t
 
 Previews are **ad hoc signed and unnotarized**; macOS may block first launch. Only open a build you trust, following [Apple's app-opening guidance](https://support.apple.com/en-us/102445). Stable notarized releases are not yet available. Each release lists its tested platforms and known limitations; macOS 15+ is the deployment target, not a claim that every OS version was tested.
 
-The published first preview contains **Stage 1/2 only**; the Stage 3 source changes require a local build until a new release is published. The first preview passed [release CI and public-download verification](https://github.com/lukin-io/deep-work/actions/runs/39108209226). Download `SHA256SUMS` and `release-metadata.json` alongside the app ZIP and verify them with `shasum -a 256 -c SHA256SUMS`. The metadata records the source commit and build configuration. Quit an older running copy before replacing it; user data stays in Application Support.
+The published first preview contains **Stage 1/2 only**; Stage 3/4 source changes require a local build until a new release is published. The first preview passed [release CI and public-download verification](https://github.com/lukin-io/deep-work/actions/runs/39108209226). Download `SHA256SUMS` and `release-metadata.json` alongside the app ZIP and verify them with `shasum -a 256 -c SHA256SUMS`. The metadata records the source commit and build configuration. Quit an older running copy before replacing it; user data stays in Application Support.
 
 ## TODO
 
@@ -57,19 +57,29 @@ The JSON is an initial import snapshot, not a live mirror of the Markdown checkl
 
 ## Stage 3 — Journal and work schedule
 
-`feature/journal-stage-3` builds on the merged Stage 1/2 app and release CI. The Journal now provides:
+Stage 3 was merged through [PR #2](https://github.com/lukin-io/deep-work/pull/2) after its CI passed. The Journal now provides:
 
 - Day, Week and custom Range reports with exact clipped focus time, completed cycles and days with focus.
 - Daily/weekly activity bars, full-period drilldown, a native four-column table and 12-row pagination.
 - Separate example data, live/paused timer observations and restored history from SQLite.
 - A nested work-schedule editor: chosen weekdays, Any day, rotating shifts, week start, reporting-day cutoff and a 14-day preview. Save waits for SQLite; failure retains the draft. Cancel discards edits, and tab changes retain them.
 
-The [Stage 3 plan](docs/STAGE_3_PLAN.md) records the original scope; [native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026) and the checklist record actual results and remaining keyboard/VoiceOver checks. Existing data needs **no schema migration**. CSV serialization and native saving remain **Stage 4**, alongside Settings export and feedback clipboard support. Export controls stay disabled until those operations work.
+The [Stage 3 plan](docs/STAGE_3_PLAN.md) records the original scope; [native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026) and the checklist record actual results and remaining keyboard/VoiceOver checks. Existing data needs **no schema migration**. Stage 4 adds the shared export and feedback behavior below.
+
+## Stage 4 — CSV export and feedback
+
+Journal **Export CSV** saves every row in the current report, including rows on other pages. Settings **All Sessions** exports actual history and a positive live observation; **Current Journal Report** uses the retained Journal range and actual/example source. A native Save panel chooses the destination. Cancel makes no success claim; a write failure remains visible. Exporting does not pause the timer. Quit cancels an untouched panel and waits for an accepted file write; failed writes keep the app open for retry.
+
+Both export paths use the same 13-column CSV contract: UTF-8 BOM, quoted fields, CRLF separators, precise focus seconds and local timestamps with UTC offsets. Example exports are explicitly labelled. CSV is a report, not a full database backup.
+
+Feedback supports validated optional email, a 5–5,000 UTF-16-unit message, multiline editing and Undo/Redo. **Save Draft** commits to SQLite; **Copy Feedback** copies the current form without changing the saved draft. Nothing is sent. Return from the email field or Command-Return submits Save Draft; Return in the message inserts a newline. Relaunch restores only the explicitly saved draft. Launch at Login and Slack remain Stage 5 work.
+
+No dependency, permission prompt or schema migration is added. See [Stage 4 verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026) for native tests, compiled-app checks and remaining keyboard/VoiceOver acceptance. One consolidated entry is kept in [CHANGELOG.md](CHANGELOG.md).
 
 ## Important implementation boundaries
 
 - The native menu-bar timer and close/reopen behavior are implemented. Real Launch at Login and Slack authorization/status changes remain later milestones.
-- The approved feedback surface contains **Save Draft** and **Copy Feedback**. Native Save Draft works; clipboard copy remains Stage 4. No Send button or delivery destination exists.
+- The approved feedback surface contains **Save Draft** and **Copy Feedback**. Save Draft persists explicitly to SQLite; Copy Feedback uses the native clipboard without saving edits. No Send button or delivery destination exists.
 - CSV is a session report export, not a lossless backup or import format.
 - The three dashboard metrics are Focus time, Completed cycles, and Days with focus. No averaging metric is implemented in this baseline.
 - The detailed specification records unresolved native policies and small prototype quirks so they can be resolved deliberately without accidentally redesigning the app.
@@ -96,6 +106,25 @@ open ".build/Deep Work.app"
 ```
 
 `test.sh` runs the native Swift Testing suites, including actual AppKit window integration. It resolves the Testing macro plugin shipped with standalone Command Line Tools; no dependency download is needed. It checks the Apple Silicon/macOS 15 build settings and rejects unsupported local build hosts. It also rejects an incomplete test run even if the hostless runner exits with status 0. The AppKit suites briefly create, minimize, zoom, hide, and reopen native test windows and exercise real status-item buttons. They serialize access to AppKit’s shared application state. `build-app.sh` compiles and creates an ad hoc signed `.build/Deep Work.app` for local use. It is not a notarized distribution build.
+
+For focused Stage 4 checks:
+
+```sh
+./scripts/test.sh --filter 'ReportCSVExporterTests|CSVFileExportServiceTests|ExportIntegrationTests|FeedbackTests|FeedbackClipboardTests|FeedbackIntegrationTests|FeedbackPresentationTests'
+swift build -Xswiftc -strict-concurrency=complete -Xswiftc -warnings-as-errors
+plutil -lint DeepWork/Resources/Info.plist DeepWork.xcodeproj/project.pbxproj
+```
+
+For user-directed manual acceptance with disposable data, **quit the normal app first**, then launch the Debug executable explicitly:
+
+```sh
+test_data_dir="${TMPDIR%/}/deep-work-manual"
+mkdir -p "$test_data_dir"
+DEEP_WORK_DATA_DIR="$test_data_dir" \
+  ".build/Deep Work.app/Contents/MacOS/DeepWork"
+```
+
+Reuse the same test directory and launch command on every test relaunch: opening the app normally uses the real Application Support store. The override is Debug-only. For simultaneous automated UI testing, use a separate test bundle with a distinct executable and bundle identifier, preserve the override for every launch, and verify its store ownership lock points inside the fixture directory before editing. Automated verification must never quit or alter a running personal session.
 
 The approved app icon has one source: `DeepWork/Resources/Assets.xcassets/AppIcon.appiconset`. Xcode compiles that catalog; the command-line build packages its unchanged PNGs with the macOS `iconutil` tool and validates all ten representations. Generated ICNS files stay in build output. No image editor or extra setup is needed. See [icon organization and provenance](docs/APP_ICON.md) for replacement steps and the preserved local originals. The test script also runs native icon packaging checks. To check only the icon or an existing built bundle:
 
@@ -129,7 +158,7 @@ xcodebuild -project DeepWork.xcodeproj -scheme DeepWork \
   -configuration Debug -destination 'platform=macOS' build
 ```
 
-**Local full Xcode remains unavailable:** `xcode-select -p` returns `/Library/Developer/CommandLineTools`; local `xcodebuild` requires an Xcode installation. Separately, [Stage 3 hosted CI passed](https://github.com/lukin-io/deep-work/actions/runs/39236029448) all 170 native tests and Apple Silicon Xcode Release builds on **macOS 15/Xcode 16.4/SDK 15.5** and **macOS 26/Xcode 26.6/SDK 26.5**, followed by optimized packaging and archive tests. CI uses this project-build check; the downloadable app is packaged and signed separately by the release script:
+**Local full Xcode remains unavailable:** `xcode-select -p` returns `/Library/Developer/CommandLineTools`; local `xcodebuild` requires an Xcode installation. Separately, [Stage 4 hosted CI passed](https://github.com/lukin-io/deep-work/actions/runs/39246777987) all 232 native tests and Apple Silicon Xcode Release builds on **macOS 15/Xcode 16.4/SDK 15.5** and **macOS 26/Xcode 26.6/SDK 26.5**, followed by optimized packaging and archive tests. CI uses this project-build check; the downloadable app is packaged and signed separately by the release script:
 
 ```sh
 xcodebuild -project DeepWork.xcodeproj -scheme DeepWork \
@@ -244,20 +273,13 @@ Stable tags are rejected until Developer ID signing, hardened runtime, timestamp
 - Journal reports use half-open `[From, Until)` bounds in the current device time zone. Range text accepts `YYYY-MM-DDTHH:mm`; invalid, reversed, nonexistent local times or ranges exceeding 3,660 elapsed days show an error and clear the report. Above 93 elapsed days, grouping switches to By week and stays there until changed. Today leaves Range for Day without erasing its inputs.
 - Schedules affect reporting only. They never start timers or discard off-day focus. Changing the schedule or time zone reinterprets raw history without rewriting session timestamps. An idle cutoff wakeup keeps Today and the draft preview current even when no timer runs.
 - Examples are generated once per launch, clearly labelled and never written to SQLite. Starting a real cycle selects actual history. Report period/range/grouping/source, paging and unsaved schedule drafts are transient; saved schedules survive Quit/relaunch.
-- CSV, clipboard, login registration and Slack integration remain unavailable. Their controls stay disabled and do not simulate success.
+- CSV export and clipboard copy are implemented in source. Login registration and Slack integration remain unavailable; their controls do not simulate success.
 
-For isolated development/UI testing, Debug builds accept a separate directory:
-
-```sh
-DEEP_WORK_DATA_DIR="$PWD/.build/manual-data" \
-  ".build/Deep Work.app/Contents/MacOS/DeepWork"
-```
-
-Quit any running copy first. Release builds ignore this override. This location is useful for testing empty data, relaunch, migration, and failures without touching the normal store.
+Use the isolated Debug launch steps in [Build, test, and run locally](#build-test-and-run-locally) for empty data, relaunch, migration and failure checks. Release builds ignore the override.
 
 ## Native milestone verification
 
-Stage 3 passes **170 native Swift tests (115 core + 55 app)**, 4 platform checks and 12 icon checks locally, plus strict concurrency compilation and app packaging. [PR CI](https://github.com/lukin-io/deep-work/actions/runs/39236029448) passes the macOS 15/26 matrix, both Xcode Release builds and packaging. The [verification record](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026) separates local results, compiled UI observations, hosted CI and unverified keyboard/VoiceOver/visual checks.
+Stage 4 passes **232 native Swift tests (133 core + 99 app)**, 4 platform checks and 12 icon checks locally, plus strict concurrency compilation and app packaging. Compiled-app CSV Save/Cancel, full-report export, feedback Return/Command-Return, clipboard and SQLite restoration checks pass. The [verification record](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026) separates local results, compiled UI observations, hosted CI and unverified keyboard/VoiceOver/visual checks.
 
 Run all native tests, or select the relevant suites:
 

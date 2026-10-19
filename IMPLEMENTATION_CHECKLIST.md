@@ -1,6 +1,6 @@
 # Deep Work implementation checklist
 
-**Baseline:** October 17, 2026 · **Progress:** 83 of 137 items accepted in native Swift.
+**Baseline:** October 17, 2026 · **Progress:** 104 of 137 items accepted in native Swift.
 
 This is the canonical manual progress tracker for the current three-view app. The initial handoff started with every item TODO; current native evidence is recorded below. Each ID links to its full use case, behavior, input rules, source reference, and acceptance checks in `DEEP_WORK_SPECIFICATION.md`.
 
@@ -14,10 +14,10 @@ Feature completion means all of its child items are DONE. View completion means 
 | --- | ---: | ---: | ---: |
 | Shared shell | 14 | 10 | 4 |
 | Focus | 29 | 26 | 3 |
-| Journal | 54 | 31 | 23 |
+| Journal | 54 | 39 | 15 |
 | Journal work schedule | 19 | 16 | 3 |
-| Settings | 21 | 0 | 21 |
-| **Total** | **137** | **83** | **54** |
+| Settings | 21 | 13 | 8 |
+| **Total** | **137** | **104** | **33** |
 
 Work schedule remains inside Journal; its separate rollup is for tracking the nested editor.
 
@@ -64,7 +64,15 @@ Journal reports, exact calendar allocation, live observations, separate examples
 
 `./scripts/test.sh` passes **170 native Swift tests (115 core + 55 app)**, plus 4 platform and 12 icon checks. Native compilation and compiled-app report/schedule/paging checks pass. Details, regression evidence and remaining platform limitations are in [Stage 3 verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026). There are **83/137 accepted IDs**: 31 Journal and 16 schedule IDs are newly accepted. [Hosted CI](https://github.com/lukin-io/deep-work/actions/runs/39236029448) also passed 170 native tests and Xcode Release builds on macOS 15/26, then optimized arm64 packaging and 20 policy/17 archive checks.
 
-Cross-stage CSV criteria keep J-017–J-020 and J-052 partial; J-048–J-051 remain Stage 4. Keyboard navigation is disabled on the implementation Mac and hostless SwiftUI accessibility is unavailable, so affected focus, chart keyboard and weekday checks remain IN PROGRESS. Full VoiceOver and final appearance acceptance are also explicitly unverified. These limits do not turn passing model/adapter tests into full UI acceptance. The published preview remains Stage 1/2; this branch does not publish a new release.
+At the Stage 3 exit, cross-stage CSV criteria kept J-017–J-020 and J-052 partial; J-048–J-051 remain Stage 4. Keyboard navigation is disabled on the implementation Mac and hostless SwiftUI accessibility is unavailable, so affected focus, chart keyboard and weekday checks remain IN PROGRESS. Full VoiceOver and final appearance acceptance are also explicitly unverified. These limits do not turn passing model/adapter tests into full UI acceptance. The published preview remains Stage 1/2; this branch does not publish a new release.
+
+## Stage 4 implementation record — October 19, 2026
+
+Shared CSV serialization, all-row Journal export, Settings export scopes, native Save/Cancel/failure handling and explicit SQLite feedback draft/native clipboard behavior are implemented. Export captures an immutable reconciled observation; Quit drains accepted writes. Feedback revisions preserve truthful asynchronous status; native editors retain input limits, Undo/Redo and validation focus. Existing data needs no schema migration.
+
+There are **104/137 accepted IDs**. Newly accepted: **J-018–J-020, J-048–J-052, S-006–S-011, S-013–S-016, S-018, S-020–S-021**. Native tests, compiled CSV/draft/copy checks, exact build commands and remaining limits are in [Stage 4 verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026). S-001/S-002/S-012/S-017/S-019 retain their complete keyboard/VoiceOver/appearance acceptance gaps; J-017 retains narrow-banner review. Launch at Login and Slack remain Stage 5. No release is published by this milestone.
+
+[Stage 4 hosted CI](https://github.com/lukin-io/deep-work/actions/runs/39246777987) passes all **232 native tests** and Xcode Release builds on macOS 15/26, plus optimized arm64 packaging and 20 policy/17 archive checks. The final documentation update records the verified source/test revision `6543707`; it does not change implementation or acceptance counts.
 
 ## Shared shell
 
@@ -569,34 +577,34 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
 ### Example data
 
-**Progress:** 0 / 4 accepted.
+**Progress:** 3 / 4 accepted.
 
 - [ ] **J-017 — Example banner** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-017))
 
     Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
-    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
-    Blocker / notes: Separate generated examples, actual selection, future exclusion and SQLite isolation pass. All Sessions export exclusion is an explicit completion criterion deferred to Stage 4.  
+    Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
+    Blocker / notes: Example labels and CSV markers pass. Narrow-width example-banner readability remains unverified; retain the Stage 3 visual acceptance gap.  
     Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **J-018 — Footer View example / Show my journal button** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-018))
+- [x] **J-018 — Footer View example / Show my journal button** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-018))
 
-    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
-    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
-    Blocker / notes: Separate generated examples, actual selection, future exclusion and SQLite isolation pass. All Sessions export exclusion is an explicit completion criterion deferred to Stage 4.  
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
+    Blocker / notes: Source switching retains real history; current-report export follows the selected actual/example source. Native CSV bytes and compiled source labels pass.  
     Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **J-019 — Banner Show my journal button** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-019))
+- [x] **J-019 — Banner Show my journal button** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-019))
 
-    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
-    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
-    Blocker / notes: Separate generated examples, actual selection, future exclusion and SQLite isolation pass. All Sessions export exclusion is an explicit completion criterion deferred to Stage 4.  
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
+    Blocker / notes: Example toggle remains transient and separate from actual records; all-history Settings export ignores example mode. Relaunch and native source tests pass.  
     Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **J-020 — Generated example scope and initial mode** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-020))
+- [x] **J-020 — Generated example scope and initial mode** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-020))
 
-    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
-    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
-    Blocker / notes: Separate generated examples, actual selection, future exclusion and SQLite isolation pass. All Sessions export exclusion is an explicit completion criterion deferred to Stage 4.  
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
+    Blocker / notes: Generated examples remain separate from SQLite. Native CSV tests and compiled exports preserve example markers, exact focus totals and completion counts.  
     Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 ### Report totals
@@ -822,45 +830,45 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
 ### Export
 
-**Progress:** 0 / 4 accepted.
+**Progress:** 4 / 4 accepted.
 
-- [ ] **J-048 — Journal Export CSV button** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-048))
+- [x] **J-048 — Journal Export CSV button** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-048))
 
-    Status: **TODO** · Stage: **4** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Reports/ReportCSVExporter.swift`, `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Settings/SettingsView.swift`
+    Status: **DONE** · Stage: **4** · Owner: Codex  
+    Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
+    Blocker / notes: Native Save/Cancel and real atomic file success/failure pass. Export captures all report rows and never pauses or ends the timer early; pending accepted writes drain on Quit.  
+    Swift: `DeepWork/Core/ReportCSVExporter.swift`, `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Settings/SettingsView.swift`
 
-- [ ] **J-049 — CSV column contract and values** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-049))
+- [x] **J-049 — CSV column contract and values** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-049))
 
-    Status: **TODO** · Stage: **4** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Reports/ReportCSVExporter.swift`, `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Settings/SettingsView.swift`
+    Status: **DONE** · Stage: **4** · Owner: Codex  
+    Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
+    Blocker / notes: Exports ignore pagination. Compiled page-2 export saved all 75 rows; 297,000 focus seconds and 65 completions match the report. Actual, example and live snapshots pass native tests.  
+    Swift: `DeepWork/Core/ReportCSVExporter.swift`, `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Settings/SettingsView.swift`
 
-- [ ] **J-050 — CSV filenames and export confirmation** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-050))
+- [x] **J-050 — CSV filenames and export confirmation** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-050))
 
-    Status: **TODO** · Stage: **4** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Reports/ReportCSVExporter.swift`, `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Settings/SettingsView.swift`
+    Status: **DONE** · Stage: **4** · Owner: Codex  
+    Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
+    Blocker / notes: Native Save panel presents the correct inclusive/exclusive filename. Cancel stays silent; actual successful exports show accessible success text. Failures preserve existing files and expose errors.  
+    Swift: `DeepWork/Core/ReportCSVExporter.swift`, `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Settings/SettingsView.swift`
 
-- [ ] **J-051 — Shared current-report and full-history scope rules** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-051))
+- [x] **J-051 — Shared current-report and full-history scope rules** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-051))
 
-    Status: **TODO** · Stage: **4** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Reports/ReportCSVExporter.swift`, `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Settings/SettingsView.swift`
+    Status: **DONE** · Stage: **4** · Owner: Codex  
+    Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
+    Blocker / notes: One native serializer supplies the exact 13-column BOM/quoted/CRLF contract, offset timestamps and rounded seconds for both entry points; current-report bytes match.  
+    Swift: `DeepWork/Core/ReportCSVExporter.swift`, `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Settings/SettingsView.swift`
 
 ### Storage
 
-**Progress:** 0 / 1 accepted.
+**Progress:** 1 / 1 accepted.
 
-- [ ] **J-052 — Saved-on-device footer and failure message** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-052))
+- [x] **J-052 — Saved-on-device footer and failure message** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-052))
 
-    Status: **IN PROGRESS** · Stage: **1** · Owner: Codex  
-    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
-    Blocker / notes: SQLite saved/failure status and recoverable edits pass; CSV availability during storage failure remains Stage 4.  
+    Status: **DONE** · Stage: **1** · Owner: Codex  
+    Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
+    Blocker / notes: Failed SQLite keeps in-memory reports exportable; visible warning recommends working CSV export. Real SQLite failure plus native file-export tests preserve edits without claiming persistence.  
     Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 ### Live journal
@@ -1084,9 +1092,9 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
 - [ ] **S-001 — Settings** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-001))
 
-    Status: **TODO** · Stage: **4** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **IN PROGRESS** · Stage: **4** · Owner: Codex  
+    Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
+    Blocker / notes: Settings workflow is implemented with distinct accessible controls. Full keyboard traversal, visible focus and final light/dark/narrow review remain unverified.  
     Swift: `DeepWork/Features/Settings/SettingsView.swift`
 
 ### General
@@ -1095,9 +1103,9 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
 - [ ] **S-002 — General** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-002))
 
-    Status: **TODO** · Stage: **4** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
+    Status: **IN PROGRESS** · Stage: **4** · Owner: Codex  
+    Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
+    Blocker / notes: General group and unavailable login control are present and labelled. Complete light/dark accessible group review remains unverified; login registration belongs to S-003–S-005.  
     Swift: `DeepWork/Features/Settings/SettingsView.swift`
 
 ### Launch at Login
@@ -1127,130 +1135,130 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
 ### CSV export
 
-**Progress:** 0 / 6 accepted.
+**Progress:** 6 / 6 accepted.
 
-- [ ] **S-006 — Export** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-006))
+- [x] **S-006 — Export** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-006))
 
-    Status: **TODO** · Stage: **4** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Reports/ReportCSVExporter.swift`
+    Status: **DONE** · Stage: **4** · Owner: Codex  
+    Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
+    Blocker / notes: Native export group is enabled with scope, live summary, Save panel and truthful result states. Compiled Settings current-report export and empty actual-history state pass.  
+    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Core/ReportCSVExporter.swift`
 
-- [ ] **S-007 — Include — All Sessions / Current Journal Report** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-007))
+- [x] **S-007 — Include — All Sessions / Current Journal Report** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-007))
 
-    Status: **TODO** · Stage: **4** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Reports/ReportCSVExporter.swift`
+    Status: **DONE** · Stage: **4** · Owner: Codex  
+    Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
+    Blocker / notes: All Sessions defaults on launch and uses actual history/live only; Current Journal Report retains Journal range and source. Scope stays transient and both paths share the serializer.  
+    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Core/ReportCSVExporter.swift`
 
-- [ ] **S-008 — Export scope and availability summary** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-008))
+- [x] **S-008 — Export scope and availability summary** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-008))
 
-    Status: **TODO** · Stage: **4** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Reports/ReportCSVExporter.swift`
+    Status: **DONE** · Stage: **4** · Owner: Codex  
+    Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
+    Blocker / notes: Exact pluralization/focus duration and empty/invalid/example/live availability pass native tests; compiled summaries agree with exported rows and totals.  
+    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Core/ReportCSVExporter.swift`
 
-- [ ] **S-009 — Export to CSV…** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-009))
+- [x] **S-009 — Export to CSV…** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-009))
 
-    Status: **TODO** · Stage: **4** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Reports/ReportCSVExporter.swift`
+    Status: **DONE** · Stage: **4** · Owner: Codex  
+    Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
+    Blocker / notes: Native CSV destination selection and real atomic writes pass. Cancel, denied/invalid destinations, write failure, slow writes, Quit and retry have regression coverage.  
+    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Core/ReportCSVExporter.swift`
 
-- [ ] **S-010 — Shared CSV data contract** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-010))
+- [x] **S-010 — Shared CSV data contract** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-010))
 
-    Status: **TODO** · Stage: **4** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Reports/ReportCSVExporter.swift`
+    Status: **DONE** · Stage: **4** · Owner: Codex  
+    Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
+    Blocker / notes: Both entry points emit the same 13-column CSV contract; compiled identical-snapshot exports are byte-identical. Actual all-history export is independent of filters/examples.  
+    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Core/ReportCSVExporter.swift`
 
-- [ ] **S-011 — Export result status** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-011))
+- [x] **S-011 — Export result status** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-011))
 
-    Status: **TODO** · Stage: **4** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Reports/ReportCSVExporter.swift`
+    Status: **DONE** · Stage: **4** · Owner: Codex  
+    Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
+    Blocker / notes: Success follows the actual file write; Cancel makes no success claim; failure is explicit and changing scope clears stale results. Compiled result text has stable accessibility identifiers.  
+    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Core/ReportCSVExporter.swift`
 
 ### Feedback
 
-**Progress:** 0 / 9 accepted.
+**Progress:** 6 / 9 accepted.
 
 - [ ] **S-012 — Feedback** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-012))
 
-    Status: **TODO** · Stage: **4** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Data/SettingsStore.swift`, `DeepWork/Services/FeedbackClipboard.swift`
+    Status: **IN PROGRESS** · Stage: **4** · Owner: Codex  
+    Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
+    Blocker / notes: Save/Copy and explicit-draft restoration work. Complete keyboard-only form traversal remains unverified with macOS Keyboard navigation disabled.  
+    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Data/SettingsStore.swift`, `DeepWork/Features/Settings/FeedbackClipboard.swift`
 
-- [ ] **S-013 — This preview can save a draft or copy your feedback to share.** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-013))
+- [x] **S-013 — This preview can save a draft or copy your feedback to share.** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-013))
 
-    Status: **TODO** · Stage: **4** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Data/SettingsStore.swift`, `DeepWork/Services/FeedbackClipboard.swift`
+    Status: **DONE** · Stage: **4** · Owner: Codex  
+    Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
+    Blocker / notes: Approved helper text is visible and accessible; actions save locally or copy, with no Send control or network delivery.  
+    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Data/SettingsStore.swift`, `DeepWork/Features/Settings/FeedbackClipboard.swift`
 
-- [ ] **S-014 — Feedback type — Idea / Problem / General feedback** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-014))
+- [x] **S-014 — Feedback type — Idea / Problem / General feedback** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-014))
 
-    Status: **TODO** · Stage: **4** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Data/SettingsStore.swift`, `DeepWork/Services/FeedbackClipboard.swift`
+    Status: **DONE** · Stage: **4** · Owner: Codex  
+    Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
+    Blocker / notes: All three feedback types retain their approved labels, stored values and exact copied captions. Validation, unknown stored type fallback and SQLite restoration pass.  
+    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Data/SettingsStore.swift`, `DeepWork/Features/Settings/FeedbackClipboard.swift`
 
-- [ ] **S-015 — Email (optional)** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-015))
+- [x] **S-015 — Email (optional)** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-015))
 
-    Status: **TODO** · Stage: **4** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Data/SettingsStore.swift`, `DeepWork/Services/FeedbackClipboard.swift`
+    Status: **DONE** · Stage: **4** · Owner: Codex  
+    Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
+    Blocker / notes: Optional email uses trimmed validation with a raw 254 UTF-16-unit limit and email-first errors; empty/invalid/boundary and native field behavior pass.  
+    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Data/SettingsStore.swift`, `DeepWork/Features/Settings/FeedbackClipboard.swift`
 
-- [ ] **S-016 — Your feedback** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-016))
+- [x] **S-016 — Your feedback** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-016))
 
-    Status: **TODO** · Stage: **4** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Data/SettingsStore.swift`, `DeepWork/Services/FeedbackClipboard.swift`
+    Status: **DONE** · Stage: **4** · Owner: Codex  
+    Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
+    Blocker / notes: Message retains multiline editing, raw 5,000 UTF-16-unit maximum and trimmed five-unit minimum. Native selection, Undo/Redo, disabled Quit editing and model synchronization pass.  
+    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Data/SettingsStore.swift`, `DeepWork/Features/Settings/FeedbackClipboard.swift`
 
 - [ ] **S-017 — Feedback validation error** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-017))
 
-    Status: **TODO** · Stage: **4** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Data/SettingsStore.swift`, `DeepWork/Services/FeedbackClipboard.swift`
+    Status: **IN PROGRESS** · Stage: **4** · Owner: Codex  
+    Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
+    Blocker / notes: Typed validation, visible errors, field hints and native focus are implemented. Actual VoiceOver reception and field identification remain unverified.  
+    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Data/SettingsStore.swift`, `DeepWork/Features/Settings/FeedbackClipboard.swift`
 
-- [ ] **S-018 — Save Draft** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-018))
+- [x] **S-018 — Save Draft** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-018))
 
-    Status: **TODO** · Stage: **4** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Data/SettingsStore.swift`, `DeepWork/Services/FeedbackClipboard.swift`
+    Status: **DONE** · Stage: **4** · Owner: Codex  
+    Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
+    Blocker / notes: Explicit SQLite draft save, keyboard submission, relaunch, trim/validation and failed-write retention pass. Delayed save acknowledgments cannot overwrite later Copy/validation status.  
+    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Data/SettingsStore.swift`, `DeepWork/Features/Settings/FeedbackClipboard.swift`
 
 - [ ] **S-019 — Copy Feedback** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-019))
 
-    Status: **TODO** · Stage: **4** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Data/SettingsStore.swift`, `DeepWork/Services/FeedbackClipboard.swift`
+    Status: **IN PROGRESS** · Stage: **4** · Owner: Codex  
+    Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
+    Blocker / notes: Exact native pasteboard payload, no implicit save, success/failure messages and selection adapter pass. Complete integrated failure selection and Copy-button focus remain unverified.  
+    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Data/SettingsStore.swift`, `DeepWork/Features/Settings/FeedbackClipboard.swift`
 
-- [ ] **S-020 — Feedback result and saved-draft status** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-020))
+- [x] **S-020 — Feedback result and saved-draft status** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-020))
 
-    Status: **TODO** · Stage: **4** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Data/SettingsStore.swift`, `DeepWork/Services/FeedbackClipboard.swift`
+    Status: **DONE** · Stage: **4** · Owner: Codex  
+    Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
+    Blocker / notes: Compiled success and saved-draft-ready captions pass; failed store and pasteboard cases are covered natively. Editing/new actions clear stale results and nothing claims delivery.  
+    Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Data/SettingsStore.swift`, `DeepWork/Features/Settings/FeedbackClipboard.swift`
 
 ### Local settings persistence
 
-**Progress:** 0 / 1 accepted.
+**Progress:** 1 / 1 accepted.
 
-- [ ] **S-021 — Settings saved on this device** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-021))
+- [x] **S-021 — Settings saved on this device** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-021))
 
-    Status: **IN PROGRESS** · Stage: **1** · Owner: Codex  
-    Evidence / commit: [Native verification, October 18, 2026](docs/VERIFICATION.md); `./scripts/test.sh`, compiled native app and macOS acceptance.  
-    Blocker / notes: SQLite settings/defaults, explicit draft save/relaunch, corruption/failure warnings and journal independence implemented. Launch registration and clipboard/CSV behavior during failure remain in later stages.  
+    Status: **DONE** · Stage: **1** · Owner: Codex  
+    Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
+    Blocker / notes: Real SQLite tests verify settings/defaults/restoration and independent failure handling. Explicit draft persists; Copy/CSV remain usable on storage failure. OS login registration is separately deferred.  
     Swift: `DeepWork/Data/SettingsStore.swift`, `DeepWork/Features/Settings/SettingsView.swift`
 
 ## Native release review
 
-Distribution support is Apple Silicon (arm64), macOS 15+. [Preview v0.1.0-preview.1](https://github.com/lukin-io/deep-work/releases/tag/v0.1.0-preview.1) is published with a built app ZIP; native CI and public-download verification passed. Exact packaging and public-download evidence are recorded in [VERIFICATION.md](docs/VERIFICATION.md); release engineering does not change the 36/137 product acceptance total.
+Distribution support is Apple Silicon (arm64), macOS 15+. [Preview v0.1.0-preview.1](https://github.com/lukin-io/deep-work/releases/tag/v0.1.0-preview.1) is published with a built app ZIP; native CI and public-download verification passed. Exact packaging and public-download evidence are recorded in [VERIFICATION.md](docs/VERIFICATION.md); release engineering does not advance product acceptance; the current total is recorded in the rollup above.
 
 Before declaring the port complete, run AC-01 through AC-29 from the specification and record the results for the affected IDs above. Verify macOS integrations on an actual Mac. Keep unresolved implementation details visible rather than marking their preview state DONE.

@@ -42,16 +42,43 @@ final class FeedbackTests {
         #expect(email254.utf16.count == 254)
         #expect(throws: Never.self) { try FeedbackDraft(email: email254, message: "hello").validatedForSaving() }
         #expect(throws: (any Error).self) { try FeedbackDraft(email: "a" + email254, message: "hello").validatedForSaving() }
-        #expect(throws: ModelValidationError("Enter a valid email address, or leave it blank.")) {
+        #expect(throws: FeedbackValidationError.email) {
             try FeedbackDraft(email: "bad", message: "").validatedForSaving()
         }
     }
 
+    @Test func testS014_S015_S016_S019ClipboardPayloadUsesMappedTypesOptionalEmailAndTrimmedText() throws {
+        let names: [(FeedbackType, String)] = [(.idea, "Suggestion"), (.problem, "Problem report"), (.general, "General feedback")]
+        for (type, name) in names {
+            for email in ["", " \tperson@example.com\n"] {
+                let draft = FeedbackDraft(type: type, email: email, message: " \u{FEFF}hello 😀\nsecond line\n ")
+                let emailLine = email.isEmpty ? "" : "\nEmail: person@example.com"
+                #expect(try draft.validatedClipboardText() == "Deep Work feedback\nType: \(name)\(emailLine)\n\nhello 😀\nsecond line")
+                #expect(draft.message.hasPrefix(" \u{FEFF}"), "Preparing feedback must not mutate unsaved form edits")
+            }
+        }
+        #expect(try FeedbackDraft(email: " \t\n", message: "hello").validatedClipboardText()
+            == "Deep Work feedback\nType: General feedback\n\nhello")
+    }
+
+    @Test func testS017_S019ClipboardUsesSameValidationAndErrorPriorityAsSaving() {
+        for draft in [FeedbackDraft(email: "bad", message: ""), FeedbackDraft(email: "bad", message: "hello")] {
+            #expect(throws: FeedbackValidationError.email) { try draft.validatedClipboardText() }
+        }
+        for message in ["", "  ", "😀😀", String(repeating: "a", count: 5001)] {
+            #expect(throws: FeedbackValidationError.message) { try FeedbackDraft(message: message).validatedClipboardText() }
+        }
+        #expect(FeedbackValidationError.email.localizedDescription == "Enter a valid email address, or leave it blank.")
+        #expect(FeedbackValidationError.message.localizedDescription == "Write a message between 5 and 5,000 characters.")
+    }
+
     @Test func testUnknownFeedbackTypeFallsBackWithoutChangingSavedText() throws {
-        let bytes = Data(#"{"version":1,"launchAtLogin":false,"feedbackDraft":{"type":"future","email":"","message":"hello"}}"#.utf8)
-        let settings = try JSONDecoder().decode(SettingsDocument.self, from: bytes)
-        try settings.validate()
-        #expect(settings.feedbackDraft.type == .general)
-        #expect(settings.feedbackDraft.message == "hello")
+        for typeField in [#""type":"future","#, #""type":null,"#, ""] {
+            let bytes = Data("{\"version\":1,\"launchAtLogin\":false,\"feedbackDraft\":{\(typeField)\"email\":\"\",\"message\":\"hello\"}}".utf8)
+            let settings = try JSONDecoder().decode(SettingsDocument.self, from: bytes)
+            try settings.validate()
+            #expect(settings.feedbackDraft.type == .general)
+            #expect(settings.feedbackDraft.message == "hello")
+        }
     }
 }

@@ -16,6 +16,16 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = "BC7305616E768B644C01BDD1";
 		};
+		"91A27560F68C207F5F73CB49" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "DeepWork/App/CSVFileExportService.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		"93D7BCD67F1C9FD129A94569" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "91A27560F68C207F5F73CB49";
+		};
 		"0EC668B65540AFA41961BCB1" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -136,6 +146,46 @@
 			"isa" = "PBXBuildFile";
 			"fileRef" = "11F5D062CDD31575E8FDB995";
 		};
+		"34C784C0CCAFEC3EDC568B86" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "DeepWork/Features/Settings/FeedbackClipboard.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		"7FD16846B0E4C2042DCC3241" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "34C784C0CCAFEC3EDC568B86";
+		};
+		"F2CFDD0F68311E00B858452C" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "DeepWork/Features/Settings/FeedbackEmailField.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		"764E8526C0C2C125C6573C5A" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "F2CFDD0F68311E00B858452C";
+		};
+		"1899C4CC14A34FD6A2E33DF4" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "DeepWork/Features/Settings/FeedbackMessageEditor.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		"A5B474FA197AD3EB7FDCBBDF" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "1899C4CC14A34FD6A2E33DF4";
+		};
+		"0ACF1C6DFFF52EC0C459167B" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "DeepWork/Features/Settings/FeedbackPresentation.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		"C6699D6CE24D76C51F800672" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "0ACF1C6DFFF52EC0C459167B";
+		};
 		"97DFA66E4F056526FA8F264C" = {
 			"isa" = "PBXFileReference";
 			"lastKnownFileType" = "sourcecode.swift";
@@ -150,6 +200,7 @@
 			"isa" = "PBXGroup";
 			"children" = (
 				"BC7305616E768B644C01BDD1",
+				"91A27560F68C207F5F73CB49",
 				"0EC668B65540AFA41961BCB1",
 				"7C853BA4A41AF387C7206B7F",
 				"60EDB10781FBE12B96098D51",
@@ -162,6 +213,10 @@
 				"E153FA034620F22B82677AAB",
 				"236C304192143C2861E76E66",
 				"11F5D062CDD31575E8FDB995",
+				"34C784C0CCAFEC3EDC568B86",
+				"F2CFDD0F68311E00B858452C",
+				"1899C4CC14A34FD6A2E33DF4",
+				"0ACF1C6DFFF52EC0C459167B",
 				"97DFA66E4F056526FA8F264C",
 			);
 			"name" = "Application";
@@ -172,6 +227,7 @@
 			"buildActionMask" = 2147483647;
 			"files" = (
 				"98E90DFF6FABC595B450C330",
+				"93D7BCD67F1C9FD129A94569",
 				"C145AA2EA118C5928632AD49",
 				"F346C53EFA3DEE1DEB01741E",
 				"B2F0297D784A3D09BDAC85F4",
@@ -184,6 +240,10 @@
 				"968D646D5148A6A1ED2998B2",
 				"DF1ACA1F665B5E047D2C9E49",
 				"B0DF0F76F4FABA00DAB780D0",
+				"7FD16846B0E4C2042DCC3241",
+				"764E8526C0C2C125C6573C5A",
+				"A5B474FA197AD3EB7FDCBBDF",
+				"C6699D6CE24D76C51F800672",
 				"559FCF4F51D81E828AE83106",
 			);
 			"runOnlyForDeploymentPostprocessing" = 0;
@@ -227,6 +287,16 @@
 		"56E418545920E09969C0E320" = {
 			"isa" = "PBXBuildFile";
 			"fileRef" = "FD3B8372AF3A15CAF1D27328";
+		};
+		"723342E292C549002E2633F8" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "DeepWorkTests/Core/ReportCSVExporterTests.swift";
+			"sourceTree" = "SOURCE_ROOT";
+		};
+		"E5A56D4DF222821ABFF74EE3" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "723342E292C549002E2633F8";
 		};
 		"EE5A6735F545F496AE71C05A" = {
 			"isa" = "PBXFileReference";
@@ -275,6 +345,7 @@
 				"3CE0E3507C40E735041A53DF",
 				"1EC524E8692E5F9D70BD4344",
 				"FD3B8372AF3A15CAF1D27328",
+				"723342E292C549002E2633F8",
 				"EE5A6735F545F496AE71C05A",
 				"FDA4A452F23D9483F3F3C5B5",
 				"D49BF1DEF694648D174DFED6",
@@ -291,6 +362,7 @@
 				"260E8D8284ABDFEAFF271DFD",
 				"2D52CA498B50FC5D706F5E42",
 				"56E418545920E09969C0E320",
+				"E5A56D4DF222821ABFF74EE3",
 				"4E3FE3F6FE888C8909004F25",
 				"86A851D77C45943CE95581E4",
 				"A5D83235D56046E95B883101",

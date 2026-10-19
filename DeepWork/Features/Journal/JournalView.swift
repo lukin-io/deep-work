@@ -19,6 +19,7 @@ struct JournalView: View {
         .accessibilityIdentifier("dw-journal-panel")
         .onChange(of: model.scheduleSaveStatus) { _, status in if let status { announce(status) } }
         .onChange(of: model.rangeError) { _, error in if let error { announce(error) } }
+        .onChange(of: model.journalExportError) { _, error in if let error { announce(error) } }
         .onChange(of: model.showingExamples) { _, examples in
             announce(examples ? "Showing example data, separate from your journal." : "Showing your journal.")
         }
@@ -224,8 +225,15 @@ struct JournalView: View {
                         .background(Color(nsColor: .quaternaryLabelColor), in: RoundedRectangle(cornerRadius: 4))
                 }.accessibilityElement(children: .combine).accessibilityIdentifier("dw-sessions-title")
                 Spacer()
-                Button("Export CSV") {}.disabled(true).help("CSV export is not available yet.")
+                Button("Export CSV") { Task { await model.exportJournalCSV() } }.disabled(!model.canExportJournal)
                     .accessibilityIdentifier("dw-export")
+            }
+            if let error = model.journalExportError {
+                Text(error).font(.caption).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("dw-export-error")
+            } else if let status = model.journalExportStatus {
+                Text(status).font(.caption).foregroundStyle(.secondary)
+                    .accessibilityIdentifier("dw-export-status")
             }
             if model.reportSnapshot.rows.isEmpty { emptyState }
             else {

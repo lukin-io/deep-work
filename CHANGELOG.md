@@ -2,9 +2,18 @@
 
 One consolidated entry per PR or stage, newest first. Follow-up commits update the same entry. Detailed acceptance and test evidence stay in [the checklist](IMPLEMENTATION_CHECKLIST.md) and [verification](docs/VERIFICATION.md).
 
+## Stage 4 — CSV export and feedback ([PR #3](https://github.com/lukin-io/deep-work/pull/3))
+
+**Unreleased.** Source branch: `codex/settings-export-stage-4`.
+
+- Save Journal reports and Settings All Sessions/Current Journal Report through a native CSV Save panel, including every matching row across pagination and precise live-session accounting.
+- Share one CSV format and snapshot across both paths; preserve actual/example separation, truthful cancellation and failures, and wait for accepted writes before Quit.
+- Validate, explicitly save and restore feedback drafts in SQLite; copy current feedback without saving or sending it. Support native multiline editing, Undo/Redo and validation focus.
+- Preserve existing data without a schema migration. Add native unit, SQLite/AppKit integration and compiled-app acceptance checks; remaining keyboard/VoiceOver checks stay in the checklist. Launch at Login and Slack remain Stage 5.
+
 ## Stage 3 — Journal and work schedule ([PR #2](https://github.com/lukin-io/deep-work/pull/2))
 
-**Unreleased.** Available from source on `feature/journal-stage-3`.
+**Unreleased.** Merged into `main` through PR #2.
 
 - Add Day, Week and custom Range reports with focus time, completed cycles, days with focus, activity drilldown and paginated session history.
 - Show live/paused sessions and separate example data without saving examples as real history.
