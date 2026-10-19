@@ -2,9 +2,9 @@
 
 One consolidated entry per PR or stage, newest first. Follow-up commits update the same entry. Detailed acceptance and test evidence stay in [the checklist](IMPLEMENTATION_CHECKLIST.md) and [verification](docs/VERIFICATION.md).
 
-## Stage 5 — Native services
+## Stage 5 — Native services ([PR #4](https://github.com/lukin-io/deep-work/pull/4))
 
-**Unreleased.** Source branch: `codex/native-services-stage-5`.
+**Unreleased.** PR #4 targets `main`; source branch: `codex/native-services-stage-5`.
 
 - Add native Settings and Redo commands; keep menu actions on the retained app window and shared timer.
 - Register Launch at Login through macOS, showing actual approval, revocation and failure states without saving unfinished feedback edits.

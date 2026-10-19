@@ -21,6 +21,7 @@ struct SettingsView: View {
                                 .accessibilityIdentifier("dw-launch-helper")
                         }
                     }.toggleStyle(.switch).disabled(!model.canChangeLoginItem).accessibilityIdentifier("dw-launch-login")
+                        .accessibilityLabel("Launch at Login")
                         .accessibilityHint("Open Deep Work automatically when you log in to your Mac. \(model.loginItemStatusMessage)")
                     AvailabilityNote(text: model.loginItemStatusMessage).accessibilityIdentifier("dw-launch-preview")
                     if let error = model.loginItemError {

@@ -281,7 +281,7 @@ Stable tags are rejected until Developer ID signing, hardened runtime, timestamp
 - Journal reports use half-open `[From, Until)` bounds in the current device time zone. Range text accepts `YYYY-MM-DDTHH:mm`; invalid, reversed, nonexistent local times or ranges exceeding 3,660 elapsed days show an error and clear the report. Above 93 elapsed days, grouping switches to By week and stays there until changed. Today leaves Range for Day without erasing its inputs.
 - Schedules affect reporting only. They never start timers or discard off-day focus. Changing the schedule or time zone reinterprets raw history without rewriting session timestamps. An idle cutoff wakeup keeps Today and the draft preview current even when no timer runs.
 - Examples are generated once per launch, clearly labelled and never written to SQLite. Starting a real cycle selects actual history. Report period/range/grouping/source, paging and unsaved schedule drafts are transient; saved schedules survive Quit/relaunch.
-- CSV export and clipboard copy are implemented in source. Login registration and Slack integration remain unavailable; their controls do not simulate success.
+- CSV export, clipboard copy and actual login registration are implemented. Slack services are implemented but connection stays unavailable until the public Client ID is configured; no control simulates remote success.
 
 Use the isolated Debug launch steps in [Build, test, and run locally](#build-test-and-run-locally) for empty data, relaunch, migration and failure checks. Release builds ignore the override.
 
