@@ -71,7 +71,8 @@ struct JournalReportTests {
         let report = try build(records, "2026-03-28T00:00", "2026-03-31T00:00")
         #expect(report.error == nil)
         #expect(report.focusedSeconds == 23 * 3_600)
-        #expect(report.days.map(\.focusedSeconds) == [0, 23 * 3_600, 0])
+        let expectedSeconds: [TimeInterval] = [0, 23 * 3_600, 0]
+        #expect(report.days.map(\.focusedSeconds) == expectedSeconds)
         #expect(report.days.map(\.completedCycles) == [0, 2, 1])
         let autumn = try build([], "2026-10-24T00:00", "2026-10-27T00:00")
         #expect(autumn.days.map { $0.end.timeIntervalSince($0.start) } == [86_400, 90_000, 86_400])
