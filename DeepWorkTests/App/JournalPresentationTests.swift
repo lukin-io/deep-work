@@ -81,6 +81,19 @@ struct JournalFormattingTests {
         #expect(JournalPresentation.barHeight(seconds: 30, maximum: 0) == 3)
     }
 
+    @Test @MainActor func testJ029J033ColumnMinimumAdaptsToNativeTextWithoutShrinkingExistingBaseline() {
+        let bucket = JournalBucket(key: CivilDate(start, timeZone: utc), start: start,
+                                   end: start + 86_400, focusedSeconds: 0, completedCycles: 0, scheduledDays: 0)
+        #expect(JournalPresentation.minimumChartColumnWidth(buckets: [], grouping: .day,
+            shortWeekdayLabels: true, timeZone: utc) == 35)
+        #expect(JournalPresentation.minimumChartColumnWidth(buckets: [bucket], grouping: .day,
+            shortWeekdayLabels: true, timeZone: utc) == 35)
+        #expect(JournalPresentation.minimumChartColumnWidth(buckets: Array(repeating: bucket, count: 15), grouping: .day,
+            shortWeekdayLabels: true, timeZone: utc) == 44)
+        #expect(JournalPresentation.bucketCaption(bucket, grouping: .week, shortWeekdayLabels: true, timeZone: utc)
+            == JournalPresentation.date(start, pattern: "MMM d", timeZone: utc))
+    }
+
     private func session(outcome: SessionOutcome) -> SessionRecord {
         SessionRecord(startedAt: start, endedAt: start.addingTimeInterval(3_600), plannedFocusMinutes: 60,
                       outcome: outcome, segments: [ActiveSegment(startedAt: start, endedAt: start.addingTimeInterval(3_600))])
@@ -91,6 +104,53 @@ extension NativeApplicationTests {
 @Suite(.serialized)
 @MainActor
 struct JournalPresentationTests {
+    @Test(arguments: [JournalGrouping.day, .week])
+    func testJ029_J033NarrowChartKeepsFullDurationAndDateLabelsInsideScrollableColumns(_ grouping: JournalGrouping) async throws {
+        prepareNativeTestApplication()
+        let start = Date(timeIntervalSince1970: 1_792_396_800)
+        let seconds: TimeInterval = grouping == .day ? 3.5 * 3_600 : 167 * 3_600 + 59 * 60
+        let dayStep: TimeInterval = grouping == .day ? 86_400 : 7 * 86_400
+        let buckets = (0..<7).map { index in
+            let date = start + Double(index) * dayStep
+            return JournalBucket(key: CivilDate(date, timeZone: .gmt), start: date, end: date + dayStep,
+                                 focusedSeconds: seconds, completedCycles: 3, scheduledDays: 1)
+        }
+        let host = NSHostingView(rootView: JournalActivityChart(buckets: buckets, grouping: grouping,
+            shortWeekdayLabels: grouping == .day, today: buckets[0].key, timeZone: .gmt, open: { _ in })
+            .padding(24).frame(width: 320, height: 217))
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 320, height: 217),
+                              styleMask: [.titled], backing: .buffered, defer: false)
+        window.contentView = host
+        window.orderFront(nil)
+        defer { window.orderOut(nil) }
+        let clock = ContinuousClock()
+        let deadline = clock.now.advanced(by: .seconds(3))
+        while findScrollView(in: host) == nil && clock.now < deadline {
+            host.layoutSubtreeIfNeeded()
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        host.layoutSubtreeIfNeeded()
+        let scroll = try #require(findScrollView(in: host))
+        let document = try #require(scroll.documentView)
+        let duration = JournalDuration.format(seconds: seconds, precise: false)
+        #expect(duration == (grouping == .day ? "3h 30m" : "167h 59m"))
+        let durationWidth = (duration as NSString).size(withAttributes: [
+            .font: NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .regular)
+        ]).width
+        let dateWidth = buckets.map {
+            (JournalPresentation.date($0.start, pattern: grouping == .day ? "EEE" : "MMM d", timeZone: .gmt) as NSString)
+                .size(withAttributes: [.font: NSFont.systemFont(ofSize: 10, weight: .semibold)]).width
+        }.max() ?? 0
+        let requiredColumnWidth = ceil(max(durationWidth, dateWidth))
+        let requiredDocumentWidth = requiredColumnWidth * 7 + 9 * 6
+        #expect(document.bounds.width >= requiredDocumentWidth,
+                "Full duration/date text must fit each chart column, including at 320 pt; scroll instead of truncating")
+        #expect(scroll.contentView.bounds.width <= 272)
+        #expect(document.bounds.width > scroll.contentView.bounds.width)
+        // The real scroll extent is mandatory. Pixel/readability and keyboard
+        // focus retention are separately checked in the compiled application.
+    }
+
     @Test(arguments: [320, 696], [false, true])
     func testJ002NativeJournalRetainsRangeControlsAndScrollableDataAtBothWidthsAndAppearances(_ width: Int, _ dark: Bool) async throws {
         prepareNativeTestApplication()

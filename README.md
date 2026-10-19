@@ -1,6 +1,6 @@
 # Deep Work for macOS
 
-A native SwiftUI/AppKit application with the foundation, focus timer, Journal, schedules, CSV export, local feedback and Stage 5 native login/Slack services. The specification defines **137 implementation items**; `IMPLEMENTATION_CHECKLIST.md` is the sole progress tracker and records remaining native acceptance checks.
+A native SwiftUI/AppKit application with the foundation, focus timer, Journal, schedules, CSV export, local feedback, native login/Slack services and Stage 6 accessibility/layout fixes. The specification defines **137 implementation items**; `IMPLEMENTATION_CHECKLIST.md` is the sole progress tracker and records remaining native acceptance checks.
 
 ## Download the app
 
@@ -8,13 +8,13 @@ A native SwiftUI/AppKit application with the foundation, focus timer, Journal, s
 
 Previews are **ad hoc signed and unnotarized**; macOS may block first launch. Only open a build you trust, following [Apple's app-opening guidance](https://support.apple.com/en-us/102445). Stable notarized releases are not yet available. Each release lists its tested platforms and known limitations; macOS 15+ is the deployment target, not a claim that every OS version was tested.
 
-The published first preview contains **Stage 1/2 only**; Stage 3–5 source changes require a local build until a new release is published. The first preview passed [release CI and public-download verification](https://github.com/lukin-io/deep-work/actions/runs/39108209226). Download `SHA256SUMS` and `release-metadata.json` alongside the app ZIP and verify them with `shasum -a 256 -c SHA256SUMS`. The metadata records the source commit and build configuration. Quit an older running copy before replacing it; user data stays in Application Support.
+The published first preview contains **Stage 1/2 only**; Stage 3–6 source changes require a local build until a new release is published. The first preview passed [release CI and public-download verification](https://github.com/lukin-io/deep-work/actions/runs/39108209226). Download `SHA256SUMS` and `release-metadata.json` alongside the app ZIP and verify them with `shasum -a 256 -c SHA256SUMS`. The metadata records the source commit and build configuration. Quit an older running copy before replacing it; user data stays in Application Support.
 
 ## TODO
 
 - [ ] **This Mac has no Developer ID signing identity.** Configure an Apple Developer Program team's **Developer ID Application** certificate and its matching private key, either in this Mac's signing keychain or a protected CI signing environment. The local check is `security find-identity -v -p codesigning`; it currently reports zero valid identities. Never commit certificates, private keys or passwords.
 - [ ] Implement and verify the stable distribution path: hardened runtime, secure timestamp, notarization with `notarytool`, stapling on the app before the final ZIP, and Gatekeeper checks. Current automation intentionally publishes only clearly labelled unnotarized previews.
-- [ ] Complete the remaining physical Mac acceptance checks, including VoiceOver/keyboard access, light/dark appearance, menu-bar clicking and sleep/wake. Product acceptance stays in `IMPLEMENTATION_CHECKLIST.md`.
+- [ ] Complete the remaining manual Mac checks: actual VoiceOver speech/traversal, login cycles and physical sleep/wake. Keyboard traversal and light/dark/narrow layout checks are recorded under Stage 6. Product acceptance stays in `IMPLEMENTATION_CHECKLIST.md`.
 
 Read the [10-point Apple development and distribution guide](docs/MACOS_RELEASE_GUIDE.md) for requirements, conditional App Store rules, current gaps and official sources. This TODO covers release readiness; it does not replace the product progress tracker.
 
@@ -91,6 +91,12 @@ Slack uses native browser sign-in with PKCE, device-local Keychain credentials a
 - The three dashboard metrics are Focus time, Completed cycles, and Days with focus. No averaging metric is implemented in this baseline.
 - The detailed specification records unresolved native policies and small prototype quirks so they can be resolved deliberately without accidentally redesigning the app.
 
+## Stage 6 — Native accessibility and acceptance
+
+Timer action announcements now belong to the app, so they work regardless of the selected tab and remain silent on ordinary countdown ticks. Feedback Tab/Shift-Tab traverses the form without inserting tabs; the empty Journal action focuses the duration picker. Chart labels retain their full duration, focused bars scroll into view and keep focus during live updates. Weekday controls wrap at narrow widths. Sleep/wake notification handling checkpoints and reconciles the shared timer without pausing it.
+
+[PR #5](https://github.com/lukin-io/deep-work/pull/5) includes these fixes, native regression tests and isolated compiled-app checks. Stage 5 was merged through [PR #4](https://github.com/lukin-io/deep-work/pull/4) before this branch was created from `main`. No schema migration or new dependency is required; schema 2 remains unchanged. Actual VoiceOver speech, live Slack and login-cycle acceptance remain explicitly blocked in the checklist.
+
 ## Build, test, and run locally
 
 Requires Swift 6 or later from Xcode 16+ or current Command Line Tools. The app requires **Apple Silicon (M1 or later), macOS 15+**; local verification used **macOS 27.0.1, Apple Silicon, Swift 6.4**. Intel Macs and macOS versions before 15 are unsupported. Tests use the same minimum macOS version.
@@ -114,10 +120,11 @@ open ".build/Deep Work.app"
 
 `test.sh` runs the native Swift Testing suites, including actual AppKit window integration. It resolves the Testing macro plugin shipped with standalone Command Line Tools; no dependency download is needed. It checks the Apple Silicon/macOS 15 build settings and rejects unsupported local build hosts. It also rejects an incomplete test run even if the hostless runner exits with status 0. The AppKit suites briefly create, minimize, zoom, hide, and reopen native test windows and exercise real status-item buttons. They serialize access to AppKit’s shared application state. `build-app.sh` compiles and creates an ad hoc signed `.build/Deep Work.app` for local use. It is not a notarized distribution build.
 
-For focused Stage 5 checks:
+For focused Stage 6 checks:
 
 ```sh
-./scripts/test.sh --filter 'ApplicationMenuTests|LoginItem|Slack'
+./scripts/test.sh --filter 'AccessibilityAnnouncementTests|WorkspaceLifecycleTests|FeedbackPresentationTests|TabFocusRegressionTests|JournalPresentationTests|WorkSchedulePresentationTests|DebugAcceptanceOptionsTests'
+python3 DeepWorkTests/Build/test-ui-acceptance.py
 swift build -Xswiftc -strict-concurrency=complete -Xswiftc -warnings-as-errors
 plutil -lint DeepWork/Resources/Info.plist DeepWork.xcodeproj/project.pbxproj
 ```
@@ -132,6 +139,19 @@ DEEP_WORK_DATA_DIR="$test_data_dir" \
 ```
 
 Reuse the same test directory and launch command on every test relaunch: opening the app normally uses the real Application Support store. The override is Debug-only. For simultaneous automated UI testing, use a separate test bundle with a distinct executable and bundle identifier, preserve the override for every launch, and verify its store ownership lock points inside the fixture directory before editing. Automated verification must never quit or alter a running personal session.
+
+For a separate compiled UI acceptance app that is safe to reopen, build first, then run:
+
+```sh
+./scripts/build-app.sh
+./scripts/prepare-ui-acceptance.sh light
+# Open the absolute .app path printed by the script.
+# Other isolated fixtures:
+./scripts/prepare-ui-acceptance.sh dark
+./scripts/prepare-ui-acceptance.sh light clipboard-failure 320
+```
+
+Each command creates a new disposable folder under the system temporary directory, a distinct executable/bundle ID and an embedded Debug data override. It never launches or quits an app, registers a login item or claims the production Slack callback. The sibling `data/` folder contains that fixture's SQLite database; normal app data is untouched. Verify the running test process holds `data/DeepWork.owner.lock` with `lsof -p <test-pid>` before automated edits. Quit each fixture after testing. The helper refuses Release or symbol-stripped binaries before copying: Release ignores the Debug data override, and stripped binaries cannot be verified by this guard. The optional third argument fixes the test window width (320–1,600 points, clamped to the screen). Light/dark override only the test app's appearance; `clipboard-failure` rejects feedback copying so full-message selection and recovery can be checked. These options require `DEEP_WORK_DATA_DIR` and are excluded from Release builds.
 
 The approved app icon has one source: `DeepWork/Resources/Assets.xcassets/AppIcon.appiconset`. Xcode compiles that catalog; the command-line build packages its unchanged PNGs with the macOS `iconutil` tool and validates all ten representations. Generated ICNS files stay in build output. No image editor or extra setup is needed. See [icon organization and provenance](docs/APP_ICON.md) for replacement steps and the preserved local originals. The test script also runs native icon packaging checks. To check only the icon or an existing built bundle:
 
@@ -165,7 +185,7 @@ xcodebuild -project DeepWork.xcodeproj -scheme DeepWork \
   -configuration Debug -destination 'platform=macOS' build
 ```
 
-**Local full Xcode remains unavailable:** `xcode-select -p` returns `/Library/Developer/CommandLineTools`; local `xcodebuild` requires an Xcode installation. Separately, [Stage 5 hosted CI passed](https://github.com/lukin-io/deep-work/actions/runs/39254888329) all 335 native tests and Apple Silicon Xcode Release builds on **macOS 15/Xcode 16.4/SDK 15.5** and **macOS 26/Xcode 26.6/SDK 26.5**. The pipeline then packages and verifies an optimized archive. CI uses this project-build check; the downloadable app is packaged and signed separately by the release script:
+**Local full Xcode remains unavailable:** `xcode-select -p` returns `/Library/Developer/CommandLineTools`; local `xcodebuild` requires an Xcode installation. Separately, [Stage 6 hosted CI passed](https://github.com/lukin-io/deep-work/actions/runs/39262277404) all 361 native tests and Apple Silicon Xcode Release builds on **macOS 15/Xcode 16.4/SDK 15.5** and **macOS 26/Xcode 26.6/SDK 26.5**. The pipeline then packages and verifies an optimized archive. CI uses this project-build check; the downloadable app is packaged and signed separately by the release script:
 
 ```sh
 xcodebuild -project DeepWork.xcodeproj -scheme DeepWork \
@@ -287,7 +307,9 @@ Use the isolated Debug launch steps in [Build, test, and run locally](#build-tes
 
 ## Native milestone verification
 
-Stage 5 passes **335 native Swift tests (144 core + 191 app)**, 4 platform checks and 12 icon checks locally, plus strict concurrency compilation and app packaging. Compiled Settings/Undo/Redo, actual login registration/removal, unsaved-draft preservation and Quit/relaunch checks pass. The [verification record](docs/VERIFICATION.md#stage-5--native-services--october-19-2026) separates local results, compiled UI, hosted CI and pending live Slack/login acceptance. **Stage 5 remains IN PROGRESS; Stage 6 is the one remaining implementation stage**, covering keyboard/VoiceOver, appearance/layout, background/recovery and cross-feature acceptance.
+Stage 6 passes **361 native Swift tests (144 core + 217 app)**, 4 platform checks, 4 acceptance-fixture checks and 12 icon checks locally, plus strict concurrency compilation and app packaging. Compiled keyboard traversal, chart drilldown/live focus, clipboard-failure selection and light/dark layouts at 320 and 696 points were checked separately. See [Stage 6 verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026) for exact evidence and limits.
+
+**Stage 6: IN PROGRESS — implementation delivered, 127/137 IDs accepted; 10 remain blocked. There are no subsequent numbered implementation stages.** Remaining work is actual VoiceOver speech/traversal, configured live Slack and login-cycle acceptance, plus physical sleep/wake and distribution readiness. No new release is published. VoiceOver and Keyboard navigation were temporarily enabled with permission and restored to their original Off settings.
 
 Run all native tests, or select the relevant suites:
 
@@ -307,7 +329,7 @@ plutil -lint DeepWork/Resources/Info.plist DeepWork.xcodeproj/project.pbxproj
 codesign --verify --strict ".build/Deep Work.app"
 ```
 
-The engine tests use an injected clock for exact deadlines, multi-cycle delays, pauses, clock changes and recovery. SQLite integration verifies real persisted records/checkpoints; AppKit integration exercises windows, tab focus and status-button actions. Close/Quit regressions cover automatic hidden ticking, slow/failed saves, same-window reopening, and Quit-only pause/recovery. Local full Xcode, physical sleep/wake, and complete VoiceOver/light/dark acceptance remain separately identified in the verification record.
+The engine tests use an injected clock for exact deadlines, multi-cycle delays, pauses, clock changes and recovery. SQLite integration verifies real persisted records/checkpoints; AppKit integration exercises windows, tab focus and status-button actions. Close/Quit regressions cover automatic hidden ticking, slow/failed saves, same-window reopening, and Quit-only pause/recovery. Local full Xcode, physical sleep/wake and complete VoiceOver reception remain separately identified in the verification record. Light/dark and keyboard observations are recorded under Stage 6.
 
 For a short manual check with the isolated data command above: choose Custom → 1 minute for both phases, turn Repeat off, and start. Press Command-W: the menu-bar timer must keep counting with the current phase name. Click it to bring Focus to the front at the current remaining time. Repeat with the red close button during the break. One complete 60-second focus record should precede Cycle complete after its break. An already paused cycle must remain paused across close/reopen. Quit with an unfinished phase and relaunch using the same isolated directory: it must restore paused with the same remainder. Open Journal during focus and pause: time and the Live/Paused row must grow only during active focus; completion appears exactly once.
 
@@ -318,7 +340,7 @@ For Journal acceptance in the same isolated store:
 3. Open Schedule, try all modes, blank/fractional shift counts, zero weekdays and cutoff `04:00`. Invalid active fields disable Save and clear the preview. Switch tabs to retain edits; Cancel restores the saved schedule. Save, Quit and relaunch to verify persistence.
 4. With macOS **System Settings → Keyboard → Keyboard navigation** enabled by the tester, traverse chart buttons and weekdays, activate with Space, verify focus survives live updates and returns after Cancel/Save. Repeat with VoiceOver, light/dark appearance and a narrow window. Automated checks never change system preferences; unperformed checks remain unverified.
 
-Native button focus follows macOS Keyboard navigation preferences. Tab-strip arrows/Home/End retain focus on the tab strip. No test changes the user's system preferences. The progress view reads the system Reduce Motion environment and disables interpolation when requested.
+Native button focus follows macOS Keyboard navigation preferences. Tab-strip arrows/Home/End retain focus on the tab strip. Automated tests do not change system preferences. Manual keyboard/VoiceOver acceptance requires explicit permission, recording the original settings and restoring them afterward. The progress view reads the system Reduce Motion environment and disables interpolation when requested.
 
 ## Optional reference test run
 

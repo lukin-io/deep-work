@@ -443,3 +443,91 @@ Each runner also passes 22 CI policy regressions, 4 platform checks, 12 icon che
 Package job `118070093061` passed: optimized arm64/macOS 15+ packaging, native archive verification, **20 release-policy and 17 archive regressions**. Temporary `macOS-release` artifact `12186808384` is 2,439,572 bytes; icon, license, ad hoc signature, metadata and checksums were verified. Tag-only publication was correctly skipped. This is an Actions artifact, not a GitHub Release or a notarized download.
 
 The evidence-only follow-up updates documentation for this completed source/test run. It changes no production or test files. PR #4 remains open against `main`; its subsequent CI status is visible on the PR. No merge or release was requested for Stage 5.
+
+## Stage 6 — Native acceptance — October 19, 2026
+
+### Starting revision and scope
+
+PR #4's final [CI run 39255984080](https://github.com/lukin-io/deep-work/actions/runs/39255984080) passed both native/Xcode jobs and optimized packaging before the authorized merge. `main` advanced to `7c6aa05a9b566729d29b4b14eb68f1e32d014db5`; `codex/native-acceptance-stage-6` was created from that fetched merge. This stage fixes defects found during native accessibility, keyboard, appearance and lifecycle acceptance. It adds no schema migration, dependencies, OS compatibility or release publication.
+
+### Local verification
+
+Environment: Apple Silicon, macOS 27.0.1, Swift 6.4, `/Library/Developer/CommandLineTools`. Full Xcode remains unavailable locally. Passing project lint is not an Xcode build.
+
+| Command | Result |
+| --- | --- |
+| `./scripts/test.sh` | **361 native Swift tests pass: 144 core + 217 app**; 4 platform checks, 4 acceptance-fixture checks and 12 native icon checks pass. |
+| `swift build -Xswiftc -strict-concurrency=complete -Xswiftc -warnings-as-errors` | Pass; existing standalone CLT linker search-path warnings remain separate from Swift diagnostics. |
+| `./scripts/build-app.sh` | Pass; compiled, packaged and icon-verified `.build/Deep Work.app`. |
+| `python3 scripts/generate-xcode-project.py` | Project regenerated for 29 app sources and 10 core test sources. |
+| `plutil -lint DeepWork/Resources/Info.plist DeepWork.xcodeproj/project.pbxproj` | Both pass. |
+| `codesign --verify --strict ".build/Deep Work.app"` | Pass, local ad hoc signature only. |
+| `python3 DeepWorkTests/Build/test-ci-policy.py`; `python3 DeepWorkTests/Release/test-publish-release.py` | 22 CI policy and 38 publication regressions pass; no workflow/publication behavior changed. |
+| `bash -n scripts/prepare-ui-acceptance.sh scripts/test.sh` | Pass. |
+| `git diff --check`; reference and initial tracker comparison | Pass; no `reference/` or `implementation-tracker.json` changes. |
+
+Ignored evidence logs include `.build/stage6-final-tests.log`, `stage6-final-strict.log`, `stage6-final-build.log`, and focused `stage6-*-tests.log`/`*-before.log`/`*-fixed.log` files. No private journal content or credentials are committed as evidence.
+
+### Regressions and native boundaries
+
+- **Announcements (G-013/G-014, F controls):** timer messages previously belonged to the mounted Focus view and native announcement delivery targeted a window. The retained app owner now emits only semantic changes, independent of tab. AppKit requires the application accessibility element; nil application/empty message is a no-op. Eight native test functions cover start/pause/resume/break/end/repeat, silent ticks/no-ops, delayed catch-up, hidden/reopened native windows, recovery and real SQLite. These prove dispatch and state behavior, not heard speech.
+- **Feedback keyboard (S-012/S-019):** a compiled Tab key inserted a literal tab into the message and trapped keyboard traversal. The NSTextView delegate now moves through native key views for Tab/backtab. Regression tests send real native keyDown events and retain Return-newline behavior. Compiled forward/reverse traversal, explicit Save, Copy, and focused Copy success pass. No automatic draft save was added.
+- **Empty Journal focus (J-047):** before the fix, the action selected Focus but left focus on the tab strip. A cancellable post-insertion focus request now reaches the duration picker; leaving Focus invalidates an abandoned request. Native tests cover setup/running/paused targets, abandonment and unchanged arrow/Home/End tab navigation. Compiled Tab/Space activation focuses `dw-focus-select` without starting a cycle.
+- **Chart (J-026–J-035):** narrow columns visibly truncated `3h 30m`; native width regressions failed before the fix. Columns now fit the full native duration/caption. Keyboard focus originally moved outside the horizontal viewport and could leave the chart below the outer scroll viewport. Stable bucket focus now reveals both axes only on focus changes. Native geometry/formatting tests plus the reproducible compiled keyboard cases below cover this SwiftUI behavior; hostless accessibility-tree limitations prevent claiming an automated end-to-end focus test.
+- **Weekdays (W-004):** seven fixed columns clipped narrow labels. The failing-before/fixed-after native layout cases cover light/dark at 320 points; the selector wraps to four then three controls and preserves independent toggles and order. Rotating Work/Rest/anchor fields also retain their native input bounds and row placement in native tests.
+- **Workspace lifecycle (F-024/F-025, AC-10/12/27):** the retained adapter uses the real workspace notification center and the required Notification selector argument. Seven native tests exercise notification delivery, background-to-MainActor dispatch, observer lifetime, paused/idle no-ops, multi-boundary wake reconciliation, civil clock changes, failed writes and real SQLite checkpoint/recovery. Sleep queues a sealed checkpoint without pausing; wake reconciles continuous elapsed time. Posting native notifications does not prove hardware sleep or App Nap.
+- **Safe fixtures:** Debug-only appearance, width and clipboard-failure options require an explicit data override. The preparation helper creates a distinct executable, bundle identity and embedded data directory, removes the production OAuth scheme, and signs the disposable copy. It refuses Release/stripped binaries before copying. Four native option tests and four Python helper tests cover missing/invalid/valid inputs, huge width overflow, isolation, absent builds and the Release guard. Mocked packaging-command tests are not native launch evidence; actual compiled fixtures were separately launched and their ownership locks verified.
+
+### Compiled-app observations
+
+All edits used disposable temporary bundles created by `scripts/prepare-ui-acceptance.sh`, with embedded `LSEnvironment`, distinct executables and bundle IDs. `lsof` verified each running fixture's `DeepWork.owner.lock` inside its temporary `data/` directory before edits. Normal Application Support data was not used. Each fixture was quit after testing; no login registration or Slack sign-in was performed.
+
+- Light/dark Journal and Settings at 696 and 320 points retain the three tabs, labels, readable sections and accessible scrolling. The narrow example banner wraps; table and chart scroll independently. Focus setup and running controls were visually checked at 320 in both appearances. App-only appearance overrides leave system appearance unchanged.
+- At 320 points, chart `3h 30m` is fully visible. Tab reveals the first Monday and last Sunday bars with visible focus rings in both scroll axes. Space on Sunday opens its full Day report; Space on a By week bucket opens the full Week and returns to By day grouping. Full dates, precise duration, completion count, off-day state and action appear in the accessibility labels.
+- During a real running timer, the focused Monday bucket updated from 16s to 27s while keeping the same focused civil-date ID and unchanged scroll position. This checks actual rendered live focus retention, independently from model tests.
+- Opening Schedule focuses Reporting days. Tab visits Monday through Sunday; Space changes an individual weekday and updates the 14-day preview. Cancel returns focus to Schedule. Both appearances show legible weekday labels in the narrow wrapped layout.
+- Feedback traverses email → message → Save Draft → Copy Feedback; Shift-Tab reverses it. Space activates Save/Copy and Copy retains focus. The explicit clipboard-failure fixture selected the complete multiline emoji-containing message and displayed the actionable copy-unavailable status. Optional-email validation focuses the field and exposes its error hint.
+- The final isolated timer fixtures quit successfully. Existing native/SQLite suites and earlier compiled Quit/SIGKILL evidence remain applicable; this stage does not claim a new physical sleep or power-loss experiment.
+
+### VoiceOver and restored preferences
+
+The owner explicitly authorized temporary Keyboard navigation and VoiceOver changes. Both were originally **Off**, temporarily enabled, then restored to **Off**, with the final switch states checked in System Settings. VoiceOver was turned off as soon as its attempted checks ended, following the owner's request. Its preexisting caption-panel preference remained unchanged. Automated tests never modify these preferences.
+
+**Actual speech reception and full VoiceOver traversal remain unverified.** The app was exercised with VoiceOver running, including feedback validation, but the automation could not inspect VoiceOver's caption/speech output: binding VoiceOver timed out with `-10005 timeoutReached`; the native app screenshot excluded the caption overlay, and the documented copy-last-spoken-phrase shortcut did not yield that output through this tool. Accessibility labels and a posted announcement are not evidence that the intended message was spoken. Therefore G-013/G-014/J-054/S-017 remain BLOCKED, even though the announcement and focus fixes are implemented and tested.
+
+### Cross-feature acceptance review
+
+This table indexes evidence against the specification's acceptance scenarios; item status remains only in `IMPLEMENTATION_CHECKLIST.md`.
+
+| Scenarios | Native evidence and limits |
+| --- | --- |
+| AC-01/02 | Model/Timer/Journal integration covers defaults, separate examples, invalid and boundary durations and SQLite restoration. Prior compiled setup checks remain applicable. |
+| AC-03–09/13 | TimerEngine/TimerIntegration covers transitions, exact segments, repeat, pause and delayed boundaries; new announcement tests add tab-independent semantic actions. |
+| AC-10 | WorkspaceLifecycle uses actual notifications and SQLite. Physical sleep, App Nap and power loss are unverified. |
+| AC-11/12 | Native close/status-button target/action, hidden ticking and paused recovery pass; earlier compiled close/Quit/SIGKILL cases remain recorded. Actual menu-extra clicking is not inferred from target/action tests. |
+| AC-14–20 | Native report/calendar/DST/cutoff/range/schedule/drilldown tests and compiled Journal/schedule cases pass, including new keyboard bar activation and live focus retention. |
+| AC-21–23 | ReportCSV/ExportIntegration/CSVFileExportService covers the actual serializer, disk writes, native panel response boundary and failures. Stage 4 compiled Save/Cancel observations remain applicable. |
+| AC-24/25 | Feedback suites cover actual SQLite and a named native pasteboard; compiled form traversal and rejecting-clipboard recovery now pass. |
+| AC-26 | ServiceManagement adapter tests and Stage 5 actual registration/removal pass; actual login, approval and external revocation remain pending. |
+| AC-27 | Unavailable/failed SQLite tests span timer, journal, export, feedback and workspace lifecycle; in-memory edits are retained and failures stay visible. |
+| AC-28 | Native OAuth/Keychain/SQLite plus injected HTTP tests pass; live Slack is blocked on owner-deferred setup/sign-in. |
+| AC-29 | Native window/focus/announcement/geometry tests and the compiled keyboard/appearance cases pass. Full VoiceOver speech/traversal and actual system Reduce Motion propagation remain unverified. |
+
+### Status and next work
+
+**Stage 6 is IN PROGRESS: implementation delivered, acceptance gaps explicit.** There are **127/137 accepted IDs**, with 10 BLOCKED: G-013/G-014/J-054/S-017 (VoiceOver), F-027–F-029 (live Slack), S-003–S-005 (actual login/approval/external-state cycles). There are **zero subsequent numbered implementation stages**. Next work is to close those acceptance gaps, perform the physical lifecycle checks, and provision signing/notarization before stable distribution. No schema migration or new app release is produced here; the downloadable first preview still contains Stage 1/2 only.
+
+### Hosted Stage 6 verification
+
+[PR #5 CI run 39262277404](https://github.com/lukin-io/deep-work/actions/runs/39262277404) tested source/test head `5053c44707b545640fddcfee95977838608a62ce` as merge preview `c06aacfe2fc90ee82a73cc1455ff258436c8f9ef`, against `main` at `7c6aa05a9b566729d29b4b14eb68f1e32d014db5`.
+
+| Hosted environment | Native / Xcode result |
+| --- | --- |
+| macOS 15.7.9, arm64, Xcode 16.4, SDK 15.5 — job `118092747758` | All 361 Swift tests, strict concurrency compilation and Xcode Release build pass. |
+| macOS 26.6.2, arm64, Xcode 26.6, SDK 26.5 — job `118092747400` | All 361 Swift tests, strict concurrency compilation and Xcode Release build pass. |
+
+Each runner also passes 22 CI policy, 4 platform, 4 acceptance-fixture, 12 icon and 38 publication checks. CI leaves Keyboard navigation disabled; its hostless tests do not replace the separately recorded compiled keyboard or pending VoiceOver acceptance. Production strict compilation passes; legacy test-only `String(contentsOf:)` deprecation warnings on the older compiler remain unchanged.
+
+Package job `118096364688` also passed: optimized arm64/macOS 15+ app, icon/license/ad hoc signature/metadata/checksum verification, 20 release-policy and 17 archive regressions. Temporary `macOS-release` artifact `12192195208` is 2,454,811 bytes. Publication was correctly skipped. This is an Actions artifact, not a new GitHub Release or a notarized app.
+
+The follow-up documentation commit records this verified source/test revision and links the consolidated changelog to PR #5; it changes no production or test code. PR #5 remains open against `main`. Its new CI run is visible on the PR; the successful run above covers the unchanged production/test revision.

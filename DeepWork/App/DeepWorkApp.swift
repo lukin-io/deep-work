@@ -20,10 +20,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var windowController: WindowController!
     private var menuBarController: MenuBarController!
     private var applicationMenuController: ApplicationMenuController!
+    private var workspaceLifecycleController: WorkspaceLifecycleController!
     private var terminationPending = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        do { model = try AppModel.live() }
+        do {
+#if DEBUG
+            let options = DebugAcceptanceOptions()
+            if let appearance = options.appearance { NSApp.appearance = NSAppearance(named: appearance) }
+            model = try AppModel.live(feedbackClipboard: options.clipboard)
+#else
+            model = try AppModel.live()
+#endif
+        }
         catch {
             let alert = NSAlert()
             alert.messageText = "Deep Work is already open"
@@ -37,9 +46,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menuBarController = MenuBarController(model: model, windowController: windowController)
         applicationMenuController = ApplicationMenuController(model: model, windowController: windowController)
         applicationMenuController.install()
-        let workspace = NSWorkspace.shared.notificationCenter
-        workspace.addObserver(self, selector: #selector(willSleep), name: NSWorkspace.willSleepNotification, object: nil)
-        workspace.addObserver(self, selector: #selector(didWake), name: NSWorkspace.didWakeNotification, object: nil)
+        workspaceLifecycleController = WorkspaceLifecycleController(model: model)
         windowController.showWindow(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
@@ -78,7 +85,4 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidHide(_ notification: Notification) { model?.persistCommittedState() }
-    @objc private func willSleep() { model?.persistCommittedState() }
-    @objc private func didWake() { model?.refreshTimer() }
-
 }

@@ -1,4 +1,4 @@
-import Foundation
+import AppKit
 import DeepWorkCore
 
 /// Shared display values for the native chart/table. Accounting remains in the
@@ -20,6 +20,28 @@ enum JournalPresentation {
     static func barHeight(seconds: TimeInterval, maximum: TimeInterval) -> Double {
         guard seconds.isFinite, maximum.isFinite, seconds > 0, maximum > 0 else { return 3 }
         return max(3, min(105, seconds / maximum * 105))
+    }
+
+    static func bucketCaption(_ bucket: JournalBucket, grouping: JournalGrouping,
+                              shortWeekdayLabels: Bool, timeZone: TimeZone) -> String {
+        date(bucket.start, pattern: grouping == .day && shortWeekdayLabels ? "EEE" : "MMM d", timeZone: timeZone)
+    }
+
+    /// Native text metrics keep complete duration/date labels inside equal-width
+    /// columns. Extra columns scroll instead of compressing essential values.
+    @MainActor
+    static func minimumChartColumnWidth(buckets: [JournalBucket], grouping: JournalGrouping,
+                                        shortWeekdayLabels: Bool, timeZone: TimeZone) -> CGFloat {
+        let durationFont = NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .regular)
+        let captionFont = NSFont.systemFont(ofSize: 10, weight: .semibold)
+        return buckets.reduce(buckets.count > 14 ? 44 : 35) { width, bucket in
+            let duration = JournalDuration.format(seconds: bucket.focusedSeconds, precise: false) as NSString
+            let caption = bucketCaption(bucket, grouping: grouping, shortWeekdayLabels: shortWeekdayLabels,
+                                        timeZone: timeZone) as NSString
+            let textWidth = max(duration.size(withAttributes: [.font: durationFont]).width,
+                                caption.size(withAttributes: [.font: captionFont]).width)
+            return max(width, ceil(textWidth) + 4)
+        }
     }
 
     static func bucketDescription(_ bucket: JournalBucket, grouping: JournalGrouping, timeZone: TimeZone) -> String {

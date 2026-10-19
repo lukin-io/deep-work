@@ -108,19 +108,9 @@ struct WorkScheduleView: View {
         switch draft.mode {
         case .chosenWeekdays:
             VStack(alignment: .leading, spacing: 8) {
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 7), spacing: 4) {
-                    ForEach(Weekday.allCases, id: \.self) { weekday in
-                        Toggle(String(weekday.name.prefix(3)), isOn: Binding(
-                            get: { draft.weekdays.contains(weekday) },
-                            set: { selected in model.updateScheduleDraft { $0.setWeekday(weekday, selected: selected) } }
-                        ))
-                        .toggleStyle(.button).buttonStyle(.bordered).controlSize(.small)
-                        .frame(maxWidth: .infinity, minHeight: 24)
-                        .accessibilityLabel(weekday.name)
-                        .accessibilityIdentifier("dw-weekday-\(weekday.rawValue)")
-                    }
-                }.accessibilityElement(children: .contain).accessibilityLabel("Scheduled workdays")
-                    .accessibilityIdentifier("dw-weekday-buttons")
+                ScheduleWeekdayButtons(weekdays: draft.weekdays) { weekday, selected in
+                    model.updateScheduleDraft { $0.setWeekday(weekday, selected: selected) }
+                }
                 AvailabilityNote(text: "Choose any combination. A 5/2 week starts with Monday–Friday selected.")
             }.accessibilityElement(children: .contain).accessibilityIdentifier("dw-weekdays-setting")
         case .anyDay:
@@ -232,10 +222,38 @@ struct WorkScheduleView: View {
     }
 
     private func announce(_ message: String) {
-        guard let window = NSApp.keyWindow else { return }
-        NSAccessibility.post(element: window, notification: .announcementRequested, userInfo: [
-            .announcement: message, .priority: NSAccessibilityPriorityLevel.high.rawValue
-        ])
+        model.announce(message, priority: .high)
+    }
+}
+
+/// Keep the ordinary seven-column arrangement while allowing complete native
+/// button labels to wrap into additional rows in a narrow window.
+struct ScheduleWeekdayButtons: View {
+    let weekdays: [Weekday]
+    let setWeekday: (Weekday, Bool) -> Void
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            grid(columns: Array(repeating: GridItem(.flexible(minimum: 52), spacing: 4), count: 7))
+            grid(columns: [GridItem(.adaptive(minimum: 52), spacing: 4)])
+        }
+        .accessibilityElement(children: .contain).accessibilityLabel("Scheduled workdays")
+        .accessibilityIdentifier("dw-weekday-buttons")
+    }
+
+    private func grid(columns: [GridItem]) -> some View {
+        LazyVGrid(columns: columns, spacing: 4) {
+            ForEach(Weekday.allCases, id: \.self) { weekday in
+                Toggle(String(weekday.name.prefix(3)), isOn: Binding(
+                    get: { weekdays.contains(weekday) },
+                    set: { selected in setWeekday(weekday, selected) }
+                ))
+                .toggleStyle(.button).buttonStyle(.bordered).controlSize(.small)
+                .frame(maxWidth: .infinity, minHeight: 24)
+                .accessibilityLabel(weekday.name)
+                .accessibilityIdentifier("dw-weekday-\(weekday.rawValue)")
+            }
+        }
     }
 }
 

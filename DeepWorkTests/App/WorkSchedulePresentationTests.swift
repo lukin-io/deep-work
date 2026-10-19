@@ -8,6 +8,75 @@ extension NativeApplicationTests {
 @Suite(.serialized)
 @MainActor
 struct WorkSchedulePresentationTests {
+    @Test(arguments: [244, 620], [false, true])
+    func testW004_W013_AC29WeekdayButtonsWrapAtNarrowWidthWithoutCompressingLabels(_ width: Int, _ dark: Bool) async throws {
+        prepareNativeTestApplication()
+        // These are the available widths inside the production Surface at
+        // 320-point and 696-point root widths (24 + 14 padding on each side).
+        let grid = ScheduleWeekdayButtons(weekdays: [.monday, .friday], setWeekday: { _, _ in })
+            .font(.system(size: 12)).frame(width: CGFloat(width))
+        let host = NSHostingView(rootView: grid)
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: CGFloat(width), height: 160),
+                              styleMask: [.titled], backing: .buffered, defer: false)
+        let appearance: NSAppearance.Name = dark ? .darkAqua : .aqua
+        window.appearance = NSAppearance(named: appearance)
+        window.contentView = host
+        window.orderFront(nil)
+        defer { window.orderOut(nil) }
+        try await waitUntil(in: host) { host.fittingSize.height > 0 }
+        #expect(abs(host.fittingSize.width - CGFloat(width)) < 1)
+        #expect(host.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == appearance)
+        if width == 244 {
+            #expect(host.fittingSize.height >= 48,
+                    "The narrow schedule must wrap the seven native button labels into multiple rows")
+        } else {
+            #expect(host.fittingSize.height <= 32,
+                    "The ordinary-width schedule must preserve the seven buttons on one row")
+        }
+        // Fitting height proves the row change, not pixel legibility. The
+        // compiled-app regression checks all seven untruncated labels and AX IDs.
+    }
+
+    @Test(arguments: [320, 696])
+    func testW006_W007_W008_AC29RotatingFieldsFitAndAnchorMovesBelowCountsWhenNarrow(_ width: Int) async throws {
+        prepareNativeTestApplication()
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("DeepWorkNarrowShifts-\(UUID())")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let model = AppModel(journalStore: JournalStore(directory: directory), settingsStore: SettingsStore(directory: directory),
+                             clock: TestTimerClock(), automaticRefresh: false, reportingTimeZone: .gmt)
+        model.openSchedule()
+        model.updateScheduleDraft {
+            $0.mode = .rotatingShifts; $0.workDaysText = "3"; $0.restDaysText = "4"
+            $0.firstWorkDayText = "2026-10-19"
+        }
+        let host = NSHostingView(rootView: RootView(model: model))
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: CGFloat(width), height: 740),
+                              styleMask: [.titled], backing: .buffered, defer: false)
+        window.contentView = host
+        window.orderFront(nil)
+        defer { window.orderOut(nil) }
+        let work = try await textField(in: host, value: "3")
+        let rest = try await textField(in: host, value: "4")
+        let anchor = try await textField(in: host, value: "2026-10-19")
+        let workRect = work.convert(work.bounds, to: host)
+        let restRect = rest.convert(rest.bounds, to: host)
+        let anchorRect = anchor.convert(anchor.bounds, to: host)
+        for rect in [workRect, restRect, anchorRect] {
+            #expect(rect.width >= 40 && rect.minX >= 0 && rect.maxX <= host.bounds.width)
+        }
+        #expect(abs(workRect.midY - restRect.midY) < 1)
+        #expect(workRect.maxX < restRect.minX)
+        if width == 320 {
+            #expect(abs(anchorRect.midY - workRect.midY) > workRect.height,
+                    "The first-work-day field must move to a separate row without compressing Work/Rest")
+        } else {
+            #expect(abs(anchorRect.maxY - workRect.maxY) < 2,
+                    "The ordinary-width editor keeps the counts and anchor together")
+        }
+        await model.flushPersistence()
+        #expect(model.journal.schedule.mode == .chosenWeekdays, "Layout never commits the transient schedule draft")
+    }
+
     @Test func testW002_G012ScheduleFocusHonorsKeyboardNavigationAndTabReturnDoesNotStealFocus() async throws {
         prepareNativeTestApplication()
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent("DeepWorkScheduleFocus-\(UUID())")
