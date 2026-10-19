@@ -27,7 +27,7 @@ final class StoreTests {
         #expect(settings.value == SettingsDocument())
         #expect(journalStore.fileURL.lastPathComponent == "DeepWork.sqlite")
         let db = try TestDatabase(journalStore.fileURL)
-        #expect(try db.integer("PRAGMA user_version") == 1)
+        #expect(try db.integer("PRAGMA user_version") == 2)
         #expect(try db.text("PRAGMA journal_mode") == "wal")
         #expect(try db.integer("SELECT COUNT(*) FROM session_records") == 0)
         #expect(try db.integer("SELECT COUNT(*) FROM journal_state") == 1)

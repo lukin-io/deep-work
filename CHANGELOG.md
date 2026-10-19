@@ -2,9 +2,18 @@
 
 One consolidated entry per PR or stage, newest first. Follow-up commits update the same entry. Detailed acceptance and test evidence stay in [the checklist](IMPLEMENTATION_CHECKLIST.md) and [verification](docs/VERIFICATION.md).
 
+## Stage 5 — Native services ([PR #4](https://github.com/lukin-io/deep-work/pull/4))
+
+**Unreleased.** PR #4 targets `main`; source branch: `codex/native-services-stage-5`.
+
+- Add native Settings and Redo commands; keep menu actions on the retained app window and shared timer.
+- Register Launch at Login through macOS, showing actual approval, revocation and failure states without saving unfinished feedback edits.
+- Add Slack PKCE sign-in, Keychain token rotation, focus-status ownership and conditional restoration on break/end/Quit/disconnect. Preserve manual changes and pending recovery after failures; notifications are unchanged.
+- Migrate SQLite schema 1 → 2 without rewriting existing records; older app versions cannot reopen the migrated store. Include setup instructions and native tests; real logout/login and configured live Slack verification remain pending.
+
 ## Stage 4 — CSV export and feedback ([PR #3](https://github.com/lukin-io/deep-work/pull/3))
 
-**Unreleased.** Source branch: `codex/settings-export-stage-4`.
+**Unreleased.** Merged into `main` through PR #3.
 
 - Save Journal reports and Settings All Sessions/Current Journal Report through a native CSV Save panel, including every matching row across pagination and precise live-session accounting.
 - Share one CSV format and snapshot across both paths; preserve actual/example separation, truthful cancellation and failures, and wait for accepted writes before Quit.

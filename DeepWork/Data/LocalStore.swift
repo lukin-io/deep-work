@@ -160,7 +160,16 @@ private final class LocalDatabase {
         // Do this before WAL configuration or permission changes. Opening an
         // unsupported or malformed database must never initialize/replace it.
         let version = try connection.integer("PRAGMA user_version")
-        guard version == 1 else { throw UnsupportedSchemaVersion(version) }
+        guard version == 1 || version == 2 else { throw UnsupportedSchemaVersion(version) }
+        if version == 1 {
+            // Add only the restoration receipt. All original payload bytes stay
+            // intact; table creation and version advancement commit together.
+            try connection.transaction(immediate: true) {
+                try connection.execute("CREATE TABLE slack_state (id INTEGER PRIMARY KEY CHECK(id = 1), payload BLOB NOT NULL)")
+                try connection.writeSlack(SlackDocument())
+                try connection.execute("PRAGMA user_version=2")
+            }
+        }
         try restrictPermissions(of: directory, to: 0o700)
         try restrictPermissions(of: fileURL, to: 0o600)
         try connection.configureWAL()
@@ -205,10 +214,15 @@ private final class LocalDatabase {
                         id INTEGER PRIMARY KEY CHECK(id = 1),
                         payload BLOB NOT NULL
                     );
+                    CREATE TABLE slack_state (
+                        id INTEGER PRIMARY KEY CHECK(id = 1),
+                        payload BLOB NOT NULL
+                    );
                     """)
                 try connection.writeJournal(journal)
                 try connection.writeSettings(settings)
-                try connection.execute("PRAGMA user_version=1")
+                try connection.writeSlack(SlackDocument())
+                try connection.execute("PRAGMA user_version=2")
             }
             connection.close()
             // This same-directory rename publishes the fully committed database.
@@ -403,6 +417,17 @@ final class SQLiteConnection {
     func writeSettings(_ settings: SettingsDocument) throws {
         try settings.validate()
         try writeSingleton("settings", payload: encodePayload(settings))
+    }
+
+    func readSlack() throws -> SlackDocument {
+        let document: SlackDocument = try singleton("slack_state", as: SlackDocument.self)
+        try document.validate()
+        return document
+    }
+
+    func writeSlack(_ document: SlackDocument) throws {
+        try document.validate()
+        try writeSingleton("slack_state", payload: encodePayload(document))
     }
 
     private func singleton<T: Decodable>(_ table: String, as: T.Type) throws -> T {

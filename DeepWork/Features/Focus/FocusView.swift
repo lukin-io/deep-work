@@ -39,16 +39,7 @@ struct FocusView: View {
                     .accessibilityIdentifier("dw-focus-storage-warning")
             }
             Divider()
-            HStack {
-                Label("Slack status", systemImage: "number")
-                Spacer()
-                Text("Preview").foregroundStyle(.secondary)
-            }.font(.caption)
-            Surface {
-                Text(model.timer.state == .break || model.timer.state == .complete ? "↶ Previous status restored" : "❌ Deep WORK, DND")
-                    .font(.system(size: 13, weight: .medium))
-            }
-            AvailabilityNote(text: "Slack is not connected. No status changes are made.")
+            if let slack = model.slack { SlackStatusView(service: slack) }
         }
         .frame(maxWidth: 440, alignment: .leading).frame(maxWidth: .infinity)
         .accessibilityElement(children: .contain)

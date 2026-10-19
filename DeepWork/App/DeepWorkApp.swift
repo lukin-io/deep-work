@@ -19,6 +19,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var model: AppModel!
     private var windowController: WindowController!
     private var menuBarController: MenuBarController!
+    private var applicationMenuController: ApplicationMenuController!
     private var terminationPending = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -34,7 +35,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         windowController = WindowController(model: model)
         menuBarController = MenuBarController(model: model, windowController: windowController)
-        installMenus()
+        applicationMenuController = ApplicationMenuController(model: model, windowController: windowController)
+        applicationMenuController.install()
         let workspace = NSWorkspace.shared.notificationCenter
         workspace.addObserver(self, selector: #selector(willSleep), name: NSWorkspace.willSleepNotification, object: nil)
         workspace.addObserver(self, selector: #selector(didWake), name: NSWorkspace.didWakeNotification, object: nil)
@@ -68,6 +70,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 alert.addButton(withTitle: "Quit Without Saving")
                 shouldQuit = alert.runModal() == .alertSecondButtonReturn
             }
+            if !shouldQuit { model.keepOpenAfterCancelledQuit() }
             terminationPending = false
             sender.reply(toApplicationShouldTerminate: shouldQuit)
         }
@@ -78,36 +81,4 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func willSleep() { model?.persistCommittedState() }
     @objc private func didWake() { model?.refreshTimer() }
 
-    @objc private func showFocus() { menuBarController.showFocus() }
-
-    private func installMenus() {
-        let menu = NSMenu()
-        let app = NSMenuItem(); menu.addItem(app)
-        let appMenu = NSMenu(title: "Deep Work"); app.submenu = appMenu
-        appMenu.addItem(withTitle: "About Deep Work", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
-        appMenu.addItem(.separator())
-        appMenu.addItem(withTitle: "Hide Deep Work", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
-        appMenu.addItem(.separator())
-        appMenu.addItem(withTitle: "Quit Deep Work", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
-        let file = NSMenuItem(); menu.addItem(file)
-        file.submenu = NSMenu(title: "File")
-        let show = file.submenu!.addItem(withTitle: "Show Deep Work", action: #selector(showFocus), keyEquivalent: "0")
-        show.target = self
-        file.submenu!.addItem(withTitle: "Close Window", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
-        let edit = NSMenuItem(); menu.addItem(edit)
-        edit.submenu = NSMenu(title: "Edit")
-        edit.submenu!.addItem(withTitle: "Undo", action: Selector(("undo:")), keyEquivalent: "z")
-        edit.submenu!.addItem(withTitle: "Cut", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
-        edit.submenu!.addItem(withTitle: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
-        edit.submenu!.addItem(withTitle: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
-        edit.submenu!.addItem(withTitle: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
-        let window = NSMenuItem(); menu.addItem(window)
-        let windowMenu = NSMenu(title: "Window"); window.submenu = windowMenu
-        windowMenu.addItem(withTitle: "Minimize", action: #selector(NSWindow.performMiniaturize(_:)), keyEquivalent: "m")
-        windowMenu.addItem(withTitle: "Zoom", action: #selector(NSWindow.performZoom(_:)), keyEquivalent: "")
-        let fullScreen = windowMenu.addItem(withTitle: "Toggle Full Screen", action: #selector(NSWindow.toggleFullScreen(_:)), keyEquivalent: "f")
-        fullScreen.keyEquivalentModifierMask = [.control, .command]
-        NSApp.windowsMenu = windowMenu
-        NSApp.mainMenu = menu
-    }
 }
