@@ -428,3 +428,18 @@ The `.notFound` copy regression failed before the fix (`.build/stage5-login-not-
 The final rebuilt acceptance app displayed the corrected caption through its native accessibility tree. After unregistering the disposable login item and quitting, the test bundle was moved back into ignored `.build/`; no acceptance login item remains enabled.
 
 **Login accessibility regression:** before the fix, the compiled `dw-launch-login` switch exposed the helper but omitted “Launch at Login” from its AX description. Adding an explicit native accessibility label preserves the helper/status and Off value while exposing `Description: Launch at Login`. Reproduce by opening Settings with Command-comma and inspecting that switch in the compiled app. This case passed after rebuilding; the 36 focused login tests and native app build also pass (`stage5-login-label-tests.log`, `stage5-login-label-build.log`). Hostless SwiftUI AX trees are unavailable, so this regression uses a recorded compiled-app acceptance case rather than claiming automated screen-reader coverage.
+
+### Hosted Stage 5 verification
+
+[PR #4 run 39254888329](https://github.com/lukin-io/deep-work/actions/runs/39254888329) tested source head `6920da483f40a6c8fcb433475a7734393efd4c27` as merge preview `6cb87b47c6b94242127a934ac222f04cf80b6281`, against `main` at `731e0e71d7d82993e1672de0a7b2df9fffd445c9`. The superseded initial run was cancelled after the compiled accessibility correction; its partial results are not the final acceptance evidence.
+
+| Hosted environment | Native / Xcode result |
+| --- | --- |
+| macOS 15, arm64, Xcode 16.4, SDK 15.5 — job `118068065500` | All 335 Swift tests pass; strict concurrency compilation and Xcode Release build pass. |
+| macOS 26, arm64, Xcode 26.6, SDK 26.5 — job `118068065167` | All 335 Swift tests pass; strict concurrency compilation and Xcode Release build pass. |
+
+Each runner also passes 22 CI policy regressions, 4 platform checks, 12 icon checks and 38 publication regressions. These results cover the supported toolchains; they do not establish live Slack, actual login-cycle, screen-reader or local full-Xcode acceptance.
+
+Package job `118070093061` passed: optimized arm64/macOS 15+ packaging, native archive verification, **20 release-policy and 17 archive regressions**. Temporary `macOS-release` artifact `12186808384` is 2,439,572 bytes; icon, license, ad hoc signature, metadata and checksums were verified. Tag-only publication was correctly skipped. This is an Actions artifact, not a GitHub Release or a notarized download.
+
+The evidence-only follow-up updates documentation for this completed source/test run. It changes no production or test files. PR #4 remains open against `main`; its subsequent CI status is visible on the PR. No merge or release was requested for Stage 5.

@@ -80,6 +80,8 @@ There are **104/137 accepted IDs**. Newly accepted: **J-018–J-020, J-048–J-0
 
 There are **105/137 accepted IDs**; **G-002** is newly DONE. Compiled Settings/Undo/Redo, real login registration/removal, draft preservation and Quit/relaunch checks pass. F-027–F-029 are BLOCKED on the owner's deferred Slack configuration/sign-in; S-003–S-005 remain IN PROGRESS until actual login cycles, approval and external OS changes are verified. Passing injected-service tests do not establish those live outcomes. See [Stage 5 evidence](docs/VERIFICATION.md#stage-5--native-services--october-19-2026) and [Slack setup](docs/SLACK_SETUP.md).
 
+[Hosted Stage 5 CI](https://github.com/lukin-io/deep-work/actions/runs/39254888329) passes **335 native tests**, strict compilation and Xcode Release builds on macOS 15/26, then optimized arm64 packaging with 20 policy/17 archive regressions. The source/test revision is `6920da4`; the evidence-only follow-up changes no code or acceptance counts. [PR #4](https://github.com/lukin-io/deep-work/pull/4) remains open against `main`.
+
 **Next: Stage 6, one implementation stage remaining**, plus the pending Stage 5 checks. Work covers keyboard/VoiceOver, light/dark/narrow layouts, background/sleep/recovery, final cross-feature regressions and the remaining acceptance IDs. This PR does not publish a release.
 
 ## Shared shell
