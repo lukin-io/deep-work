@@ -44,10 +44,15 @@ struct FocusView: View {
         .frame(maxWidth: 440, alignment: .leading).frame(maxWidth: .infinity)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("dw-focus-panel")
-        .onAppear { if model.consumeFocusControlRequest() { focusRelevantControl() } }
-        .onChange(of: model.focusRequest) { if model.consumeFocusControlRequest() { focusRelevantControl() } }
-        .onChange(of: model.timer.phaseTitle) { _, title in announce(title) }
-        .onChange(of: model.repeatExplanation) { _, text in announce(text) }
+        .task(id: model.focusRequest) {
+            guard model.consumeFocusControlRequest() else { return }
+            // Explicit navigation can insert this panel before its native
+            // controls exist. Let insertion finish, then honor the request
+            // only while this view still owns the selected tab.
+            await Task.yield()
+            guard !Task.isCancelled, model.selectedTab == .focus else { return }
+            focusRelevantControl()
+        }
         .onChange(of: model.durationSummary) { _, text in if model.timer.state == .setup { announce(text) } }
         .onChange(of: model.focusDurationError) { _, error in if let error { announce("Deep work: \(error)") } }
         .onChange(of: model.breakDurationError) { _, error in if let error { announce("Break: \(error)") } }
@@ -146,9 +151,6 @@ struct FocusView: View {
         focusedControl = model.timer.state == .setup ? .focusPicker : .primary
     }
     private func announce(_ message: String) {
-        guard let window = NSApp.keyWindow else { return }
-        NSAccessibility.post(element: window, notification: .announcementRequested, userInfo: [
-            .announcement: message, .priority: NSAccessibilityPriorityLevel.medium.rawValue
-        ])
+        model.announce(message)
     }
 }

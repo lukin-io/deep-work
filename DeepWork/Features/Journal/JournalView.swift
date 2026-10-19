@@ -2,8 +2,11 @@ import AppKit
 import SwiftUI
 import DeepWorkCore
 
+enum JournalScrollTarget: Hashable { case activity }
+
 struct JournalView: View {
     @ObservedObject var model: AppModel
+    var revealActivity: () -> Void = {}
     @FocusState private var scheduleFocused: Bool
 
     var body: some View {
@@ -189,7 +192,8 @@ struct JournalView: View {
             JournalActivityChart(buckets: model.reportSnapshot.buckets, grouping: model.reportSnapshot.grouping,
                                  shortWeekdayLabels: model.reportPeriod == .week && model.reportSnapshot.buckets.count <= 7,
                                  today: model.currentReportingDay, timeZone: model.reportingTimeZone,
-                                 open: model.openReportBucket)
+                                 open: model.openReportBucket, revealActivity: revealActivity)
+                .id(JournalScrollTarget.activity)
             Text("Click a \(model.chartGrouping == .day ? "day" : "week") to see its sessions. All focus time is included, even on days off.")
                 .font(.system(size: 10)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 .accessibilityIdentifier("dw-chart-note")
@@ -279,9 +283,7 @@ struct JournalView: View {
         }.font(.system(size: 11)).accessibilityElement(children: .contain)
     }
     private func announce(_ message: String) {
-        guard let window = NSApp.keyWindow else { return }
-        NSAccessibility.post(element: window, notification: .announcementRequested,
-                             userInfo: [.announcement: message, .priority: NSAccessibilityPriorityLevel.medium.rawValue])
+        model.announce(message, priority: .medium)
     }
 }
 
@@ -292,24 +294,37 @@ struct JournalActivityChart: View {
     let today: CivilDate
     let timeZone: TimeZone
     let open: (JournalBucket) -> Void
-    @FocusState private var focusedBucket: String?
+    var revealActivity: () -> Void = {}
+    @FocusState private var focusedBucket: CivilDate?
 
     var body: some View {
         GeometryReader { geometry in
             let maximum = buckets.map(\.focusedSeconds).max() ?? 0
             let count = max(1, buckets.count)
-            let minWidth: CGFloat = buckets.count > 14 ? 44 : 35
+            let minWidth = JournalPresentation.minimumChartColumnWidth(buckets: buckets, grouping: grouping,
+                shortWeekdayLabels: shortWeekdayLabels, timeZone: timeZone)
             let columnWidth = max(minWidth, (geometry.size.width - CGFloat(count - 1) * 9) / CGFloat(count))
-            ScrollView(.horizontal) {
-                HStack(alignment: .bottom, spacing: 9) {
-                    ForEach(buckets, id: \.key) { bucket in
-                        bar(bucket, width: columnWidth, maximum: maximum)
+            ScrollViewReader { proxy in
+                ScrollView(.horizontal) {
+                    HStack(alignment: .bottom, spacing: 9) {
+                        ForEach(buckets, id: \.key) { bucket in
+                            bar(bucket, width: columnWidth, maximum: maximum)
+                        }
+                    }
+                    .frame(minWidth: geometry.size.width, alignment: .leading)
+                    .background(alignment: .bottom) {
+                        VStack(spacing: 41) { Divider(); Divider(); Divider() }
+                            .padding(.bottom, 29).accessibilityHidden(true)
                     }
                 }
-                .frame(minWidth: geometry.size.width, alignment: .leading)
-                .background(alignment: .bottom) {
-                    VStack(spacing: 41) { Divider(); Divider(); Divider() }
-                        .padding(.bottom, 29).accessibilityHidden(true)
+                .onChange(of: focusedBucket) { _, bucket in
+                    if let bucket {
+                        proxy.scrollTo(bucket)
+                        // Focus must be visible in both nested scroll axes.
+                        // A live report refresh retains the same key and does
+                        // not trigger this explicit-focus presentation action.
+                        revealActivity()
+                    }
                 }
             }
         }
@@ -330,17 +345,19 @@ struct JournalActivityChart: View {
                 Spacer(minLength: 0)
                 Text(JournalDuration.format(seconds: bucket.focusedSeconds, precise: false))
                     .font(.system(size: 10)).foregroundStyle(.secondary).monospacedDigit()
+                    .fixedSize(horizontal: true, vertical: false)
                 UnevenRoundedRectangle(topLeadingRadius: 4, bottomLeadingRadius: 1, bottomTrailingRadius: 1, topTrailingRadius: 4)
                     .fill(empty ? Color(nsColor: .separatorColor) : (offDay ? Color(nsColor: .tertiaryLabelColor) : .accentColor))
                     .frame(width: min(42, width), height: height)
-                Text(JournalPresentation.date(bucket.start, pattern: grouping == .day && shortWeekdayLabels ? "EEE" : "MMM d", timeZone: timeZone))
+                Text(JournalPresentation.bucketCaption(bucket, grouping: grouping,
+                    shortWeekdayLabels: shortWeekdayLabels, timeZone: timeZone))
                     .font(.system(size: 10, weight: isToday ? .semibold : .regular))
-                    .foregroundStyle(isToday ? Color.accentColor : .secondary).lineLimit(1)
+                    .foregroundStyle(isToday ? Color.accentColor : .secondary).fixedSize(horizontal: true, vertical: false)
                     .frame(height: 25)
             }.frame(width: width, height: 159).contentShape(Rectangle())
         }
-        .buttonStyle(.plain).focused($focusedBucket, equals: bucket.key.iso8601Date)
-        .overlay(RoundedRectangle(cornerRadius: 4).stroke(focusedBucket == bucket.key.iso8601Date ? Color.accentColor : .clear, lineWidth: 2))
+        .buttonStyle(.plain).focused($focusedBucket, equals: bucket.key)
+        .overlay(RoundedRectangle(cornerRadius: 4).stroke(focusedBucket == bucket.key ? Color.accentColor : .clear, lineWidth: 2))
         .accessibilityLabel(description).accessibilityIdentifier("dw-bucket-\(bucket.key.iso8601Date)")
         .help(description)
     }

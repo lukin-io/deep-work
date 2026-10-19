@@ -41,9 +41,8 @@ struct SlackStatusView: View {
         }
         .accessibilityElement(children: .contain).accessibilityIdentifier("dw-slack-section")
         .onChange(of: service.failureMessage) { _, value in
-            guard let value, let window = NSApp.keyWindow else { return }
-            NSAccessibility.post(element: window, notification: .announcementRequested,
-                                 userInfo: [.announcement: value, .priority: NSAccessibilityPriorityLevel.high.rawValue])
+            guard let value else { return }
+            NativeAccessibilityAnnouncer().announce(value, priority: .high)
         }
     }
 }

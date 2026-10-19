@@ -2,9 +2,18 @@
 
 One consolidated entry per PR or stage, newest first. Follow-up commits update the same entry. Detailed acceptance and test evidence stay in [the checklist](IMPLEMENTATION_CHECKLIST.md) and [verification](docs/VERIFICATION.md).
 
+## Stage 6 — Native accessibility and acceptance
+
+**Unreleased.** Targets `main`; source branch: `codex/native-acceptance-stage-6`.
+
+- Announce meaningful timer/lifecycle changes from the shared app owner; keep countdown ticks silent and use the native application accessibility target.
+- Fix feedback Tab/Shift-Tab navigation, empty-Journal focus, clipped chart labels, chart focus visibility and narrow weekday layouts. Retain chart focus during live updates.
+- Correct workspace sleep/wake observation and verify SQLite checkpoints/recovery; add disposable Debug acceptance fixtures and native regression tests.
+- Preserve schema 2 and the approved three tabs. Actual VoiceOver speech, live Slack and login-cycle acceptance remain pending; physical sleep and signing/notarization are separate verification gaps.
+
 ## Stage 5 — Native services ([PR #4](https://github.com/lukin-io/deep-work/pull/4))
 
-**Unreleased.** PR #4 targets `main`; source branch: `codex/native-services-stage-5`.
+**Unreleased.** Merged into `main` through PR #4.
 
 - Add native Settings and Redo commands; keep menu actions on the retained app window and shared timer.
 - Register Launch at Login through macOS, showing actual approval, revocation and failure states without saving unfinished feedback edits.

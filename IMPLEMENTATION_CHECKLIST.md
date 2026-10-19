@@ -1,6 +1,6 @@
 # Deep Work implementation checklist
 
-**Baseline:** October 17, 2026 · **Progress:** 105 of 137 items accepted in native Swift.
+**Baseline:** October 17, 2026 · **Progress:** 127 of 137 items accepted in native Swift.
 
 This is the canonical manual progress tracker for the current three-view app. The initial handoff started with every item TODO; current native evidence is recorded below. Each ID links to its full use case, behavior, input rules, source reference, and acceptance checks in `DEEP_WORK_SPECIFICATION.md`.
 
@@ -12,12 +12,12 @@ Feature completion means all of its child items are DONE. View completion means 
 
 | View or subview | Total | Done | Remaining |
 | --- | ---: | ---: | ---: |
-| Shared shell | 14 | 11 | 3 |
+| Shared shell | 14 | 12 | 2 |
 | Focus | 29 | 26 | 3 |
-| Journal | 54 | 39 | 15 |
-| Journal work schedule | 19 | 16 | 3 |
-| Settings | 21 | 13 | 8 |
-| **Total** | **137** | **105** | **32** |
+| Journal | 54 | 53 | 1 |
+| Journal work schedule | 19 | 19 | 0 |
+| Settings | 21 | 17 | 4 |
+| **Total** | **137** | **127** | **10** |
 
 Work schedule remains inside Journal; its separate rollup is for tracking the nested editor.
 
@@ -80,9 +80,19 @@ There are **104/137 accepted IDs**. Newly accepted: **J-018–J-020, J-048–J-0
 
 There are **105/137 accepted IDs**; **G-002** is newly DONE. Compiled Settings/Undo/Redo, real login registration/removal, draft preservation and Quit/relaunch checks pass. F-027–F-029 are BLOCKED on the owner's deferred Slack configuration/sign-in; S-003–S-005 remain IN PROGRESS until actual login cycles, approval and external OS changes are verified. Passing injected-service tests do not establish those live outcomes. See [Stage 5 evidence](docs/VERIFICATION.md#stage-5--native-services--october-19-2026) and [Slack setup](docs/SLACK_SETUP.md).
 
-[Hosted Stage 5 CI](https://github.com/lukin-io/deep-work/actions/runs/39254888329) passes **335 native tests**, strict compilation and Xcode Release builds on macOS 15/26, then optimized arm64 packaging with 20 policy/17 archive regressions. The source/test revision is `6920da4`; the evidence-only follow-up changes no code or acceptance counts. [PR #4](https://github.com/lukin-io/deep-work/pull/4) remains open against `main`.
+[Hosted Stage 5 CI](https://github.com/lukin-io/deep-work/actions/runs/39254888329) passes **335 native tests**, strict compilation and Xcode Release builds on macOS 15/26, then optimized arm64 packaging with 20 policy/17 archive regressions. The source/test revision is `6920da4`; the evidence-only follow-up changes no code or acceptance counts. [PR #4](https://github.com/lukin-io/deep-work/pull/4) subsequently merged into `main` after [final Stage 5 CI](https://github.com/lukin-io/deep-work/actions/runs/39255984080) passed. Stage 6 starts from that merge.
 
 **Next: Stage 6, one implementation stage remaining**, plus the pending Stage 5 checks. Work covers keyboard/VoiceOver, light/dark/narrow layouts, background/sleep/recovery, final cross-feature regressions and the remaining acceptance IDs. This PR does not publish a release.
+
+## Stage 6 implementation record — October 19, 2026
+
+**IN PROGRESS — implementation delivered; acceptance remains open.** This milestone fixes native announcement delivery, process-lifetime sleep/wake observation, narrow chart/weekday layouts, chart focus visibility in both scroll axes, Feedback Tab/backtab traversal and deferred explicit Focus navigation. The approved reference and initial JSON export remain unchanged. No release is published.
+
+`./scripts/test.sh` passes **361 native Swift tests (144 core + 217 app)**, plus **4 platform, 4 acceptance-fixture and 12 icon checks**. Native compilation and isolated compiled-app light/dark, narrow/wide, keyboard, clipboard-failure and live-chart checks pass; [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026) records commands, regression evidence and platform limits. Physical sleep/wake, actual system Reduce Motion propagation and hosted verification of this new revision remain separate unverified checks.
+
+Current acceptance is **127/137 DONE** and **10 BLOCKED**. Promoted IDs are **G-001, J-002, J-004, J-017, J-026–J-035, J-047, W-004, W-013, W-017, S-001, S-002, S-012 and S-019**. G-013, G-014, J-054 and S-017 require actual VoiceOver reception/traversal; F-027–F-029 require authorized Slack workspace outcomes; S-003–S-005 require real login-cycle/approval acceptance. Temporary Keyboard navigation and VoiceOver changes were authorized, and both settings were restored Off afterward. Successful announcement dispatch is not proof of spoken reception.
+
+**Zero subsequent numbered implementation stages remain.** Next work is the ten blocked native/external acceptance IDs above. Stage 6 remains IN PROGRESS until its required checks pass; local tests, hosted builds, service acceptance and any future release stay distinct.
 
 ## Shared shell
 
@@ -90,13 +100,13 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
 ### Window chrome
 
-**Progress:** 3 / 4 accepted.
+**Progress:** 4 / 4 accepted.
 
-- [ ] **G-001 — Deep Work window and title** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-001))
+- [x] **G-001 — Deep Work window and title** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-001))
 
-    Status: **IN PROGRESS** · Stage: **1** · Owner: Codex  
-    Evidence / commit: `./scripts/test.sh` — 109 native Swift tests; [current lifecycle evidence](docs/VERIFICATION.md#close-and-quit-clarification--october-18-2026).  
-    Blocker / notes: Native window, title, resizing, approved app icon and corrected hide/Quit behavior are implemented. Full light/dark and narrow-content acceptance remains Stage 6.  
+    Status: **DONE** · Stage: **1** · Owner: Codex  
+    Evidence / commit: [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026); `./scripts/test.sh` — 361 native tests, 4 platform, 4 acceptance-fixture and 12 icon checks; isolated compiled-app screenshots and native window/lifecycle tests.  
+    Blocker / notes: Deep Work title, selected-panel visibility, native traffic lights and approved icon pass. Compiled light/dark Journal, Settings and Focus fit 320 pt; Focus setup/running controls remain reachable by scrolling and the 60:00 countdown is readable. Native hide/Quit and window sizing evidence remains valid.  
     Swift: `DeepWork/App/WindowController.swift`, `DeepWork/App/AppModel.swift`
 
 - [x] **G-006 — Red close button: hide and keep running** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-006))
@@ -190,10 +200,10 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
 - [ ] **G-013 — Shared action announcements** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-013))
 
-    Status: **IN PROGRESS** · Stage: **6** · Owner: Codex  
-    Evidence / commit: `./scripts/test.sh` — 99 native tests; [Stage 2 native evidence](docs/VERIFICATION.md#stage-2--focus-october-18-2026).  
-    Blocker / notes: Focus phase, validation, Repeat and summary announcements use native accessibility notifications. Full VoiceOver and later-view announcements remain unverified.  
-    Swift: `DeepWork/App/RootView.swift`, `DeepWork/Accessibility/Announcements.swift`
+    Status: **BLOCKED** · Stage: **6** · Owner: Codex  
+    Evidence / commit: [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026); `./scripts/test.sh` — 361 native tests (144 core + 217 app), 4 platform, 4 acceptance-fixture and 12 icon checks; compiled isolated Debug app.  
+    Blocker / notes: Meaningful timer, window, validation and status announcements use the application accessibility element; ticks/no-ops stay silent and dispatch tests pass. Actual VoiceOver phrase reception remains unverified: caption inspection timed out with -10005 and Copy Last Phrase did not yield reliable text. Requires a human screen-reader acceptance pass.  
+    Swift: `DeepWork/App/RootView.swift`, `DeepWork/App/AccessibilityAnnouncements.swift`
 
 ### Prototype disclosure
 
@@ -201,10 +211,10 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
 - [ ] **G-014 — Standalone preview explanation** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#g-014))
 
-    Status: **TODO** · Stage: **6** · Owner: _unassigned_  
-    Evidence / commit: _none_  
-    Blocker / notes: _none_  
-    Swift: `DeepWork/App/RootView.swift`, `DeepWork/Accessibility/Announcements.swift`
+    Status: **BLOCKED** · Stage: **6** · Owner: Codex  
+    Evidence / commit: [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026); `./scripts/test.sh` — 361 native tests (144 core + 217 app), 4 platform, 4 acceptance-fixture and 12 icon checks; compiled isolated Debug app.  
+    Blocker / notes: The browser-only footer is deliberately omitted; native SQLite, real status item, truthful service states and hide-versus-Quit guidance are documented in NATIVE_DECISIONS.md. Copy review is complete, but this ID also requires VoiceOver announcements; actual reception remains blocked with G-013.  
+    Swift: `DeepWork/App/RootView.swift`, `DeepWork/App/AccessibilityAnnouncements.swift`
 
 ## Focus
 
@@ -425,22 +435,22 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 - [ ] **F-027 — Slack status heading, icon and Preview label** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-027))
 
     Status: **BLOCKED** · Stage: **5** · Owner: Codex  
-    Evidence / commit: [Stage 5 native verification](docs/VERIFICATION.md#stage-5--native-services--october-19-2026); native service/unit tests, real SQLite integration and compiled unconfigured UI.  
-    Blocker / notes: Implemented PKCE sign-in, Keychain rotation, transition-driven status ownership and conditional restore/recovery. Owner will configure Slack later; public Client ID, consent and actual workspace outcomes are unverified. No simulated success. See `docs/SLACK_SETUP.md`.  
+    Evidence / commit: [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026); `./scripts/test.sh` — 361 native tests (144 core + 217 app), 4 platform, 4 acceptance-fixture and 12 icon checks; compiled isolated Debug app.  
+    Blocker / notes: Implemented PKCE/Keychain sign-in and durable status ownership/conditional restoration pass native tests; compiled unconfigured UI remains truthful. Owner-deferred Slack configuration, authorization and actual workspace status/restore outcomes are still required; no live connection or delivery success is claimed. See docs/SLACK_SETUP.md.  
     Swift: `DeepWork/Features/Focus/FocusView.swift`, `DeepWork/App/SlackStatusController.swift`
 
 - [ ] **F-028 — Focus status text and restored-status placeholder** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-028))
 
     Status: **BLOCKED** · Stage: **5** · Owner: Codex  
-    Evidence / commit: [Stage 5 native verification](docs/VERIFICATION.md#stage-5--native-services--october-19-2026); native service/unit tests, real SQLite integration and compiled unconfigured UI.  
-    Blocker / notes: Implemented PKCE sign-in, Keychain rotation, transition-driven status ownership and conditional restore/recovery. Owner will configure Slack later; public Client ID, consent and actual workspace outcomes are unverified. No simulated success. See `docs/SLACK_SETUP.md`.  
+    Evidence / commit: [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026); `./scripts/test.sh` — 361 native tests (144 core + 217 app), 4 platform, 4 acceptance-fixture and 12 icon checks; compiled isolated Debug app.  
+    Blocker / notes: Implemented PKCE/Keychain sign-in and durable status ownership/conditional restoration pass native tests; compiled unconfigured UI remains truthful. Owner-deferred Slack configuration, authorization and actual workspace status/restore outcomes are still required; no live connection or delivery success is claimed. See docs/SLACK_SETUP.md.  
     Swift: `DeepWork/Features/Focus/FocusView.swift`, `DeepWork/App/SlackStatusController.swift`
 
 - [ ] **F-029 — Slack helper copy by session state** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#f-029))
 
     Status: **BLOCKED** · Stage: **5** · Owner: Codex  
-    Evidence / commit: [Stage 5 native verification](docs/VERIFICATION.md#stage-5--native-services--october-19-2026); native service/unit tests, real SQLite integration and compiled unconfigured UI.  
-    Blocker / notes: Implemented PKCE sign-in, Keychain rotation, transition-driven status ownership and conditional restore/recovery. Owner will configure Slack later; public Client ID, consent and actual workspace outcomes are unverified. No simulated success. See `docs/SLACK_SETUP.md`.  
+    Evidence / commit: [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026); `./scripts/test.sh` — 361 native tests (144 core + 217 app), 4 platform, 4 acceptance-fixture and 12 icon checks; compiled isolated Debug app.  
+    Blocker / notes: Implemented PKCE/Keychain sign-in and durable status ownership/conditional restoration pass native tests; compiled unconfigured UI remains truthful. Owner-deferred Slack configuration, authorization and actual workspace status/restore outcomes are still required; no live connection or delivery success is claimed. See docs/SLACK_SETUP.md.  
     Swift: `DeepWork/Features/Focus/FocusView.swift`, `DeepWork/App/SlackStatusController.swift`
 
 ## Journal
@@ -458,13 +468,13 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
 ### Layout
 
-**Progress:** 0 / 1 accepted.
+**Progress:** 1 / 1 accepted.
 
-- [ ] **J-002 — Journal window and section structure** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-002))
+- [x] **J-002 — Journal window and section structure** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-002))
 
-    Status: **IN PROGRESS** · Stage: **1** · Owner: Codex  
-    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
-    Blocker / notes: Approved section order and light appearance observed; final light/dark and narrow-window visual acceptance remains unverified.  
+    Status: **DONE** · Stage: **1** · Owner: Codex  
+    Evidence / commit: [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026); `./scripts/test.sh` — 361 native tests (144 core + 217 app), 4 platform, 4 acceptance-fixture and 12 icon checks; compiled isolated Debug app.  
+    Blocker / notes: Compiled Journal at 320 and 696 pt in light/dark appearances retains section order, readable labels and independent chart/table scrolling. Native navigation, state retention and geometry regressions pass.  
     Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 ### Report context
@@ -487,13 +497,13 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
 ### Work schedule access
 
-**Progress:** 0 / 1 accepted.
+**Progress:** 1 / 1 accepted.
 
-- [ ] **J-004 — Schedule button** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-004))
+- [x] **J-004 — Schedule button** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-004))
 
-    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
-    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
-    Blocker / notes: Nested Schedule opens and retains drafts; initial Reporting days keyboard focus remains unverified with Keyboard navigation disabled.  
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026); `./scripts/test.sh` — 361 native tests (144 core + 217 app), 4 platform, 4 acceptance-fixture and 12 icon checks; compiled isolated Debug app.  
+    Blocker / notes: Compiled Schedule activation focuses Reporting days in the inserted editor; Cancel returns focus to Schedule. Draft creation/retention, unchanged timer and cancelled-store preservation also pass native integration.  
     Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 ### Period selection
@@ -587,13 +597,13 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
 ### Example data
 
-**Progress:** 3 / 4 accepted.
+**Progress:** 4 / 4 accepted.
 
-- [ ] **J-017 — Example banner** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-017))
+- [x] **J-017 — Example banner** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-017))
 
-    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
-    Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
-    Blocker / notes: Example labels and CSV markers pass. Narrow-width example-banner readability remains unverified; retain the Stage 3 visual acceptance gap.  
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026); `./scripts/test.sh` — 361 native tests (144 core + 217 app), 4 platform, 4 acceptance-fixture and 12 icon checks; compiled isolated Debug app.  
+    Blocker / notes: Example disclosure remains readable and unambiguous at 320 pt in light/dark appearances. Switching to actual history removes it; native SQLite/CSV tests retain example isolation and actual-only All Sessions export.  
     Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 - [x] **J-018 — Footer View example / Show my journal button** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-018))
@@ -669,80 +679,80 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
 ### Activity
 
-**Progress:** 0 / 5 accepted.
+**Progress:** 5 / 5 accepted.
 
-- [ ] **J-026 — Daily focus / Weekly focus heading** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-026))
+- [x] **J-026 — Daily focus / Weekly focus heading** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-026))
 
-    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
-    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
-    Blocker / notes: Native arithmetic, grouping, labels and pointer drilldown pass. The shared chart completion check also requires keyboard/bar activation; that and live bucket focus retention remain unverified with Keyboard navigation disabled.  
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026); `./scripts/test.sh` — 361 native tests (144 core + 217 app), 4 platform, 4 acceptance-fixture and 12 icon checks; compiled isolated Debug app.  
+    Blocker / notes: Daily/Weekly focus follows displayed grouping. Native chart sums and forcing/drilldown tests pass; compiled daily and weekly Space activation opens the corresponding report.  
     Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **J-027 — By day / By week grouping selector** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-027))
+- [x] **J-027 — By day / By week grouping selector** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-027))
 
-    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
-    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
-    Blocker / notes: Native arithmetic, grouping, labels and pointer drilldown pass. The shared chart completion check also requires keyboard/bar activation; that and live bucket focus retention remain unverified with Keyboard navigation disabled.  
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026); `./scripts/test.sh` — 361 native tests (144 core + 217 app), 4 platform, 4 acceptance-fixture and 12 icon checks; compiled isolated Debug app.  
+    Blocker / notes: Grouping retains totals, session set and pagination; saved week start and return to daily buckets pass native tests. Compiled keyboard daily/weekly activation and live focus retention pass.  
     Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **J-028 — Automatic weekly grouping for long ranges** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-028))
+- [x] **J-028 — Automatic weekly grouping for long ranges** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-028))
 
-    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
-    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
-    Blocker / notes: Native arithmetic, grouping, labels and pointer drilldown pass. The shared chart completion check also requires keyboard/bar activation; that and live bucket focus retention remain unverified with Keyboard navigation disabled.  
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026); `./scripts/test.sh` — 361 native tests (144 core + 217 app), 4 platform, 4 acceptance-fixture and 12 icon checks; compiled isolated Debug app.  
+    Blocker / notes: Native tests verify the exact 93-elapsed-day boundary, forced weekly grouping above it and retained weekly selection when shrinking the range. Compiled keyboard grouping/drilldown passes.  
     Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **J-034 — Chart instruction and off-day inclusion helper** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-034))
+- [x] **J-034 — Chart instruction and off-day inclusion helper** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-034))
 
-    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
-    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
-    Blocker / notes: Native arithmetic, grouping, labels and pointer drilldown pass. The shared chart completion check also requires keyboard/bar activation; that and live bucket focus retention remain unverified with Keyboard navigation disabled.  
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026); `./scripts/test.sh` — 361 native tests (144 core + 217 app), 4 platform, 4 acceptance-fixture and 12 icon checks; compiled isolated Debug app.  
+    Blocker / notes: Daily/weekly helper wording matches the displayed drilldown unit. Native schedule changes retain off-day focus in totals; compiled keyboard chart drilldown passes.  
     Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **J-035 — Day off legend** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-035))
+- [x] **J-035 — Day off legend** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-035))
 
-    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
-    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
-    Blocker / notes: Native arithmetic, grouping, labels and pointer drilldown pass. The shared chart completion check also requires keyboard/bar activation; that and live bucket focus retention remain unverified with Keyboard navigation disabled.  
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026); `./scripts/test.sh` — 361 native tests (144 core + 217 app), 4 platform, 4 acceptance-fixture and 12 icon checks; compiled isolated Debug app.  
+    Blocker / notes: Daily grouping shows the noninteractive Day off legend; weekly grouping hides it. Native totals and session sets remain unfiltered; compiled chart/grouping review passes.  
     Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 ### Activity chart
 
-**Progress:** 0 / 5 accepted.
+**Progress:** 5 / 5 accepted.
 
-- [ ] **J-029 — Bars, duration values, captions, and relative scale** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-029))
+- [x] **J-029 — Bars, duration values, captions, and relative scale** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-029))
 
-    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
-    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
-    Blocker / notes: Native arithmetic, grouping, labels and pointer drilldown pass. The shared chart completion check also requires keyboard/bar activation; that and live bucket focus retention remain unverified with Keyboard navigation disabled.  
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026); `./scripts/test.sh` — 361 native tests (144 core + 217 app), 4 platform, 4 acceptance-fixture and 12 icon checks; compiled isolated Debug app.  
+    Blocker / notes: Native font measurements and scroll extents preserve full duration/date labels at 320 pt; compiled 3h 30m remains untruncated. Relative heights, every bucket and selectable 0m baselines pass native/compiled checks.  
     Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **J-030 — Off-day, zero, and current-day visual states** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-030))
+- [x] **J-030 — Off-day, zero, and current-day visual states** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-030))
 
-    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
-    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
-    Blocker / notes: Native arithmetic, grouping, labels and pointer drilldown pass. The shared chart completion check also requires keyboard/bar activation; that and live bucket focus retention remain unverified with Keyboard navigation disabled.  
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026); `./scripts/test.sh` — 361 native tests (144 core + 217 app), 4 platform, 4 acceptance-fixture and 12 icon checks; compiled isolated Debug app.  
+    Blocker / notes: Native and compiled daily states distinguish worked off days, zero buckets and the current date without excluding focus. Keyboard activation reaches zero/off-day buckets; chart sums remain consistent.  
     Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **J-031 — Select a day or week to drill into its report** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-031))
+- [x] **J-031 — Select a day or week to drill into its report** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-031))
 
-    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
-    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
-    Blocker / notes: Native arithmetic, grouping, labels and pointer drilldown pass. The shared chart completion check also requires keyboard/bar activation; that and live bucket focus retention remain unverified with Keyboard navigation disabled.  
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026); `./scripts/test.sh` — 361 native tests (144 core + 217 app), 4 platform, 4 acceptance-fixture and 12 icon checks; compiled isolated Debug app.  
+    Blocker / notes: Compiled Space activation drills into a daily bucket and a full configured weekly bucket, including an empty Sunday. Native clipped-range, zero/off-day and weekly-boundary cases pass.  
     Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **J-032 — Bar accessibility and detailed tooltip** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-032))
+- [x] **J-032 — Bar accessibility and detailed tooltip** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-032))
 
-    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
-    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
-    Blocker / notes: Native arithmetic, grouping, labels and pointer drilldown pass. The shared chart completion check also requires keyboard/bar activation; that and live bucket focus retention remain unverified with Keyboard navigation disabled.  
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026); `./scripts/test.sh` — 361 native tests (144 core + 217 app), 4 platform, 4 acceptance-fixture and 12 icon checks; compiled isolated Debug app.  
+    Blocker / notes: Native descriptions expose full date, duration and completed cycles; compiled keyboard activation matches pointer drilldown. A focused Monday updated from 16s to 27s while focus and scroll position stayed unchanged.  
     Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **J-033 — Scrollable chart frame** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-033))
+- [x] **J-033 — Scrollable chart frame** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-033))
 
-    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
-    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
-    Blocker / notes: Native arithmetic, grouping, labels and pointer drilldown pass. The shared chart completion check also requires keyboard/bar activation; that and live bucket focus retention remain unverified with Keyboard navigation disabled.  
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026); `./scripts/test.sh` — 361 native tests (144 core + 217 app), 4 platform, 4 acceptance-fixture and 12 icon checks; compiled isolated Debug app.  
+    Blocker / notes: Compiled 320 pt first/last chart columns and focus rings remain visible in both nested scroll axes. Native long-range horizontal extents and usable zero-bar columns pass; keyboard scrolling stays inside the chart.  
     Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 ### Sessions
@@ -822,7 +832,7 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
 ### Empty state
 
-**Progress:** 1 / 2 accepted.
+**Progress:** 2 / 2 accepted.
 
 - [x] **J-046 — No sessions illustration and message** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-046))
 
@@ -831,11 +841,11 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
     Blocker / notes: Native table/presentation and integration tests verify original timestamps, live/partial/outside-range states, 12-row paging, unchanged totals and empty-state content; compiled table and paging observed.  
     Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
-- [ ] **J-047 — Start a focus cycle button** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-047))
+- [x] **J-047 — Start a focus cycle button** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-047))
 
-    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
-    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
-    Blocker / notes: Compiled empty action opens Focus, selects actual history and does not start a timer. Duration-picker focus remains unverified with Keyboard navigation disabled.  
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026); `./scripts/test.sh` — 361 native tests (144 core + 217 app), 4 platform, 4 acceptance-fixture and 12 icon checks; compiled isolated Debug app.  
+    Blocker / notes: Compiled Tab then Space opens Focus and focuses the duration picker without starting a timer. The cancellable insertion task and discarded stale requests have native regressions; example mode is exited and paging/session tests remain green.  
     Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 ### Export
@@ -898,9 +908,9 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
 - [ ] **J-054 — Journal controls, regions, focus, and statuses** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#j-054))
 
-    Status: **IN PROGRESS** · Stage: **6** · Owner: Codex  
-    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
-    Blocker / notes: Named native controls, chart descriptions, table headers and status hooks implemented. Full VoiceOver, keyboard traversal/focus and announcement acceptance remains unverified.  
+    Status: **BLOCKED** · Stage: **6** · Owner: Codex  
+    Evidence / commit: [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026); `./scripts/test.sh` — 361 native tests (144 core + 217 app), 4 platform, 4 acceptance-fixture and 12 icon checks; compiled isolated Debug app.  
+    Blocker / notes: Compiled keyboard report/schedule traversal, visible focus, chart drilldown, weekday controls and return focus pass; native labels, table headers and status dispatch pass. Complete VoiceOver traversal and received errors/status remain blocked by the -10005 caption/tooling limitation.  
     Swift: `DeepWork/Features/Journal/JournalView.swift`, `DeepWork/Features/Journal/JournalSessionTable.swift`, `DeepWork/Core/JournalReport.swift`, `DeepWork/App/AppModel.swift`
 
 ## Journal work schedule
@@ -940,13 +950,13 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
 ### Chosen weekdays
 
-**Progress:** 0 / 1 accepted.
+**Progress:** 1 / 1 accepted.
 
-- [ ] **W-004 — Seven independent weekday checkboxes** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-004))
+- [x] **W-004 — Seven independent weekday checkboxes** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-004))
 
-    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
-    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
-    Blocker / notes: Pointer/input and zero-weekday semantics pass; independent keyboard activation remains unverified with macOS Keyboard navigation disabled.  
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026); `./scripts/test.sh` — 361 native tests (144 core + 217 app), 4 platform, 4 acceptance-fixture and 12 icon checks; compiled isolated Debug app.  
+    Blocker / notes: Compiled Tab/Space independently toggles Monday through Sunday and updates the preview. All seven labels remain readable in the 320 pt 4+3 layout; native all/zero-weekday and preserved-focus accounting cases pass.  
     Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Core/WorkScheduleDraft.swift`, `DeepWork/Core/ReportingCalendar.swift`, `DeepWork/App/AppModel.swift`
 
 ### Any day
@@ -1027,13 +1037,13 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
 ### Preview
 
-**Progress:** 1 / 2 accepted.
+**Progress:** 2 / 2 accepted.
 
-- [ ] **W-013 — Next 14 days heading, legend, and preview layout** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-013))
+- [x] **W-013 — Next 14 days heading, legend, and preview layout** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-013))
 
-    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
-    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
-    Blocker / notes: Fourteen dates and work/rest states pass native tests and the wide compiled view. Narrow preview-cell readability remains unverified; native field geometry alone does not establish visual acceptance.  
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026); `./scripts/test.sh` — 361 native tests (144 core + 217 app), 4 platform, 4 acceptance-fixture and 12 icon checks; compiled isolated Debug app.  
+    Blocker / notes: Compiled light/dark 320 pt preview shows all fourteen readable cells in two rows with its heading and Work day legend; wide layout and date/work-rest arithmetic pass. The legend remains noninteractive.  
     Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Core/WorkScheduleDraft.swift`, `DeepWork/Core/ReportingCalendar.swift`, `DeepWork/App/AppModel.swift`
 
 - [x] **W-014 — Fourteen draft-schedule date cells** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-014))
@@ -1067,13 +1077,13 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
 ### Actions
 
-**Progress:** 1 / 2 accepted.
+**Progress:** 2 / 2 accepted.
 
-- [ ] **W-017 — Cancel button** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-017))
+- [x] **W-017 — Cancel button** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-017))
 
-    Status: **IN PROGRESS** · Stage: **3** · Owner: Codex  
-    Evidence / commit: [Stage 3 native verification](docs/VERIFICATION.md#stage-3--journal-and-work-schedule--october-19-2026); `./scripts/test.sh` — 170 Swift tests, compiled app, real SQLite/AppKit checks.  
-    Blocker / notes: Cancel/Escape discards edits, retains raw history and refreshes the prior report. Return-to-Schedule keyboard focus remains unverified with Keyboard navigation disabled.  
+    Status: **DONE** · Stage: **3** · Owner: Codex  
+    Evidence / commit: [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026); `./scripts/test.sh` — 361 native tests (144 core + 217 app), 4 platform, 4 acceptance-fixture and 12 icon checks; compiled isolated Debug app.  
+    Blocker / notes: Compiled Cancel/Escape returns to the saved report and focuses Schedule. Native tests verify discarded edits, saved-value restoration and unchanged raw history.  
     Swift: `DeepWork/Features/Journal/WorkScheduleView.swift`, `DeepWork/Core/WorkScheduleDraft.swift`, `DeepWork/Core/ReportingCalendar.swift`, `DeepWork/App/AppModel.swift`
 
 - [x] **W-018 — Save schedule button** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#w-018))
@@ -1098,24 +1108,24 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
 ### View structure
 
-**Progress:** 0 / 1 accepted.
+**Progress:** 1 / 1 accepted.
 
-- [ ] **S-001 — Settings** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-001))
+- [x] **S-001 — Settings** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-001))
 
-    Status: **IN PROGRESS** · Stage: **4** · Owner: Codex  
-    Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
-    Blocker / notes: Settings workflow is implemented with distinct accessible controls. Full keyboard traversal, visible focus and final light/dark/narrow review remain unverified.  
+    Status: **DONE** · Stage: **4** · Owner: Codex  
+    Evidence / commit: [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026); `./scripts/test.sh` — 361 native tests (144 core + 217 app), 4 platform, 4 acceptance-fixture and 12 icon checks; compiled isolated Debug app.  
+    Blocker / notes: Compiled light/dark Settings at 320 and 696 pt preserves General/Export/Feedback order, readable controls and visible keyboard focus without horizontal overflow. Shared timer and view-state retention remain verified.  
     Swift: `DeepWork/Features/Settings/SettingsView.swift`
 
 ### General
 
-**Progress:** 0 / 1 accepted.
+**Progress:** 1 / 1 accepted.
 
-- [ ] **S-002 — General** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-002))
+- [x] **S-002 — General** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-002))
 
-    Status: **IN PROGRESS** · Stage: **4** · Owner: Codex  
-    Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
-    Blocker / notes: General group and actual login control are present and labelled. Stage 5 verifies native registration/removal and draft preservation; complete light/dark accessibility review and actual login-cycle acceptance remain unverified under S-003–S-005.  
+    Status: **DONE** · Stage: **4** · Owner: Codex  
+    Evidence / commit: [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026); `./scripts/test.sh` — 361 native tests (144 core + 217 app), 4 platform, 4 acceptance-fixture and 12 icon checks; compiled isolated Debug app.  
+    Blocker / notes: General precedes the actual Launch at Login control in compiled light/dark narrow/wide views. Accessible labels and shared timer retention pass; real login-cycle acceptance remains blocked separately under S-003–S-005.  
     Swift: `DeepWork/Features/Settings/SettingsView.swift`
 
 ### Launch at Login
@@ -1124,23 +1134,23 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
 - [ ] **S-003 — Launch at Login** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-003))
 
-    Status: **IN PROGRESS** · Stage: **5** · Owner: Codex  
-    Evidence / commit: [Stage 5 native verification](docs/VERIFICATION.md#stage-5--native-services--october-19-2026); native service/SQLite tests and compiled actual registration/removal, status and unsaved-draft preservation.  
-    Blocker / notes: Actual SMAppService registration/removal passes on the isolated app. Deliberate logout/login, approval/revocation and external state changes remain unverified; the active Mac user was not logged out. OS state is authoritative; stored preference never establishes success.  
+    Status: **BLOCKED** · Stage: **5** · Owner: Codex  
+    Evidence / commit: [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026); `./scripts/test.sh` — 361 native tests (144 core + 217 app), 4 platform, 4 acceptance-fixture and 12 icon checks; compiled isolated Debug app.  
+    Blocker / notes: Actual SMAppService registration/removal and stored-draft isolation pass. Actual enable/disable across logout/login, approval/revocation and externally changed OS state require a deliberate external acceptance session; they are not established by injected-service tests or a stored preference.  
     Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/App/LoginItemService.swift`
 
 - [ ] **S-004 — Open Deep Work automatically when you log in to your Mac.** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-004))
 
-    Status: **IN PROGRESS** · Stage: **5** · Owner: Codex  
-    Evidence / commit: [Stage 5 native verification](docs/VERIFICATION.md#stage-5--native-services--october-19-2026); native service/SQLite tests and compiled actual registration/removal, status and unsaved-draft preservation.  
-    Blocker / notes: Actual SMAppService registration/removal passes on the isolated app. Deliberate logout/login, approval/revocation and external state changes remain unverified; the active Mac user was not logged out. OS state is authoritative; stored preference never establishes success.  
+    Status: **BLOCKED** · Stage: **5** · Owner: Codex  
+    Evidence / commit: [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026); `./scripts/test.sh` — 361 native tests (144 core + 217 app), 4 platform, 4 acceptance-fixture and 12 icon checks; compiled isolated Debug app.  
+    Blocker / notes: Actual SMAppService registration/removal and stored-draft isolation pass. Actual enable/disable across logout/login, approval/revocation and externally changed OS state require a deliberate external acceptance session; they are not established by injected-service tests or a stored preference.  
     Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/App/LoginItemService.swift`
 
 - [ ] **S-005 — Preview — Your preference is saved here. Automatic launch will work in the Mac app.** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-005))
 
-    Status: **IN PROGRESS** · Stage: **5** · Owner: Codex  
-    Evidence / commit: [Stage 5 native verification](docs/VERIFICATION.md#stage-5--native-services--october-19-2026); native service/SQLite tests and compiled actual registration/removal, status and unsaved-draft preservation.  
-    Blocker / notes: Actual SMAppService registration/removal passes on the isolated app. Deliberate logout/login, approval/revocation and external state changes remain unverified; the active Mac user was not logged out. OS state is authoritative; stored preference never establishes success.  
+    Status: **BLOCKED** · Stage: **5** · Owner: Codex  
+    Evidence / commit: [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026); `./scripts/test.sh` — 361 native tests (144 core + 217 app), 4 platform, 4 acceptance-fixture and 12 icon checks; compiled isolated Debug app.  
+    Blocker / notes: Actual SMAppService registration/removal and stored-draft isolation pass. Actual enable/disable across logout/login, approval/revocation and externally changed OS state require a deliberate external acceptance session; they are not established by injected-service tests or a stored preference.  
     Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/App/LoginItemService.swift`
 
 ### CSV export
@@ -1191,13 +1201,13 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
 ### Feedback
 
-**Progress:** 6 / 9 accepted.
+**Progress:** 8 / 9 accepted.
 
-- [ ] **S-012 — Feedback** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-012))
+- [x] **S-012 — Feedback** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-012))
 
-    Status: **IN PROGRESS** · Stage: **4** · Owner: Codex  
-    Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
-    Blocker / notes: Save/Copy and explicit-draft restoration work. Complete keyboard-only form traversal remains unverified with macOS Keyboard navigation disabled.  
+    Status: **DONE** · Stage: **4** · Owner: Codex  
+    Evidence / commit: [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026); `./scripts/test.sh` — 361 native tests (144 core + 217 app), 4 platform, 4 acceptance-fixture and 12 icon checks; compiled isolated Debug app.  
+    Blocker / notes: Compiled keyboard traversal reaches Email → message → Save Draft → Copy Feedback and reverses correctly. Tab/backtab no longer insert tabs; Return remains multiline and Command-Return keeps explicit Save semantics. Native validation, draft persistence/recovery and no-network behavior pass.  
     Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Data/SettingsStore.swift`, `DeepWork/Features/Settings/FeedbackClipboard.swift`
 
 - [x] **S-013 — This preview can save a draft or copy your feedback to share.** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-013))
@@ -1230,9 +1240,9 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
 
 - [ ] **S-017 — Feedback validation error** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-017))
 
-    Status: **IN PROGRESS** · Stage: **4** · Owner: Codex  
-    Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
-    Blocker / notes: Typed validation, visible errors, field hints and native focus are implemented. Actual VoiceOver reception and field identification remain unverified.  
+    Status: **BLOCKED** · Stage: **4** · Owner: Codex  
+    Evidence / commit: [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026); `./scripts/test.sh` — 361 native tests (144 core + 217 app), 4 platform, 4 acceptance-fixture and 12 icon checks; compiled isolated Debug app.  
+    Blocker / notes: Email-first validation, corrected retry, field hints and actual native focus pass. VoiceOver error reception and affected-field identification remain unverified; caption access timed out with -10005 and Copy Last Phrase was ineffective. Requires human screen-reader acceptance.  
     Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Data/SettingsStore.swift`, `DeepWork/Features/Settings/FeedbackClipboard.swift`
 
 - [x] **S-018 — Save Draft** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-018))
@@ -1242,11 +1252,11 @@ Release delivery is recorded in `docs/VERIFICATION.md` and the repository's GitH
     Blocker / notes: Explicit SQLite draft save, keyboard submission, relaunch, trim/validation and failed-write retention pass. Delayed save acknowledgments cannot overwrite later Copy/validation status.  
     Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Data/SettingsStore.swift`, `DeepWork/Features/Settings/FeedbackClipboard.swift`
 
-- [ ] **S-019 — Copy Feedback** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-019))
+- [x] **S-019 — Copy Feedback** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-019))
 
-    Status: **IN PROGRESS** · Stage: **4** · Owner: Codex  
-    Evidence / commit: [Stage 4 native verification](docs/VERIFICATION.md#stage-4--csv-export-and-feedback--october-19-2026); native CSV/SQLite/AppKit tests, compiled Save/Cancel and draft/copy/relaunch checks.  
-    Blocker / notes: Exact native pasteboard payload, no implicit save, success/failure messages and selection adapter pass. Complete integrated failure selection and Copy-button focus remain unverified.  
+    Status: **DONE** · Stage: **4** · Owner: Codex  
+    Evidence / commit: [Stage 6 native verification](docs/VERIFICATION.md#stage-6--native-acceptance--october-19-2026); `./scripts/test.sh` — 361 native tests (144 core + 217 app), 4 platform, 4 acceptance-fixture and 12 icon checks; compiled isolated Debug app.  
+    Blocker / notes: Compiled Space activates Copy and retains button focus. The isolated rejecting-clipboard fixture reports failure and selects the complete multiline emoji message. Exact payload/type/email, unsaved-copy recovery and no-network cases remain covered by native tests.  
     Swift: `DeepWork/Features/Settings/SettingsView.swift`, `DeepWork/Data/SettingsStore.swift`, `DeepWork/Features/Settings/FeedbackClipboard.swift`
 
 - [x] **S-020 — Feedback result and saved-draft status** ([behavior and acceptance](DEEP_WORK_SPECIFICATION.md#s-020))

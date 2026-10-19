@@ -160,8 +160,6 @@ struct SettingsView: View {
     }
 
     private func announce(_ message: String, priority: NSAccessibilityPriorityLevel = .medium) {
-        guard let window = NSApp.keyWindow else { return }
-        NSAccessibility.post(element: window, notification: .announcementRequested,
-                             userInfo: [.announcement: message, .priority: priority.rawValue])
+        model.announce(message, priority: priority)
     }
 }

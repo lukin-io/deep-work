@@ -14,14 +14,17 @@ struct RootView: View {
                     .padding(.horizontal, 24).padding(.top, 8)
                     .accessibilityIdentifier("dw-lifecycle-error")
             }
-            ScrollView {
-                Group {
-                    switch model.selectedTab {
-                    case .focus: FocusView(model: model)
-                    case .journal: JournalView(model: model)
-                    case .settings: SettingsView(model: model)
-                    }
-                }.padding(24).frame(maxWidth: .infinity, alignment: .topLeading)
+            ScrollViewReader { proxy in
+                ScrollView {
+                    Group {
+                        switch model.selectedTab {
+                        case .focus: FocusView(model: model)
+                        case .journal:
+                            JournalView(model: model, revealActivity: { proxy.scrollTo(JournalScrollTarget.activity) })
+                        case .settings: SettingsView(model: model)
+                        }
+                    }.padding(24).frame(maxWidth: .infinity, alignment: .topLeading)
+                }
             }
         }
         .frame(minWidth: 320, minHeight: 420)
@@ -29,10 +32,8 @@ struct RootView: View {
         .tint(.accentColor)
         .disabled(model.isTerminating)
         .onChange(of: model.lifecycleFailureMessage) { _, message in
-            guard let message, let window = NSApp.keyWindow else { return }
-            NSAccessibility.post(element: window, notification: .announcementRequested, userInfo: [
-                .announcement: message, .priority: NSAccessibilityPriorityLevel.high.rawValue
-            ])
+            guard let message else { return }
+            model.announce(message, priority: .high)
         }
     }
 }

@@ -13,6 +13,9 @@ final class AppModel: ObservableObject {
     @Published var selectedTab: AppTab = .journal {
         didSet {
             guard !isTerminating, selectedTab != oldValue else { return }
+            // A showFocus action can be superseded before Focus ever mounts.
+            // Returning with the tab keys must not consume that stale request.
+            if selectedTab != .focus { focusControlRequested = false }
             refreshTimer()
             refreshReport()
             if selectedTab == .settings { refreshLoginItemStatus() }
@@ -73,6 +76,8 @@ final class AppModel: ObservableObject {
     private let csvFileExporter: any CSVFileExporting
     private let feedbackClipboard: any FeedbackCopying
     private let loginItemService: (any LoginItemServicing)?
+    private let announcements: any AccessibilityAnnouncing
+    private var announcedTimer: TimerAnnouncementState
     private var loginItemTask: Task<Void, Never>?
     private var ticker: Task<Void, Never>?
     private var lastCheckpointElapsed: TimeInterval
@@ -98,7 +103,8 @@ final class AppModel: ObservableObject {
          csvFileExporter: (any CSVFileExporting)? = nil,
          feedbackClipboard: (any FeedbackCopying)? = nil,
          loginItemService: (any LoginItemServicing)? = nil,
-         slack: SlackStatusController? = nil) {
+         slack: SlackStatusController? = nil,
+         announcements: (any AccessibilityAnnouncing)? = nil) {
         self.clock = clock ?? ContinuousTimerClock()
         self.automaticRefresh = automaticRefresh
         self.ownershipLock = ownershipLock
@@ -106,6 +112,7 @@ final class AppModel: ObservableObject {
         self.feedbackClipboard = feedbackClipboard ?? FeedbackClipboard()
         self.loginItemService = loginItemService
         self.slack = slack
+        self.announcements = announcements ?? NativeAccessibilityAnnouncer()
         self.reportingTimeZone = reportingTimeZone ?? .current
         let instant = self.clock.now()
         lastCheckpointElapsed = instant.elapsed
@@ -115,14 +122,17 @@ final class AppModel: ObservableObject {
         journalFailure = journalLoad.failure; settingsFailure = settingsLoad.failure
         // Store validation already rejects malformed checkpoints. Keep recovery
         // defensive at this boundary without silently turning corrupt data into history.
+        let initialTimer: TimerEngine
         if let checkpoint = journalLoad.value.activeCheckpoint {
-            do { timer = try TimerEngine(checkpoint: checkpoint, repeats: journalLoad.value.configuration.repeats, at: instant) }
+            do { initialTimer = try TimerEngine(checkpoint: checkpoint, repeats: journalLoad.value.configuration.repeats, at: instant) }
             catch {
-                timer = TimerEngine(repeats: journalLoad.value.configuration.repeats)
+                initialTimer = TimerEngine(repeats: journalLoad.value.configuration.repeats)
                 journalFailure = StoreFailure(operation: .validation, fileURL: URL(fileURLWithPath: JournalStore.filename),
                                               reason: error.localizedDescription)
             }
-        } else { timer = TimerEngine(repeats: journalLoad.value.configuration.repeats) }
+        } else { initialTimer = TimerEngine(repeats: journalLoad.value.configuration.repeats) }
+        timer = initialTimer
+        announcedTimer = TimerAnnouncementState(initialTimer)
         persistence = PersistenceWorker(journalStore: journalStore, settingsStore: settingsStore)
         customFocusText = String(journalLoad.value.configuration.customFocusMinutes)
         customBreakText = String(journalLoad.value.configuration.customBreakMinutes)
@@ -153,7 +163,7 @@ final class AppModel: ObservableObject {
         slack?.start()
     }
 
-    static func live() throws -> AppModel {
+    static func live(feedbackClipboard: (any FeedbackCopying)? = nil) throws -> AppModel {
         do {
             let directory: URL
             let legacyDirectory: URL?
@@ -172,7 +182,7 @@ final class AppModel: ObservableObject {
             let ownership = try StoreOwnershipLock(directory: directory)
             return AppModel(journalStore: JournalStore(directory: directory, legacyDirectory: legacyDirectory),
                             settingsStore: SettingsStore(directory: directory, legacyDirectory: legacyDirectory), ownershipLock: ownership,
-                            loginItemService: NativeLoginItemService(),
+                            feedbackClipboard: feedbackClipboard, loginItemService: NativeLoginItemService(),
                             slack: SlackStatusController(client: NativeSlackClient(), store: SlackStore(directory: directory)))
         } catch StoreOwnershipError.alreadyOwned {
             throw StoreOwnershipError.alreadyOwned
@@ -180,7 +190,7 @@ final class AppModel: ObservableObject {
             let failure = StoreFailure(operation: .read, fileURL: URL(fileURLWithPath: NSHomeDirectory()),
                                        reason: "Application Support is unavailable: \(error.localizedDescription)")
             return AppModel(journalStore: UnavailableJournalStore(failure: failure), settingsStore: UnavailableSettingsStore(failure: failure),
-                            loginItemService: NativeLoginItemService(),
+                            feedbackClipboard: feedbackClipboard, loginItemService: NativeLoginItemService(),
                             slack: SlackStatusController(client: NativeSlackClient(), store: UnavailableSlackStore(failure: failure)))
         }
     }
@@ -382,6 +392,7 @@ final class AppModel: ObservableObject {
         }
         updateTicker()
         updateSlackProjection()
+        announceTimerChange(completedCycles: records.filter { $0.outcome == .complete }.count)
         if (selectedTab == .journal && scheduleDraft == nil) || selectedTab == .settings {
             refreshReport(force: !records.isEmpty || oldPhase != timer.phaseID || oldState != timer.state)
         }
@@ -484,7 +495,38 @@ final class AppModel: ObservableObject {
         persistJournal()
         updateTicker()
         updateSlackProjection()
+        announceTimerChange(completedCycles: records.filter { $0.outcome == .complete }.count)
         refreshReport()
+    }
+
+    func announce(_ message: String, priority: NSAccessibilityPriorityLevel = .medium) {
+        announcements.announce(message, priority: priority)
+    }
+
+    private func announceTimerChange(completedCycles: Int) {
+        let current = TimerAnnouncementState(timer)
+        let previous = announcedTimer
+        announcedTimer = current
+        if let message = current.message(after: previous, completedCycles: completedCycles,
+                                         repeatExplanation: timer.repeatExplanation) {
+            announce(message)
+        }
+    }
+
+    func announceWindowHidden() {
+        let state = timer.isActive ? (timer.isPaused ? " Your timer stays paused." : " Your timer keeps running.") : ""
+        announce("Window hidden.\(state) Use the menu-bar timer to reopen Deep Work.")
+    }
+
+    func announceWindowShown(isFirstPresentation: Bool) {
+        if isFirstPresentation {
+            if timer.isRecovered {
+                announce("Your unfinished session is paused at its last saved point. Resume when you’re ready.")
+            }
+            return
+        }
+        let state = timer.isActive ? " \(timer.phaseTitle), \(timer.countdownText) remaining." : ""
+        announce("Deep Work window shown. \(selectedTab.title).\(state)")
     }
 
     private func updateSlackProjection() {
@@ -604,10 +646,7 @@ final class AppModel: ObservableObject {
             if fromSettings {
                 settingsExportStatus = snapshot.isExample ? "Example report exported as CSV." : "Your journal exported as CSV."
             } else { journalExportStatus = "Report exported as CSV." }
-            if let window = NSApp?.keyWindow {
-                NSAccessibility.post(element: window, notification: .announcementRequested,
-                    userInfo: [.announcement: "Report exported as CSV.", .priority: NSAccessibilityPriorityLevel.medium.rawValue])
-            }
+            announce("Report exported as CSV.")
         case .cancelled: break
         case .failed(let reason):
             let message = "CSV could not be saved. \(reason)"

@@ -129,6 +129,43 @@ struct FeedbackPresentationTests {
         #expect(field.stringValue == state.text)
     }
 
+    @Test func testS012_S016NativeMessageTabAndBacktabTraverseKeyViewsWithoutEditingOrSaving() async throws {
+        let fixture = try makeFixture()
+        defer { fixture.close() }
+        await fixture.model.flushPersistence()
+        fixture.model.feedbackMessage = "Keep this unsaved message"
+        let message = try await messageField(in: fixture.host)
+        let email = try await emailField(in: fixture.host)
+        try await wait(in: fixture.host) { message.string == fixture.model.feedbackMessage }
+
+        // Use actual native key views so the adapter test does not depend on a
+        // user's global Keyboard navigation preference or SwiftUI's AX bridge.
+        // The compiled Settings acceptance verifies the Save/Copy button order.
+        let following = NSTextField(frame: NSRect(x: 0, y: 0, width: 100, height: 22))
+        fixture.host.addSubview(following)
+        fixture.window.autorecalculatesKeyViewLoop = false
+        email.nextKeyView = message
+        message.nextKeyView = following
+        following.nextKeyView = email
+        try #require(fixture.window.makeFirstResponder(message))
+        message.setSelectedRange(NSRange(location: message.string.utf16.count, length: 0))
+        message.keyDown(with: try keyEvent("\t", keyCode: 48, window: fixture.window))
+        try await wait(in: fixture.host) {
+            following.currentEditor() != nil && fixture.window.firstResponder === following.currentEditor()
+        }
+
+        try #require(fixture.window.makeFirstResponder(message))
+        message.keyDown(with: try keyEvent("\u{19}", keyCode: 48, modifiers: .shift, window: fixture.window))
+        try await wait(in: fixture.host) {
+            email.currentEditor() != nil && fixture.window.firstResponder === email.currentEditor()
+        }
+        #expect(message.string == "Keep this unsaved message")
+        #expect(fixture.model.feedbackMessage == message.string)
+        #expect(fixture.model.feedbackStatus == nil)
+        #expect(fixture.model.pendingSettingsWrites == 0)
+        #expect(SettingsStore(directory: fixture.directory).load().value.feedbackDraft == .empty)
+    }
+
     @Test func testS012_S016NativeMessageReturnInsertsNewlineWithoutSavingAndRetainsNativeUndo() async throws {
         let fixture = try makeFixture()
         defer { fixture.close() }
@@ -137,7 +174,11 @@ struct FeedbackPresentationTests {
         try await wait(in: fixture.host) { message.string == "An unsaved message" }
         try #require(fixture.window.makeFirstResponder(message))
         message.setSelectedRange(NSRange(location: message.string.utf16.count, length: 0))
-        message.insertNewline(nil)
+        let delegate = try #require(message.delegate)
+        #expect(delegate.textView?(message, doCommandBy: #selector(NSResponder.insertNewline(_:))) == false,
+                "Return remains a native text command; Command-Return belongs to the Save Draft shortcut")
+        #expect(delegate.textView?(message, doCommandBy: #selector(NSResponder.deleteBackward(_:))) == false)
+        message.keyDown(with: try keyEvent("\r", keyCode: 36, window: fixture.window))
         try await wait(in: fixture.host) { fixture.model.feedbackMessage == "An unsaved message\n" }
         #expect(message.allowsUndo && !message.isRichText && !message.importsGraphics)
         let undo = try #require(message.undoManager)
@@ -315,6 +356,14 @@ struct FeedbackPresentationTests {
     private func nativeViews<ViewType: NSView>(_ type: ViewType.Type, in view: NSView) -> [ViewType] {
         let current = (view as? ViewType).map { [$0] } ?? []
         return current + view.subviews.flatMap { nativeViews(type, in: $0) }
+    }
+
+    private func keyEvent(_ characters: String, keyCode: UInt16, modifiers: NSEvent.ModifierFlags = [],
+                          window: NSWindow) throws -> NSEvent {
+        try #require(NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: modifiers, timestamp: 0,
+                                     windowNumber: window.windowNumber, context: nil, characters: characters,
+                                     charactersIgnoringModifiers: characters,
+                                     isARepeat: false, keyCode: keyCode))
     }
 
     private func wait(in host: NSView, sourceLocation: SourceLocation = #_sourceLocation, condition: () -> Bool) async throws {

@@ -67,6 +67,21 @@ struct FeedbackMessageEditor: NSViewRepresentable {
             handledSelectionRequest = parent.selectionRequest
         }
 
+        func textView(_ textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+            // This editor is one field in a form. Preserve the native key-view
+            // loop instead of inserting a tab and trapping keyboard navigation.
+            switch commandSelector {
+            case #selector(NSResponder.insertTab(_:)):
+                textView.window?.selectNextKeyView(nil)
+                return true
+            case #selector(NSResponder.insertBacktab(_:)):
+                textView.window?.selectPreviousKeyView(nil)
+                return true
+            default:
+                return false
+            }
+        }
+
         func textView(_ textView: NSTextView, shouldChangeTextIn affectedCharRange: NSRange,
                       replacementString: String?) -> Bool {
             guard let replacementString else { return true } // Attribute-only change.
