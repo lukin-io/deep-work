@@ -23,6 +23,7 @@ Read the [10-point Apple development and distribution guide](docs/MACOS_RELEASE_
 | File | Use it for |
 | --- | --- |
 | [AGENTS.md](AGENTS.md) | Required development workflow, Swift/Apple practices, tests, verification, and release rules |
+| [CHANGELOG.md](CHANGELOG.md) | One consolidated change summary per PR or stage, with release links when available |
 | [Apple development and distribution guide](docs/MACOS_RELEASE_GUIDE.md) | Detailed Apple guidance, Human Interface Guidelines, official sources, and applicability to development or distribution; consult relevant sections as required by `AGENTS.md` |
 | `DEEP_WORK_SPECIFICATION.md` | Full behavior reference, all controls and states, data/CSV rules, native decisions, build order and 29 integration acceptance scenarios |
 | `IMPLEMENTATION_CHECKLIST.md` | Editable progress by view → feature → element, with status, owner, evidence and notes |

@@ -51,6 +51,12 @@
 - Always keep `README.md` current with required setup, dependencies, build/test/run commands, migration steps, and known tooling limits whenever implementation changes them.
 - Report local compile, native tests, UI observations, and unverified tooling separately.
 
+## Changelog
+
+- Update root `CHANGELOG.md` with one consolidated entry per PR or stage, newest first, linked to its PR when available. Follow-up commits and fixes within that PR update the same entry; never create an entry per commit.
+- Keep entries short: observable changes, relevant compatibility/data changes and remaining limitations. Mark changes Unreleased until a published app includes them, then add the release link. Keep acceptance status and test evidence in the existing checklist and verification document.
+- Use these summaries when preparing the existing `docs/releases/<tag>.md` and GitHub Release notes. Keep this manual and simple: no changelog fragments, generators or additional tracking system.
+
 ## Commit and pull request writing
 
 - Use `/Users/sesharim/.codex/skills/caveman-commit/SKILL.md` for commit messages; use the same concise intent-first style for PR titles/descriptions.
